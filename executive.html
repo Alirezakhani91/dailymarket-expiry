@@ -15,15 +15,15 @@
   </div>
   <div class="right">
     <span class="pill">مدیر ارشد</span>
-    <span class="context-label">دسترسی فقط‌مشاهده</span>
+    <span class="context-label" id="managerLabel">در حال بارگذاری...</span>
     <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
   </div>
 </div>
 
 <div class="container">
   <div class="page-head">
-    <h1>نمای کلی وضعیت کالاها</h1>
-    <p>گزارش لحظه‌ای از تمام فروشگاه‌ها و مناطق.</p>
+    <h1>گزارش کلی حوزه‌ی نظارتی</h1>
+    <p>وضعیت کالاها در تمام مناطق و فروشگاه‌های زیر نظر شما، به تفکیک مدیر منطقه.</p>
   </div>
 
   <div id="alert" class="alert alert-error"></div>
@@ -31,33 +31,35 @@
   <div class="stat-grid" id="statGrid"></div>
 
   <div class="card">
-    <h2 style="font-size:15px; margin:0 0 14px;">آخرین رویدادها</h2>
+    <h2 style="font-size:15px; margin:0 0 14px;">تفکیک بر اساس مدیر منطقه</h2>
+    <div id="rollupWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">گزارش فروشگاه‌ها</h2>
     <div class="filter-bar">
-      <input type="text" id="textSearch" placeholder="جست‌وجو در نام کالا یا فروشگاه...">
-      <select id="statusFilter">
-        <option value="">همه‌ی وضعیت‌ها</option>
-        <option value="draft">پیش‌نویس</option>
-        <option value="needs_correction">نیاز به اصلاح</option>
-        <option value="approved">تأییدشده</option>
-        <option value="sold">فروخته‌شده</option>
-        <option value="rejected">ردشده</option>
-      </select>
-      <select id="regionFilter"><option value="">همه‌ی مناطق</option></select>
-      <span class="filter-count" id="filterCount"></span>
+      <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
+      <select id="mgrFilter"><option value="">همه‌ی مدیران منطقه</option></select>
+      <label class="checkbox-inline"><input type="checkbox" id="onlyPending"> فقط دارای مورد در انتظار</label>
+      <span class="filter-count" id="reportCount"></span>
     </div>
-    <div id="listWrap"><div class="empty">در حال بارگذاری...</div></div>
+    <div id="reportWrap"><div class="empty">در حال بارگذاری گزارش...</div></div>
   </div>
 </div>
 
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["executive_manager"]);
-  let allRecent = [];
+  let myManagerName = null;
+  let storesReport = [];
+
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
   const alertEl = document.getElementById("alert");
-  const listWrap = document.getElementById("listWrap");
+  const managerLabel = document.getElementById("managerLabel");
   const statGrid = document.getElementById("statGrid");
+  const rollupWrap = document.getElementById("rollupWrap");
+  const reportWrap = document.getElementById("reportWrap");
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -70,70 +72,108 @@
     alertEl.classList.add("show");
   }
 
-  async function loadOverview() {
+  async function loadMyManager() {
     const query = `
-      query Overview {
-        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
-        needs_correction: expiry_batches_aggregate(where: { status: { _eq: "needs_correction" } }) { aggregate { count } }
-        approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
-        sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
-        rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
-        recent: expiry_batches(order_by: { created_at: desc }, limit: 100) {
-          id product_name quantity unit expiry_date status store { name region }
+      query MyRole($user_id: uuid!) {
+        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) { manager_name }
+      }
+    `;
+    const data = await nhGql(query, { user_id: session.userId }, session.token);
+    if (!data.user_roles.length || !data.user_roles[0].manager_name) {
+      managerLabel.textContent = "نام مدیری برای این حساب ثبت نشده";
+      return;
+    }
+    myManagerName = data.user_roles[0].manager_name;
+    managerLabel.textContent = "مدیر ارشد: " + myManagerName;
+    await loadReport();
+  }
+
+  async function loadReport() {
+    const query = `
+      query MyStoresReport($mgr: String!) {
+        stores(where: { executive_manager_name: { _eq: $mgr } }, order_by: { name: asc }) {
+          id store_code name region region_manager_name
+          total: expiry_batches_aggregate { aggregate { count } }
+          draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
+          needs_correction: expiry_batches_aggregate(where: { status: { _eq: "needs_correction" } }) { aggregate { count } }
+          approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
+          sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+          rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
         }
       }
     `;
-    const data = await nhGql(query, {}, session.token);
+    const data = await nhGql(query, { mgr: myManagerName }, session.token);
+    storesReport = data.stores.map(s => ({
+      id: s.id, store_code: s.store_code, name: s.name, region: s.region,
+      region_manager_name: s.region_manager_name,
+      draft: s.draft.aggregate.count,
+      needs_correction: s.needs_correction.aggregate.count,
+      approved: s.approved.aggregate.count,
+      sold: s.sold.aggregate.count,
+      rejected: s.rejected.aggregate.count,
+      total: s.total.aggregate.count
+    }));
 
-    statGrid.innerHTML = ["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
-      <div class="stat-card">
-        <span class="num">${data[k].aggregate.count}</span>
-        <span class="lbl">${STATUS_LABEL[k]}</span>
-      </div>
-    `).join("");
-
-    allRecent = data.recent;
-
-    const regions = [...new Set(allRecent.map(b => b.store.region))].sort();
-    const regionSelect = document.getElementById("regionFilter");
-    regionSelect.innerHTML = '<option value="">همه‌ی مناطق</option>' +
-      regions.map(r => `<option value="${r}">${r}</option>`).join("");
-
-    renderRecent();
+    renderStats();
+    renderRollup();
+    populateMgrFilter();
+    renderReport();
   }
 
-  function renderRecent() {
-    const term = document.getElementById("textSearch").value.trim();
-    const status = document.getElementById("statusFilter").value;
-    const region = document.getElementById("regionFilter").value;
+  function renderStats() {
+    const sums = storesReport.reduce((acc, s) => {
+      acc.draft += s.draft; acc.needs_correction += s.needs_correction;
+      acc.approved += s.approved; acc.sold += s.sold; acc.rejected += s.rejected;
+      return acc;
+    }, { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 });
 
-    let rows = allRecent;
-    if (status) rows = rows.filter(b => b.status === status);
-    if (region) rows = rows.filter(b => b.store.region === region);
-    if (term) rows = rows.filter(b => b.product_name.includes(term) || b.store.name.includes(term));
+    statGrid.innerHTML = `
+      <div class="stat-card"><span class="num">${storesReport.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
+      ${["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
+        <div class="stat-card"><span class="num">${sums[k]}</span><span class="lbl">${STATUS_LABEL[k]}</span></div>
+      `).join("")}
+    `;
+  }
 
-    document.getElementById("filterCount").textContent =
-      allRecent.length ? `${rows.length} از ${allRecent.length}` : "";
+  function renderRollup() {
+    const byMgr = {};
+    storesReport.forEach(s => {
+      const key = s.region_manager_name || "نامشخص";
+      if (!byMgr[key]) byMgr[key] = { stores: 0, draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 };
+      byMgr[key].stores += 1;
+      byMgr[key].draft += s.draft;
+      byMgr[key].needs_correction += s.needs_correction;
+      byMgr[key].approved += s.approved;
+      byMgr[key].sold += s.sold;
+      byMgr[key].rejected += s.rejected;
+    });
+
+    const rows = Object.entries(byMgr).sort((a, b) => (b[1].draft + b[1].needs_correction) - (a[1].draft + a[1].needs_correction));
 
     if (!rows.length) {
-      listWrap.innerHTML = allRecent.length
-        ? '<div class="empty">با این فیلتر رویدادی یافت نشد.</div>'
-        : '<div class="empty">هنوز رویدادی ثبت نشده است.</div>';
+      rollupWrap.innerHTML = '<div class="empty">فروشگاهی برای این مدیر ارشد ثبت نشده است.</div>';
       return;
     }
-    listWrap.innerHTML = `
+
+    rollupWrap.innerHTML = `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>کالا</th><th>فروشگاه</th><th>منطقه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+        <thead>
+          <tr>
+            <th>مدیر منطقه</th><th>تعداد فروشگاه</th>
+            <th>پیش‌نویس</th><th>اصلاح</th><th>تأیید</th><th>فروش</th><th>رد</th>
+          </tr>
+        </thead>
         <tbody>
-          ${rows.map(b => `
+          ${rows.map(([name, v]) => `
             <tr>
-              <td>${b.product_name}</td>
-              <td>${b.store.name}</td>
-              <td>${b.store.region}</td>
-              <td class="num">${b.quantity} ${b.unit}</td>
-              <td class="num">${b.expiry_date}</td>
-              <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
+              <td>${name}</td>
+              <td class="num">${v.stores}</td>
+              <td class="num ${v.draft > 0 ? "cell-alert" : ""}">${v.draft}</td>
+              <td class="num ${v.needs_correction > 0 ? "cell-alert" : ""}">${v.needs_correction}</td>
+              <td class="num">${v.approved}</td>
+              <td class="num">${v.sold}</td>
+              <td class="num">${v.rejected}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -142,11 +182,72 @@
     `;
   }
 
-  document.getElementById("textSearch").addEventListener("input", renderRecent);
-  document.getElementById("statusFilter").addEventListener("change", renderRecent);
-  document.getElementById("regionFilter").addEventListener("change", renderRecent);
+  function populateMgrFilter() {
+    const names = [...new Set(storesReport.map(s => s.region_manager_name).filter(Boolean))].sort();
+    const sel = document.getElementById("mgrFilter");
+    const current = sel.value;
+    sel.innerHTML = '<option value="">همه‌ی مدیران منطقه</option>' +
+      names.map(n => `<option value="${n}">${n}</option>`).join("");
+    sel.value = current;
+  }
 
-  loadOverview().catch(err => showError(err.message));
+  function renderReport() {
+    const term = document.getElementById("reportSearch").value.trim();
+    const mgr = document.getElementById("mgrFilter").value;
+    const onlyPending = document.getElementById("onlyPending").checked;
+
+    let rows = storesReport;
+    if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
+    if (mgr) rows = rows.filter(s => s.region_manager_name === mgr);
+    if (onlyPending) rows = rows.filter(s => s.draft + s.needs_correction > 0);
+
+    rows = [...rows].sort((a, b) => (b.draft + b.needs_correction) - (a.draft + a.needs_correction));
+
+    document.getElementById("reportCount").textContent =
+      storesReport.length ? `${rows.length} از ${storesReport.length} فروشگاه` : "";
+
+    if (!rows.length) {
+      reportWrap.innerHTML = storesReport.length
+        ? '<div class="empty">با این فیلتر فروشگاهی یافت نشد.</div>'
+        : '<div class="empty">فروشگاهی برای این مدیر ارشد ثبت نشده است.</div>';
+      return;
+    }
+
+    reportWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>کد</th><th>فروشگاه</th><th>منطقه</th><th>مدیر منطقه</th>
+            <th>پیش‌نویس</th><th>اصلاح</th><th>تأیید</th><th>فروش</th><th>رد</th><th>مجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(s => `
+            <tr>
+              <td class="num">${s.store_code || "—"}</td>
+              <td>${s.name}</td>
+              <td>${s.region}</td>
+              <td>${s.region_manager_name || "—"}</td>
+              <td class="num ${s.draft > 0 ? "cell-alert" : ""}">${s.draft}</td>
+              <td class="num ${s.needs_correction > 0 ? "cell-alert" : ""}">${s.needs_correction}</td>
+              <td class="num">${s.approved}</td>
+              <td class="num">${s.sold}</td>
+              <td class="num">${s.rejected}</td>
+              <td class="num">${s.total}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+  }
+
+  document.getElementById("reportSearch").addEventListener("input", renderReport);
+  document.getElementById("mgrFilter").addEventListener("change", renderReport);
+  document.getElementById("onlyPending").addEventListener("change", renderReport);
+
+  loadMyManager().catch(err => showError(err.message));
 </script>
 
 </body>
