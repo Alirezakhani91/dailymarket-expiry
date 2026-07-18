@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Environment & secrets - هرگز این فایل‌ها Commit نشوند
+.env
+.env.local
+.env.*.local
+.env.production
+.env.production.local
+.secrets
+*.pem
+*.key
+*.p12
+
+# Nhost local runtime
+.nhost/
+nhost/functions/node_modules/
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+*.log
+
+# Test / coverage
+coverage/

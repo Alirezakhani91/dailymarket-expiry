@@ -1,0 +1,24 @@
+name: Backend Check (optional)
+
+on:
+  pull_request:
+    paths:
+      - "nhost/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # این Job فقط ساختار Migration/Metadata را Validate می‌کند،
+      # هیچ Deploy واقعی روی این Workflow انجام نمی‌شود.
+      - name: Check migration folder naming
+        run: |
+          for d in nhost/migrations/default/*/; do
+            name=$(basename "$d")
+            if [[ ! "$name" =~ ^[0-9]{3}_ ]]; then
+              echo "نام پوشه Migration نامعتبر است: $name"
+              exit 1
+            fi
+          done

@@ -1,0 +1,15 @@
+{
+  "name": "dailymarket-expiry",
+  "private": true,
+  "version": "0.1.0",
+  "description": "پلتفرم ثبت و مدیریت محصولات نزدیک به تاریخ انقضا",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "lint": "pnpm --filter web lint",
+    "typecheck": "pnpm --filter web typecheck"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

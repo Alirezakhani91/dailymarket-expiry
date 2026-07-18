@@ -1,0 +1,38 @@
+name: Frontend Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (production)
+        run: pnpm --filter web build
+        env:
+          VITE_NHOST_SUBDOMAIN: ${{ secrets.VITE_NHOST_SUBDOMAIN }}
+          VITE_NHOST_REGION: ${{ secrets.VITE_NHOST_REGION }}
+
+      # TODO: مرحله Deploy واقعی بسته به سرویس انتخابی (Static Hosting یا GitHub Pages)
+      # اینجا اضافه شود. مثال برای GitHub Pages:
+      #
+      # - name: Deploy to GitHub Pages
+      #   uses: peaceiris/actions-gh-pages@v4
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./apps/web/dist

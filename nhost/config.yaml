@@ -1,0 +1,15 @@
+# این فایل توسط Nhost CLI هنگام اجرای `nhost init` تولید/به‌روزرسانی می‌شود.
+# نسخه زیر یک نمونه پایه است - بعد از nhost init مقدار واقعی را جایگزین کنید.
+
+version: 3
+
+services:
+  postgres:
+    image: nhost/postgres:14
+  hasura:
+    version: v2.36.0
+    adminSecret: "{{ secrets.HASURA_ADMIN_SECRET }}"
+  auth:
+    version: 0.31.0
+  storage:
+    version: 0.6.0
