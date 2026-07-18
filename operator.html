@@ -64,6 +64,16 @@
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">آخرین ثبت‌های این فروشگاه</h2>
+    <div class="filter-bar">
+      <select id="statusFilter">
+        <option value="">همه‌ی وضعیت‌ها</option>
+        <option value="draft">پیش‌نویس</option>
+        <option value="needs_correction">نیاز به اصلاح</option>
+        <option value="approved">تأییدشده</option>
+        <option value="sold">فروخته‌شده</option>
+        <option value="rejected">ردشده</option>
+      </select>
+    </div>
     <div id="listWrap"><div class="empty">در حال بارگذاری فهرست...</div></div>
   </div>
 </div>
@@ -74,6 +84,7 @@
   let myStoreId = null;
   let selectedProductId = null;
   let selectedProductName = null;
+  let allBatches = [];
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -122,6 +133,7 @@
   }
 
   function renderProductResults(items) {
+    activeResultIndex = -1;
     if (!items.length) {
       resultsBox.innerHTML = '<div class="search-empty">کالایی با این نام یا بارکد یافت نشد.</div>';
       resultsBox.classList.add("show");
@@ -137,6 +149,34 @@
     resultsBox.querySelectorAll(".search-item").forEach(el => {
       el.addEventListener("click", () => selectProduct(el.dataset.id, el.dataset.name));
     });
+  }
+
+  let activeResultIndex = -1;
+  searchInput.addEventListener("keydown", (e) => {
+    const items = resultsBox.querySelectorAll(".search-item");
+    if (!items.length || !resultsBox.classList.contains("show")) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      activeResultIndex = Math.min(activeResultIndex + 1, items.length - 1);
+      highlightActive(items);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      activeResultIndex = Math.max(activeResultIndex - 1, 0);
+      highlightActive(items);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeResultIndex >= 0 && items[activeResultIndex]) {
+        items[activeResultIndex].click();
+      }
+    } else if (e.key === "Escape") {
+      resultsBox.classList.remove("show");
+    }
+  });
+
+  function highlightActive(items) {
+    items.forEach((el, i) => el.classList.toggle("active", i === activeResultIndex));
+    if (items[activeResultIndex]) items[activeResultIndex].scrollIntoView({ block: "nearest" });
   }
 
   function selectProduct(id, name) {
@@ -198,16 +238,24 @@
         expiry_batches(
           where: { store_id: { _eq: $store_id } }
           order_by: { created_at: desc }
-          limit: 15
+          limit: 30
         ) {
           id product_name quantity unit expiry_date status review_note
         }
       }
     `;
     const data = await nhGql(query, { store_id: myStoreId }, session.token);
-    const rows = data.expiry_batches;
+    allBatches = data.expiry_batches;
+    renderBatches();
+  }
+
+  function renderBatches() {
+    const filter = document.getElementById("statusFilter").value;
+    const rows = filter ? allBatches.filter(b => b.status === filter) : allBatches;
     if (!rows.length) {
-      listWrap.innerHTML = '<div class="empty">هنوز کالایی ثبت نشده است. اولین پیش‌نویس را ثبت کنید.</div>';
+      listWrap.innerHTML = allBatches.length
+        ? '<div class="empty">با این فیلتر کالایی یافت نشد.</div>'
+        : '<div class="empty">هنوز کالایی ثبت نشده است. اولین پیش‌نویس را ثبت کنید.</div>';
       return;
     }
     listWrap.innerHTML = `
@@ -229,6 +277,8 @@
       </div>
     `;
   }
+
+  document.getElementById("statusFilter").addEventListener("change", renderBatches);
 
   document.getElementById("productForm").addEventListener("submit", async (e) => {
     e.preventDefault();
