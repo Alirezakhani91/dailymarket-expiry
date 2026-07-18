@@ -237,6 +237,9 @@ tbody tr:hover { background: var(--paper); }
 .filter-bar input:focus, .filter-bar select:focus { border-color: var(--brand); background: var(--surface); outline: none; }
 .filter-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .search-item.active { background: var(--paper); }
+.checkbox-inline { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); white-space: nowrap; }
+.checkbox-inline input { width: auto; margin: 0; }
+.cell-alert { color: var(--brand); font-weight: 800; }
 
 /* ---------- mobile ---------- */
 @media (max-width: 640px) {
