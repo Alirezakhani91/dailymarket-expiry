@@ -37,6 +37,7 @@
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">گزارش فروشگاه‌ها</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin:-8px 0 14px;">برای دیدن کالاهای هر فروشگاه، روی ردیفش کلیک کنید.</p>
     <div class="filter-bar">
       <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
       <select id="mgrFilter"><option value="">همه‌ی مدیران منطقه</option></select>
@@ -45,13 +46,28 @@
     </div>
     <div id="reportWrap"><div class="empty">در حال بارگذاری گزارش...</div></div>
   </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">گزارش تجمیعی کالاها</h2>
+    <div class="filter-bar">
+      <select id="groupByMode">
+        <option value="product">بر اساس کالا</option>
+        <option value="group">بر اساس گروه کالایی</option>
+      </select>
+      <input type="text" id="productSearch" placeholder="جست‌وجو در نام کالا/گروه...">
+      <span class="filter-count" id="productCount"></span>
+    </div>
+    <div id="productReportWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
 </div>
 
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["executive_manager"]);
   let myManagerName = null;
-  let storesReport = [];
+  let myStores = [];
+  let allBatches = [];
+  let expandedStoreId = null;
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -60,6 +76,7 @@
   const statGrid = document.getElementById("statGrid");
   const rollupWrap = document.getElementById("rollupWrap");
   const reportWrap = document.getElementById("reportWrap");
+  const productReportWrap = document.getElementById("productReportWrap");
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -85,50 +102,59 @@
     }
     myManagerName = data.user_roles[0].manager_name;
     managerLabel.textContent = "مدیر ارشد: " + myManagerName;
-    await loadReport();
+    await loadData();
   }
 
-  async function loadReport() {
-    const query = `
-      query MyStoresReport($mgr: String!) {
+  async function loadData() {
+    const storesQuery = `
+      query MyStores($mgr: String!) {
         stores(where: { executive_manager_name: { _eq: $mgr } }, order_by: { name: asc }) {
           id store_code name region region_manager_name
-          total: expiry_batches_aggregate { aggregate { count } }
-          draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
-          needs_correction: expiry_batches_aggregate(where: { status: { _eq: "needs_correction" } }) { aggregate { count } }
-          approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
-          sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
-          rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
         }
       }
     `;
-    const data = await nhGql(query, { mgr: myManagerName }, session.token);
-    storesReport = data.stores.map(s => ({
-      id: s.id, store_code: s.store_code, name: s.name, region: s.region,
-      region_manager_name: s.region_manager_name,
-      draft: s.draft.aggregate.count,
-      needs_correction: s.needs_correction.aggregate.count,
-      approved: s.approved.aggregate.count,
-      sold: s.sold.aggregate.count,
-      rejected: s.rejected.aggregate.count,
-      total: s.total.aggregate.count
-    }));
+    const batchesQuery = `
+      query MyBatches($mgr: String!) {
+        expiry_batches(
+          where: { store: { executive_manager_name: { _eq: $mgr } } }
+          order_by: { created_at: desc }
+          limit: 5000
+        ) {
+          id product_name product_group quantity unit expiry_date status
+          store { id }
+        }
+      }
+    `;
+    const [storesData, batchesData] = await Promise.all([
+      nhGql(storesQuery, { mgr: myManagerName }, session.token),
+      nhGql(batchesQuery, { mgr: myManagerName }, session.token)
+    ]);
+    myStores = storesData.stores;
+    allBatches = batchesData.expiry_batches;
 
     renderStats();
     renderRollup();
     populateMgrFilter();
     renderReport();
+    renderProductReport();
+  }
+
+  function storeStats(storeId) {
+    const s = { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0, total: 0 };
+    allBatches.forEach(b => {
+      if (b.store.id === storeId) {
+        if (s[b.status] !== undefined) s[b.status]++;
+        s.total++;
+      }
+    });
+    return s;
   }
 
   function renderStats() {
-    const sums = storesReport.reduce((acc, s) => {
-      acc.draft += s.draft; acc.needs_correction += s.needs_correction;
-      acc.approved += s.approved; acc.sold += s.sold; acc.rejected += s.rejected;
-      return acc;
-    }, { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 });
-
+    const sums = { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 };
+    allBatches.forEach(b => { if (sums[b.status] !== undefined) sums[b.status]++; });
     statGrid.innerHTML = `
-      <div class="stat-card"><span class="num">${storesReport.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
+      <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
       ${["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
         <div class="stat-card"><span class="num">${sums[k]}</span><span class="lbl">${STATUS_LABEL[k]}</span></div>
       `).join("")}
@@ -137,15 +163,16 @@
 
   function renderRollup() {
     const byMgr = {};
-    storesReport.forEach(s => {
+    myStores.forEach(s => {
       const key = s.region_manager_name || "نامشخص";
       if (!byMgr[key]) byMgr[key] = { stores: 0, draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 };
       byMgr[key].stores += 1;
-      byMgr[key].draft += s.draft;
-      byMgr[key].needs_correction += s.needs_correction;
-      byMgr[key].approved += s.approved;
-      byMgr[key].sold += s.sold;
-      byMgr[key].rejected += s.rejected;
+      const st = storeStats(s.id);
+      byMgr[key].draft += st.draft;
+      byMgr[key].needs_correction += st.needs_correction;
+      byMgr[key].approved += st.approved;
+      byMgr[key].sold += st.sold;
+      byMgr[key].rejected += st.rejected;
     });
 
     const rows = Object.entries(byMgr).sort((a, b) => (b[1].draft + b[1].needs_correction) - (a[1].draft + a[1].needs_correction));
@@ -183,7 +210,7 @@
   }
 
   function populateMgrFilter() {
-    const names = [...new Set(storesReport.map(s => s.region_manager_name).filter(Boolean))].sort();
+    const names = [...new Set(myStores.map(s => s.region_manager_name).filter(Boolean))].sort();
     const sel = document.getElementById("mgrFilter");
     const current = sel.value;
     sel.innerHTML = '<option value="">همه‌ی مدیران منطقه</option>' +
@@ -196,18 +223,17 @@
     const mgr = document.getElementById("mgrFilter").value;
     const onlyPending = document.getElementById("onlyPending").checked;
 
-    let rows = storesReport;
+    let rows = myStores.map(s => ({ ...s, ...storeStats(s.id) }));
     if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
     if (mgr) rows = rows.filter(s => s.region_manager_name === mgr);
     if (onlyPending) rows = rows.filter(s => s.draft + s.needs_correction > 0);
-
-    rows = [...rows].sort((a, b) => (b.draft + b.needs_correction) - (a.draft + a.needs_correction));
+    rows = rows.sort((a, b) => (b.draft + b.needs_correction) - (a.draft + a.needs_correction));
 
     document.getElementById("reportCount").textContent =
-      storesReport.length ? `${rows.length} از ${storesReport.length} فروشگاه` : "";
+      myStores.length ? `${rows.length} از ${myStores.length} فروشگاه` : "";
 
     if (!rows.length) {
-      reportWrap.innerHTML = storesReport.length
+      reportWrap.innerHTML = myStores.length
         ? '<div class="empty">با این فیلتر فروشگاهی یافت نشد.</div>'
         : '<div class="empty">فروشگاهی برای این مدیر ارشد ثبت نشده است.</div>';
       return;
@@ -224,9 +250,9 @@
         </thead>
         <tbody>
           ${rows.map(s => `
-            <tr>
+            <tr class="clickable" data-store-id="${s.id}">
               <td class="num">${s.store_code || "—"}</td>
-              <td>${s.name}</td>
+              <td>${s.name} <span class="row-expand-icon ${expandedStoreId === s.id ? "open" : ""}">◀</span></td>
               <td>${s.region}</td>
               <td>${s.region_manager_name || "—"}</td>
               <td class="num ${s.draft > 0 ? "cell-alert" : ""}">${s.draft}</td>
@@ -236,6 +262,86 @@
               <td class="num">${s.rejected}</td>
               <td class="num">${s.total}</td>
             </tr>
+            ${expandedStoreId === s.id ? renderStoreDetail(s.id) : ""}
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+
+    reportWrap.querySelectorAll("tr.clickable").forEach(tr => {
+      tr.addEventListener("click", () => {
+        const id = tr.dataset.storeId;
+        expandedStoreId = expandedStoreId === id ? null : id;
+        renderReport();
+      });
+    });
+  }
+
+  function renderStoreDetail(storeId) {
+    const items = allBatches.filter(b => b.store.id === storeId);
+    if (!items.length) {
+      return `<tr class="detail-row"><td colspan="10"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+    }
+    return `
+      <tr class="detail-row"><td colspan="10">
+        <table>
+          <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+          <tbody>
+            ${items.map(b => `
+              <tr>
+                <td>${b.product_name}</td>
+                <td>${b.product_group || "—"}</td>
+                <td class="num">${b.quantity} ${b.unit}</td>
+                <td class="num">${b.expiry_date}</td>
+                <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </td></tr>
+    `;
+  }
+
+  document.getElementById("reportSearch").addEventListener("input", renderReport);
+  document.getElementById("mgrFilter").addEventListener("change", renderReport);
+  document.getElementById("onlyPending").addEventListener("change", renderReport);
+
+  function renderProductReport() {
+    const mode = document.getElementById("groupByMode").value;
+    const term = document.getElementById("productSearch").value.trim();
+    const key = mode === "group" ? "product_group" : "product_name";
+
+    const grouped = {};
+    allBatches.forEach(b => {
+      const k = b[key] || "نامشخص";
+      if (!grouped[k]) grouped[k] = { count: 0, qty: 0 };
+      grouped[k].count += 1;
+      grouped[k].qty += Number(b.quantity) || 0;
+    });
+
+    let rows = Object.entries(grouped);
+    if (term) rows = rows.filter(([name]) => name.includes(term));
+    rows.sort((a, b) => b[1].qty - a[1].qty);
+
+    document.getElementById("productCount").textContent = rows.length ? `${rows.length} مورد` : "";
+
+    if (!rows.length) {
+      productReportWrap.innerHTML = '<div class="empty">داده‌ای برای نمایش وجود ندارد.</div>';
+      return;
+    }
+
+    productReportWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>${mode === "group" ? "گروه کالایی" : "کالا"}</th><th>تعداد ثبت</th><th>مجموع تعداد/مقدار</th></tr></thead>
+        <tbody>
+          ${rows.map(([name, v]) => `
+            <tr>
+              <td>${name}</td>
+              <td class="num">${v.count}</td>
+              <td class="num">${v.qty}</td>
+            </tr>
           `).join("")}
         </tbody>
       </table>
@@ -243,9 +349,8 @@
     `;
   }
 
-  document.getElementById("reportSearch").addEventListener("input", renderReport);
-  document.getElementById("mgrFilter").addEventListener("change", renderReport);
-  document.getElementById("onlyPending").addEventListener("change", renderReport);
+  document.getElementById("groupByMode").addEventListener("change", renderProductReport);
+  document.getElementById("productSearch").addEventListener("input", renderProductReport);
 
   loadMyManager().catch(err => showError(err.message));
 </script>
