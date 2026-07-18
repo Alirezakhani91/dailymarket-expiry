@@ -32,6 +32,10 @@
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">در انتظار بررسی</h2>
+    <div class="filter-bar">
+      <input type="text" id="storeSearch" placeholder="جست‌وجو بر اساس نام فروشگاه...">
+      <span class="filter-count" id="filterCount"></span>
+    </div>
     <div id="listWrap"><div class="empty">در حال بارگذاری فهرست...</div></div>
   </div>
 </div>
@@ -40,6 +44,7 @@
 <script>
   const session = nhRequireRole(["region_manager"]);
   let myRegion = null;
+  let allPending = [];
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -111,9 +116,21 @@
       }
     `;
     const data = await nhGql(query, { region: myRegion }, session.token);
-    const rows = data.expiry_batches;
+    allPending = data.expiry_batches;
+    renderBatches();
+  }
+
+  function renderBatches() {
+    const term = document.getElementById("storeSearch").value.trim();
+    const rows = term ? allPending.filter(b => b.store.name.includes(term)) : allPending;
+
+    document.getElementById("filterCount").textContent =
+      allPending.length ? `${rows.length} از ${allPending.length}` : "";
+
     if (!rows.length) {
-      listWrap.innerHTML = '<div class="empty">در حال حاضر پیش‌نویسی برای بررسی وجود ندارد.</div>';
+      listWrap.innerHTML = allPending.length
+        ? '<div class="empty">با این جست‌وجو موردی یافت نشد.</div>'
+        : '<div class="empty">در حال حاضر پیش‌نویسی برای بررسی وجود ندارد.</div>';
       return;
     }
     listWrap.innerHTML = rows.map(b => `
@@ -142,6 +159,8 @@
       });
     });
   }
+
+  document.getElementById("storeSearch").addEventListener("input", renderBatches);
 
   async function reviewBatch(item, action) {
     const id = item.dataset.id;
