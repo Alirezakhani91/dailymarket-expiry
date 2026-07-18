@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS public.sales CASCADE;
+DROP TABLE IF EXISTS public.customers CASCADE;
