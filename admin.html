@@ -51,12 +51,25 @@
   </div>
 
   <div class="card">
-    <h2 style="font-size:15px; margin:0 0 14px;">فهرست فروشگاه‌ها</h2>
-    <div id="storesWrap"><div class="empty">در حال بارگذاری...</div></div>
+    <h2 style="font-size:15px; margin:0 0 14px;">جست‌وجوی فروشگاه‌ها</h2>
+    <div class="filter-bar">
+      <input type="text" id="storeSearch" placeholder="جست‌وجو با نام، کد یا منطقه‌ی فروشگاه...">
+    </div>
+    <div id="storesWrap"><div class="empty">برای مشاهده، عبارتی را جست‌وجو کنید یا صبر کنید فهرست اولیه بارگذاری شود...</div></div>
   </div>
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">آخرین کالاهای ثبت‌شده</h2>
+    <div class="filter-bar">
+      <select id="statusFilter">
+        <option value="">همه‌ی وضعیت‌ها</option>
+        <option value="draft">پیش‌نویس</option>
+        <option value="needs_correction">نیاز به اصلاح</option>
+        <option value="approved">تأییدشده</option>
+        <option value="sold">فروخته‌شده</option>
+        <option value="rejected">ردشده</option>
+      </select>
+    </div>
     <div id="batchesWrap"><div class="empty">در حال بارگذاری...</div></div>
   </div>
 </div>
@@ -71,6 +84,7 @@
   const storesWrap = document.getElementById("storesWrap");
   const batchesWrap = document.getElementById("batchesWrap");
   const storeBtn = document.getElementById("storeBtn");
+  let searchTimer = null;
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -83,34 +97,15 @@
     alertEl.classList.add("show");
   }
 
-  async function loadAll() {
-    const query = `
-      query AdminOverview {
-        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
-        approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
-        sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
-        stores(order_by: { name: asc }) { id name region is_active }
-        recent: expiry_batches(order_by: { created_at: desc }, limit: 15) {
-          id product_name quantity unit expiry_date status store { name }
-        }
-      }
-    `;
-    const data = await nhGql(query, {}, session.token);
-
-    statGrid.innerHTML = `
-      <div class="stat-card"><span class="num">${data.stores.length}</span><span class="lbl">فروشگاه ثبت‌شده</span></div>
-      <div class="stat-card"><span class="num">${data.draft.aggregate.count}</span><span class="lbl">${STATUS_LABEL.draft}</span></div>
-      <div class="stat-card"><span class="num">${data.approved.aggregate.count}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
-      <div class="stat-card"><span class="num">${data.sold.aggregate.count}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
-    `;
-
-    storesWrap.innerHTML = data.stores.length ? `
+  function renderStoresTable(stores) {
+    storesWrap.innerHTML = stores.length ? `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>نام</th><th>منطقه</th><th>وضعیت</th></tr></thead>
+        <thead><tr><th>کد</th><th>نام</th><th>منطقه</th><th>وضعیت</th></tr></thead>
         <tbody>
-          ${data.stores.map(s => `
+          ${stores.map(s => `
             <tr>
+              <td class="num">${s.store_code || "—"}</td>
               <td>${s.name}</td>
               <td>${s.region}</td>
               <td>${s.is_active ? '<span class="stamp stamp-approved">فعال</span>' : '<span class="stamp stamp-rejected">غیرفعال</span>'}</td>
@@ -119,14 +114,53 @@
         </tbody>
       </table>
       </div>
-    ` : '<div class="empty">هنوز فروشگاهی ثبت نشده است.</div>';
+    ` : '<div class="empty">فروشگاهی با این مشخصات یافت نشد.</div>';
+  }
 
-    batchesWrap.innerHTML = data.recent.length ? `
+  async function searchStores(term) {
+    const query = term ? `
+      query SearchStores($q: String!) {
+        stores(
+          where: { _or: [{ name: { _ilike: $q } }, { region: { _ilike: $q } }, { store_code: { _ilike: $q } }] }
+          order_by: { name: asc }
+          limit: 30
+        ) { id store_code name region is_active }
+      }
+    ` : `
+      query FirstStores {
+        stores(order_by: { name: asc }, limit: 30) { id store_code name region is_active }
+      }
+    `;
+    try {
+      const data = await nhGql(query, term ? { q: `%${term}%` } : {}, session.token);
+      renderStoresTable(data.stores);
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  document.getElementById("storeSearch").addEventListener("input", (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => searchStores(e.target.value.trim()), 300);
+  });
+
+  async function loadBatches() {
+    const status = document.getElementById("statusFilter").value;
+    const whereClause = status ? `where: { status: { _eq: "${status}" } }` : "";
+    const query = `
+      query RecentBatches {
+        expiry_batches(${whereClause} order_by: { created_at: desc }, limit: 30) {
+          id product_name quantity unit expiry_date status store { name }
+        }
+      }
+    `;
+    const data = await nhGql(query, {}, session.token);
+    batchesWrap.innerHTML = data.expiry_batches.length ? `
       <div class="table-wrap">
       <table>
         <thead><tr><th>کالا</th><th>فروشگاه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
         <tbody>
-          ${data.recent.map(b => `
+          ${data.expiry_batches.map(b => `
             <tr>
               <td>${b.product_name}</td>
               <td>${b.store.name}</td>
@@ -138,7 +172,27 @@
         </tbody>
       </table>
       </div>
-    ` : '<div class="empty">هنوز کالایی ثبت نشده است.</div>';
+    ` : '<div class="empty">با این فیلتر کالایی یافت نشد.</div>';
+  }
+
+  document.getElementById("statusFilter").addEventListener("change", loadBatches);
+
+  async function loadStats() {
+    const query = `
+      query AdminStats {
+        stores_aggregate { aggregate { count } }
+        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
+        approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
+        sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+      }
+    `;
+    const data = await nhGql(query, {}, session.token);
+    statGrid.innerHTML = `
+      <div class="stat-card"><span class="num">${data.stores_aggregate.aggregate.count}</span><span class="lbl">فروشگاه ثبت‌شده</span></div>
+      <div class="stat-card"><span class="num">${data.draft.aggregate.count}</span><span class="lbl">${STATUS_LABEL.draft}</span></div>
+      <div class="stat-card"><span class="num">${data.approved.aggregate.count}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
+      <div class="stat-card"><span class="num">${data.sold.aggregate.count}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+    `;
   }
 
   document.getElementById("storeForm").addEventListener("submit", async (e) => {
@@ -159,7 +213,7 @@
         address: document.getElementById("s_address").value.trim() || null
       }, session.token);
       document.getElementById("storeForm").reset();
-      await loadAll();
+      await Promise.all([loadStats(), searchStores(document.getElementById("storeSearch").value.trim())]);
     } catch (err) {
       showError(err.message);
     } finally {
@@ -168,7 +222,7 @@
     }
   });
 
-  loadAll().catch(err => showError(err.message));
+  Promise.all([loadStats(), searchStores(""), loadBatches()]).catch(err => showError(err.message));
 </script>
 
 </body>
