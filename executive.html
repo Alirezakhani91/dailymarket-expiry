@@ -32,6 +32,19 @@
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">آخرین رویدادها</h2>
+    <div class="filter-bar">
+      <input type="text" id="textSearch" placeholder="جست‌وجو در نام کالا یا فروشگاه...">
+      <select id="statusFilter">
+        <option value="">همه‌ی وضعیت‌ها</option>
+        <option value="draft">پیش‌نویس</option>
+        <option value="needs_correction">نیاز به اصلاح</option>
+        <option value="approved">تأییدشده</option>
+        <option value="sold">فروخته‌شده</option>
+        <option value="rejected">ردشده</option>
+      </select>
+      <select id="regionFilter"><option value="">همه‌ی مناطق</option></select>
+      <span class="filter-count" id="filterCount"></span>
+    </div>
     <div id="listWrap"><div class="empty">در حال بارگذاری...</div></div>
   </div>
 </div>
@@ -39,6 +52,7 @@
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["executive_manager"]);
+  let allRecent = [];
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
   const alertEl = document.getElementById("alert");
@@ -64,7 +78,7 @@
         approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
         sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
         rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
-        recent: expiry_batches(order_by: { created_at: desc }, limit: 20) {
+        recent: expiry_batches(order_by: { created_at: desc }, limit: 100) {
           id product_name quantity unit expiry_date status store { name region }
         }
       }
@@ -78,9 +92,33 @@
       </div>
     `).join("");
 
-    const rows = data.recent;
+    allRecent = data.recent;
+
+    const regions = [...new Set(allRecent.map(b => b.store.region))].sort();
+    const regionSelect = document.getElementById("regionFilter");
+    regionSelect.innerHTML = '<option value="">همه‌ی مناطق</option>' +
+      regions.map(r => `<option value="${r}">${r}</option>`).join("");
+
+    renderRecent();
+  }
+
+  function renderRecent() {
+    const term = document.getElementById("textSearch").value.trim();
+    const status = document.getElementById("statusFilter").value;
+    const region = document.getElementById("regionFilter").value;
+
+    let rows = allRecent;
+    if (status) rows = rows.filter(b => b.status === status);
+    if (region) rows = rows.filter(b => b.store.region === region);
+    if (term) rows = rows.filter(b => b.product_name.includes(term) || b.store.name.includes(term));
+
+    document.getElementById("filterCount").textContent =
+      allRecent.length ? `${rows.length} از ${allRecent.length}` : "";
+
     if (!rows.length) {
-      listWrap.innerHTML = '<div class="empty">هنوز رویدادی ثبت نشده است.</div>';
+      listWrap.innerHTML = allRecent.length
+        ? '<div class="empty">با این فیلتر رویدادی یافت نشد.</div>'
+        : '<div class="empty">هنوز رویدادی ثبت نشده است.</div>';
       return;
     }
     listWrap.innerHTML = `
@@ -103,6 +141,10 @@
       </div>
     `;
   }
+
+  document.getElementById("textSearch").addEventListener("input", renderRecent);
+  document.getElementById("statusFilter").addEventListener("change", renderRecent);
+  document.getElementById("regionFilter").addEventListener("change", renderRecent);
 
   loadOverview().catch(err => showError(err.message));
 </script>
