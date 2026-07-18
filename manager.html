@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیر منطقه | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-group">
+    <div class="mark"><span>DM</span></div>
+    <div class="brand-name">dailymarket-expiry<small>سامانه مدیریت کالای نزدیک به انقضا</small></div>
+  </div>
+  <div class="right">
+    <span class="pill">مدیر منطقه</span>
+    <span class="context-label" id="regionLabel">در حال بارگذاری...</span>
+    <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>بررسی پیش‌نویس‌های منطقه</h1>
+    <p>کالاهایی که اپراتورهای فروشگاه‌های این منطقه ثبت کرده‌اند.</p>
+  </div>
+
+  <div id="alert" class="alert alert-error"></div>
+
+  <div class="card">
+    <div id="listWrap"><div class="empty">در حال بارگذاری فهرست...</div></div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const session = nhRequireRole(["region_manager"]);
+  let myRegion = null;
+
+  document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
+
+  const alertEl = document.getElementById("alert");
+  const regionLabel = document.getElementById("regionLabel");
+  const listWrap = document.getElementById("listWrap");
+
+  function showError(message) {
+    if (message === "SESSION_EXPIRED") {
+      alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
+      alertEl.classList.add("show");
+      setTimeout(nhLogout, 1500);
+      return;
+    }
+    alertEl.textContent = "خطا: " + message;
+    alertEl.classList.add("show");
+  }
+
+  async function loadMyRegion() {
+    const query = `
+      query MyRole($user_id: uuid!) {
+        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) { region }
+      }
+    `;
+    const data = await nhGql(query, { user_id: session.userId }, session.token);
+    if (!data.user_roles.length) {
+      regionLabel.textContent = "منطقه‌ای برای این حساب ثبت نشده";
+      return;
+    }
+    myRegion = data.user_roles[0].region;
+    regionLabel.textContent = "منطقه: " + myRegion;
+    await loadBatches();
+  }
+
+  async function loadBatches() {
+    const query = `
+      query PendingBatches($region: String!) {
+        expiry_batches(
+          where: {
+            status: { _in: ["draft", "needs_correction"] }
+            store: { region: { _eq: $region } }
+          }
+          order_by: { created_at: asc }
+        ) {
+          id product_name quantity unit expiry_date discount_percent status
+          store { name }
+        }
+      }
+    `;
+    const data = await nhGql(query, { region: myRegion }, session.token);
+    const rows = data.expiry_batches;
+    if (!rows.length) {
+      listWrap.innerHTML = '<div class="empty">در حال حاضر پیش‌نویسی برای بررسی وجود ندارد.</div>';
+      return;
+    }
+    listWrap.innerHTML = rows.map(b => `
+      <div class="review-item" data-id="${b.id}">
+        <div class="row1">
+          <div>
+            <div class="product">${b.product_name}</div>
+            <div class="meta">${b.store.name} · ${b.quantity} ${b.unit} · انقضا: ${b.expiry_date} · تخفیف پیشنهادی: ${b.discount_percent}٪</div>
+          </div>
+          <span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <textarea rows="2" placeholder="یادداشت بررسی (اختیاری برای تأیید، الزامی برای رد یا اصلاح)" class="note-input"></textarea>
+        </div>
+        <div class="review-actions">
+          <button class="btn btn-success btn-sm" data-action="approved">تأیید</button>
+          <button class="btn btn-outline btn-sm" data-action="needs_correction">نیاز به اصلاح</button>
+          <button class="btn btn-danger btn-sm" data-action="rejected">رد</button>
+        </div>
+      </div>
+    `).join("");
+
+    listWrap.querySelectorAll(".review-item").forEach(item => {
+      item.querySelectorAll("button[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => reviewBatch(item, btn.dataset.action));
+      });
+    });
+  }
+
+  async function reviewBatch(item, action) {
+    const id = item.dataset.id;
+    const note = item.querySelector(".note-input").value.trim();
+
+    if (action !== "approved" && !note) {
+      showError("برای رد یا درخواست اصلاح، نوشتن یادداشت بررسی الزامی است.");
+      return;
+    }
+
+    const buttons = item.querySelectorAll("button");
+    buttons.forEach(b => b.disabled = true);
+
+    const mutation = `
+      mutation ReviewBatch($id: uuid!, $status: String!, $note: String, $reviewer: uuid!) {
+        update_expiry_batches_by_pk(
+          pk_columns: { id: $id }
+          _set: { status: $status, review_note: $note, reviewed_by: $reviewer }
+        ) { id }
+      }
+    `;
+
+    try {
+      await nhGql(mutation, { id, status: action, note: note || null, reviewer: session.userId }, session.token);
+      await loadBatches();
+    } catch (err) {
+      showError(err.message);
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+
+  loadMyRegion().catch(err => showError(err.message));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیر ارشد | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-group">
+    <div class="mark"><span>DM</span></div>
+    <div class="brand-name">dailymarket-expiry<small>سامانه مدیریت کالای نزدیک به انقضا</small></div>
+  </div>
+  <div class="right">
+    <span class="pill">مدیر ارشد</span>
+    <span class="context-label">دسترسی فقط‌مشاهده</span>
+    <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>نمای کلی وضعیت کالاها</h1>
+    <p>گزارش لحظه‌ای از تمام فروشگاه‌ها و مناطق.</p>
+  </div>
+
+  <div id="alert" class="alert alert-error"></div>
+
+  <div class="stat-grid" id="statGrid"></div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">آخرین رویدادها</h2>
+    <div id="listWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const session = nhRequireRole(["executive_manager"]);
+  document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
+
+  const alertEl = document.getElementById("alert");
+  const listWrap = document.getElementById("listWrap");
+  const statGrid = document.getElementById("statGrid");
+
+  function showError(message) {
+    if (message === "SESSION_EXPIRED") {
+      alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
+      alertEl.classList.add("show");
+      setTimeout(nhLogout, 1500);
+      return;
+    }
+    alertEl.textContent = "خطا: " + message;
+    alertEl.classList.add("show");
+  }
+
+  async function loadOverview() {
+    const query = `
+      query Overview {
+        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
+        needs_correction: expiry_batches_aggregate(where: { status: { _eq: "needs_correction" } }) { aggregate { count } }
+        approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
+        sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+        rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
+        recent: expiry_batches(order_by: { created_at: desc }, limit: 20) {
+          id product_name quantity unit expiry_date status store { name region }
+        }
+      }
+    `;
+    const data = await nhGql(query, {}, session.token);
+
+    statGrid.innerHTML = ["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
+      <div class="stat-card">
+        <span class="num">${data[k].aggregate.count}</span>
+        <span class="lbl">${STATUS_LABEL[k]}</span>
+      </div>
+    `).join("");
+
+    const rows = data.recent;
+    if (!rows.length) {
+      listWrap.innerHTML = '<div class="empty">هنوز رویدادی ثبت نشده است.</div>';
+      return;
+    }
+    listWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>کالا</th><th>فروشگاه</th><th>منطقه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+        <tbody>
+          ${rows.map(b => `
+            <tr>
+              <td>${b.product_name}</td>
+              <td>${b.store.name}</td>
+              <td>${b.store.region}</td>
+              <td class="num">${b.quantity} ${b.unit}</td>
+              <td class="num">${b.expiry_date}</td>
+              <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+  }
+
+  loadOverview().catch(err => showError(err.message));
+</script>
+
+</body>
+</html>

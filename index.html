@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="center-screen">
+  <div class="splash">
+    <div class="mark"><span>DM</span></div>
+    <h1>dailymarket-expiry</h1>
+    <p>مدیریت کالاهای نزدیک به تاریخ انقضا</p>
+    <div class="loader" id="loader"></div>
+    <p id="fallback" style="display:none; margin-top:18px;">
+      <a class="btn btn-primary" href="login.html">ورود به سامانه</a>
+    </p>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const session = nhSession();
+
+  setTimeout(() => {
+    window.location.href = session ? (ROLE_HOME[session.role] || "login.html") : "login.html";
+  }, 500);
+
+  // اگر به هر دلیلی ریدایرکت خودکار انجام نشد
+  setTimeout(() => {
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("fallback").style.display = "block";
+  }, 2500);
+</script>
+
+</body>
+</html>

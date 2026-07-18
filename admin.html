@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیر سیستم | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-group">
+    <div class="mark"><span>DM</span></div>
+    <div class="brand-name">dailymarket-expiry<small>سامانه مدیریت کالای نزدیک به انقضا</small></div>
+  </div>
+  <div class="right">
+    <span class="pill">مدیر سیستم</span>
+    <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>مدیریت سامانه</h1>
+    <p>فروشگاه‌ها، نقش‌های کاربری و نمای کلی کالاها.</p>
+  </div>
+
+  <div id="alert" class="alert alert-error"></div>
+
+  <div class="stat-grid" id="statGrid"></div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">افزودن فروشگاه جدید</h2>
+    <form id="storeForm">
+      <div class="field-row">
+        <div class="field">
+          <label for="s_name">نام فروشگاه</label>
+          <input type="text" id="s_name" required>
+        </div>
+        <div class="field">
+          <label for="s_region">منطقه</label>
+          <input type="text" id="s_region" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="s_address">آدرس</label>
+        <input type="text" id="s_address">
+      </div>
+      <button type="submit" id="storeBtn" class="btn btn-primary">افزودن فروشگاه</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">فهرست فروشگاه‌ها</h2>
+    <div id="storesWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">آخرین کالاهای ثبت‌شده</h2>
+    <div id="batchesWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const session = nhRequireRole(["system_admin"]);
+  document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
+
+  const alertEl = document.getElementById("alert");
+  const statGrid = document.getElementById("statGrid");
+  const storesWrap = document.getElementById("storesWrap");
+  const batchesWrap = document.getElementById("batchesWrap");
+  const storeBtn = document.getElementById("storeBtn");
+
+  function showError(message) {
+    if (message === "SESSION_EXPIRED") {
+      alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
+      alertEl.classList.add("show");
+      setTimeout(nhLogout, 1500);
+      return;
+    }
+    alertEl.textContent = "خطا: " + message;
+    alertEl.classList.add("show");
+  }
+
+  async function loadAll() {
+    const query = `
+      query AdminOverview {
+        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
+        approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
+        sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+        stores(order_by: { name: asc }) { id name region is_active }
+        recent: expiry_batches(order_by: { created_at: desc }, limit: 15) {
+          id product_name quantity unit expiry_date status store { name }
+        }
+      }
+    `;
+    const data = await nhGql(query, {}, session.token);
+
+    statGrid.innerHTML = `
+      <div class="stat-card"><span class="num">${data.stores.length}</span><span class="lbl">فروشگاه ثبت‌شده</span></div>
+      <div class="stat-card"><span class="num">${data.draft.aggregate.count}</span><span class="lbl">${STATUS_LABEL.draft}</span></div>
+      <div class="stat-card"><span class="num">${data.approved.aggregate.count}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
+      <div class="stat-card"><span class="num">${data.sold.aggregate.count}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+    `;
+
+    storesWrap.innerHTML = data.stores.length ? `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>نام</th><th>منطقه</th><th>وضعیت</th></tr></thead>
+        <tbody>
+          ${data.stores.map(s => `
+            <tr>
+              <td>${s.name}</td>
+              <td>${s.region}</td>
+              <td>${s.is_active ? '<span class="stamp stamp-approved">فعال</span>' : '<span class="stamp stamp-rejected">غیرفعال</span>'}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    ` : '<div class="empty">هنوز فروشگاهی ثبت نشده است.</div>';
+
+    batchesWrap.innerHTML = data.recent.length ? `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>کالا</th><th>فروشگاه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+        <tbody>
+          ${data.recent.map(b => `
+            <tr>
+              <td>${b.product_name}</td>
+              <td>${b.store.name}</td>
+              <td class="num">${b.quantity} ${b.unit}</td>
+              <td class="num">${b.expiry_date}</td>
+              <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    ` : '<div class="empty">هنوز کالایی ثبت نشده است.</div>';
+  }
+
+  document.getElementById("storeForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    storeBtn.disabled = true;
+    storeBtn.textContent = "در حال افزودن...";
+
+    const mutation = `
+      mutation AddStore($name: String!, $region: String!, $address: String) {
+        insert_stores_one(object: { name: $name, region: $region, address: $address, is_active: true }) { id }
+      }
+    `;
+
+    try {
+      await nhGql(mutation, {
+        name: document.getElementById("s_name").value.trim(),
+        region: document.getElementById("s_region").value.trim(),
+        address: document.getElementById("s_address").value.trim() || null
+      }, session.token);
+      document.getElementById("storeForm").reset();
+      await loadAll();
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      storeBtn.disabled = false;
+      storeBtn.textContent = "افزودن فروشگاه";
+    }
+  });
+
+  loadAll().catch(err => showError(err.message));
+</script>
+
+</body>
+</html>

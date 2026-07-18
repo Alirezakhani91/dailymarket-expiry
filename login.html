@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ورود | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="center-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="mark"><span>DM</span></div>
+      <div>
+        <h1>dailymarket-expiry</h1>
+        <p>ورود به سامانه</p>
+      </div>
+    </div>
+
+    <div id="alert" class="alert alert-error"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">ایمیل کاری</label>
+        <input type="email" id="email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">رمز عبور</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-block">ورود</button>
+    </form>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const form = document.getElementById("loginForm");
+  const alertEl = document.getElementById("alert");
+  const submitBtn = document.getElementById("submitBtn");
+
+  const existing = nhSession();
+  if (existing) {
+    window.location.href = ROLE_HOME[existing.role] || "login.html";
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    alertEl.classList.remove("show");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "در حال ورود...";
+
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("password").value
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "ورود ناموفق بود");
+      }
+
+      sessionStorage.setItem("nhost_access_token", data.session.accessToken);
+      sessionStorage.setItem("nhost_user_id", data.session.user.id);
+      sessionStorage.setItem("nhost_default_role", data.session.user.defaultRole);
+
+      window.location.href = ROLE_HOME[data.session.user.defaultRole] || "index.html";
+
+    } catch (err) {
+      alertEl.textContent = nhFriendlyAuthError(err.message);
+      alertEl.classList.add("show");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "ورود";
+    }
+  });
+</script>
+
+</body>
+</html>
