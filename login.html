@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ورود | dailymarket-expiry</title>
+<style>
+  body {
+    font-family: Tahoma, Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 24px;
+    direction: rtl;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  .box {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 380px;
+    margin-top: 60px;
+  }
+  h1 { color: #1a1a2e; font-size: 20px; margin-bottom: 20px; }
+  label { display: block; margin-bottom: 6px; font-weight: bold; color: #333; }
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    direction: ltr;
+  }
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:disabled { background: #999; }
+  .status {
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: none;
+  }
+  .status.error { background: #f8d7da; color: #721c24; display: block; }
+  .status.success { background: #d4edda; color: #155724; display: block; }
+  .info {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #555;
+    background: #f0f0f5;
+    padding: 12px;
+    border-radius: 8px;
+    word-break: break-all;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h1>ورود به سامانه dailymarket-expiry</h1>
+  <form id="loginForm">
+    <label for="email">ایمیل</label>
+    <input type="email" id="email" required placeholder="operator1@test.com">
+    <label for="password">رمز عبور</label>
+    <input type="password" id="password" required>
+    <button type="submit" id="submitBtn">ورود</button>
+  </form>
+  <div id="status" class="status"></div>
+  <div id="info" class="info"></div>
+</div>
+
+<script>
+  const SUBDOMAIN = "wijabqjyryslediitcrc";
+  const REGION = "eu-central-1";
+  const AUTH_URL = `https://${SUBDOMAIN}.auth.${REGION}.nhost.run/v1/signin/email-password`;
+
+  const form = document.getElementById("loginForm");
+  const statusEl = document.getElementById("status");
+  const infoEl = document.getElementById("info");
+  const submitBtn = document.getElementById("submitBtn");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    statusEl.className = "status";
+    statusEl.textContent = "";
+    infoEl.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "در حال ورود...";
+
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "ورود ناموفق بود");
+      }
+
+      const accessToken = data.session.accessToken;
+      const defaultRole = data.session.user.defaultRole;
+      const userId = data.session.user.id;
+
+      // ذخیره برای استفاده در صفحات بعدی
+      sessionStorage.setItem("nhost_access_token", accessToken);
+      sessionStorage.setItem("nhost_user_id", userId);
+      sessionStorage.setItem("nhost_default_role", defaultRole);
+
+      statusEl.className = "status success";
+      statusEl.textContent = `ورود موفق! نقش: ${defaultRole}`;
+
+      infoEl.style.display = "block";
+      infoEl.innerHTML = `
+        <strong>User ID:</strong> ${userId}<br>
+        <strong>Default Role:</strong> ${defaultRole}<br>
+        <strong>Token (بخشی):</strong> ${accessToken.substring(0, 40)}...
+      `;
+
+    } catch (err) {
+      statusEl.className = "status error";
+      statusEl.textContent = "خطا: " + err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "ورود";
+    }
+  });
+</script>
+
+</body>
+</html>
