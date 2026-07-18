@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dailymarket-expiry | تست اتصال</title>
+<style>
+  body {
+    font-family: Tahoma, Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 24px;
+    direction: rtl;
+  }
+  h1 { color: #1a1a2e; }
+  .status {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-weight: bold;
+  }
+  .status.loading { background: #fff3cd; color: #856404; }
+  .status.error { background: #f8d7da; color: #721c24; }
+  .status.success { background: #d4edda; color: #155724; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+  }
+  th { background: #1a1a2e; color: white; }
+</style>
+</head>
+<body>
+
+<h1>لیست فروشگاه‌ها — dailymarket-expiry</h1>
+<div id="status" class="status loading">در حال اتصال به سرور...</div>
+<table id="storesTable" style="display:none;">
+  <thead>
+    <tr><th>نام فروشگاه</th><th>منطقه</th><th>آدرس</th><th>فعال</th></tr>
+  </thead>
+  <tbody id="storesBody"></tbody>
+</table>
+
+<script>
+  const SUBDOMAIN = "wijabqjyryslediitcrc";
+  const REGION = "eu-central-1";
+  const GRAPHQL_URL = `https://${SUBDOMAIN}.graphql.${REGION}.nhost.run/v1`;
+
+  const statusEl = document.getElementById("status");
+  const tableEl = document.getElementById("storesTable");
+  const bodyEl = document.getElementById("storesBody");
+
+  const query = `
+    query GetStores {
+      stores {
+        id
+        name
+        region
+        address
+        is_active
+      }
+    }
+  `;
+
+  fetch(GRAPHQL_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
+  })
+    .then(res => res.json())
+    .then(json => {
+      if (json.errors) {
+        statusEl.className = "status error";
+        statusEl.textContent = "خطای GraphQL: " + json.errors[0].message;
+        return;
+      }
+      const stores = json.data.stores;
+      statusEl.className = "status success";
+      statusEl.textContent = `اتصال موفق! تعداد فروشگاه‌ها: ${stores.length}`;
+      tableEl.style.display = "table";
+      bodyEl.innerHTML = stores.map(s => `
+        <tr>
+          <td>${s.name}</td>
+          <td>${s.region}</td>
+          <td>${s.address ?? "-"}</td>
+          <td>${s.is_active ? "بله" : "خیر"}</td>
+        </tr>
+      `).join("");
+    })
+    .catch(err => {
+      statusEl.className = "status error";
+      statusEl.textContent = "خطا در اتصال: " + err.message;
+    });
+</script>
+
+</body>
+</html>
