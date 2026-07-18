@@ -84,6 +84,7 @@
   let myStoreId = null;
   let selectedProductId = null;
   let selectedProductName = null;
+  let selectedProductGroup = null;
   let allBatches = [];
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
@@ -140,14 +141,14 @@
       return;
     }
     resultsBox.innerHTML = items.map(p => `
-      <div class="search-item" data-id="${p.id}" data-name="${p.name.replace(/"/g, "&quot;")}">
+      <div class="search-item" data-id="${p.id}" data-name="${p.name.replace(/"/g, "&quot;")}" data-group="${(p.product_group || "").replace(/"/g, "&quot;")}">
         <span class="search-item-name">${p.name}</span>
         <span class="search-item-meta">${p.product_group ? p.product_group + " · " : ""}${p.barcode}</span>
       </div>
     `).join("");
     resultsBox.classList.add("show");
     resultsBox.querySelectorAll(".search-item").forEach(el => {
-      el.addEventListener("click", () => selectProduct(el.dataset.id, el.dataset.name));
+      el.addEventListener("click", () => selectProduct(el.dataset.id, el.dataset.name, el.dataset.group));
     });
   }
 
@@ -179,9 +180,10 @@
     if (items[activeResultIndex]) items[activeResultIndex].scrollIntoView({ block: "nearest" });
   }
 
-  function selectProduct(id, name) {
+  function selectProduct(id, name, group) {
     selectedProductId = id;
     selectedProductName = name;
+    selectedProductGroup = group || null;
     searchInput.value = "";
     resultsBox.innerHTML = "";
     resultsBox.classList.remove("show");
@@ -196,6 +198,7 @@
   function clearProduct() {
     selectedProductId = null;
     selectedProductName = null;
+    selectedProductGroup = null;
     selectedBox.innerHTML = "";
     selectedBox.classList.remove("show");
   }
@@ -295,11 +298,11 @@
 
     const mutation = `
       mutation InsertBatch(
-        $store_id: uuid!, $product_id: uuid!, $product_name: String!, $quantity: numeric!,
+        $store_id: uuid!, $product_id: uuid!, $product_name: String!, $product_group: String, $quantity: numeric!,
         $unit: String!, $expiry_date: date!, $discount_percent: numeric, $created_by: uuid!
       ) {
         insert_expiry_batches_one(object: {
-          store_id: $store_id, product_id: $product_id, product_name: $product_name, quantity: $quantity,
+          store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group, quantity: $quantity,
           unit: $unit, expiry_date: $expiry_date, discount_percent: $discount_percent,
           created_by: $created_by, status: "draft"
         }) { id }
@@ -311,6 +314,7 @@
         store_id: myStoreId,
         product_id: selectedProductId,
         product_name: selectedProductName,
+        product_group: selectedProductGroup,
         quantity: parseFloat(document.getElementById("quantity").value),
         unit: document.getElementById("unit").value.trim(),
         expiry_date: document.getElementById("expiry_date").value,
