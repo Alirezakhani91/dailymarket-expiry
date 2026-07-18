@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ثبت محصول | dailymarket-expiry</title>
+<style>
+  body {
+    font-family: Tahoma, Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 24px;
+    direction: rtl;
+    display: flex;
+    justify-content: center;
+  }
+  .box {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 460px;
+    margin-top: 20px;
+  }
+  h1 { color: #1a1a2e; font-size: 20px; margin-bottom: 6px; }
+  .substore { color: #555; font-size: 13px; margin-bottom: 20px; }
+  label { display: block; margin-bottom: 6px; font-weight: bold; color: #333; font-size: 14px; }
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:disabled { background: #999; }
+  .status {
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: none;
+  }
+  .status.error { background: #f8d7da; color: #721c24; display: block; }
+  .status.success { background: #d4edda; color: #155724; display: block; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+  th, td { padding: 8px; text-align: right; border-bottom: 1px solid #eee; }
+  th { background: #1a1a2e; color: white; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    background: #fff3cd;
+    color: #856404;
+  }
+  .top-bar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; }
+  .top-bar a { font-size: 13px; color: #555; }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <div class="top-bar">
+    <h1>ثبت محصول جدید (پیش‌نویس)</h1>
+    <a href="login.html">خروج</a>
+  </div>
+  <div class="substore" id="substore">در حال بارگذاری اطلاعات فروشگاه...</div>
+
+  <form id="productForm">
+    <label>نام محصول</label>
+    <input type="text" id="product_name" required>
+
+    <label>تعداد / مقدار</label>
+    <input type="number" id="quantity" required min="0" step="0.01">
+
+    <label>واحد (مثلاً عدد، کیلوگرم، بسته)</label>
+    <input type="text" id="unit" required>
+
+    <label>تاریخ انقضا</label>
+    <input type="date" id="expiry_date" required>
+
+    <label>درصد تخفیف پیشنهادی</label>
+    <input type="number" id="discount_percent" min="0" max="100" step="1" value="0">
+
+    <button type="submit" id="submitBtn">ثبت پیش‌نویس</button>
+  </form>
+
+  <div id="status" class="status"></div>
+
+  <table id="batchesTable" style="display:none;">
+    <thead>
+      <tr><th>محصول</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr>
+    </thead>
+    <tbody id="batchesBody"></tbody>
+  </table>
+</div>
+
+<script>
+  const SUBDOMAIN = "wijabqjyryslediitcrc";
+  const REGION = "eu-central-1";
+  const GRAPHQL_URL = `https://${SUBDOMAIN}.graphql.${REGION}.nhost.run/v1`;
+
+  const token = sessionStorage.getItem("nhost_access_token");
+  const userId = sessionStorage.getItem("nhost_user_id");
+
+  if (!token || !userId) {
+    window.location.href = "login.html";
+  }
+
+  const substoreEl = document.getElementById("substore");
+  const statusEl = document.getElementById("status");
+  const submitBtn = document.getElementById("submitBtn");
+  const batchesTable = document.getElementById("batchesTable");
+  const batchesBody = document.getElementById("batchesBody");
+
+  let myStoreId = null;
+
+  async function gql(query, variables) {
+    const res = await fetch(GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ query, variables })
+    });
+    const json = await res.json();
+    if (json.errors) {
+      throw new Error(json.errors[0].message);
+    }
+    return json.data;
+  }
+
+  async function loadMyStore() {
+    const query = `
+      query MyRole($user_id: uuid!) {
+        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) {
+          store_id
+          role
+          stores { name region }
+        }
+      }
+    `;
+    const data = await gql(query, { user_id: userId });
+    if (!data.user_roles.length) {
+      substoreEl.textContent = "هیچ فروشگاهی برای این کاربر ثبت نشده است.";
+      submitBtn.disabled = true;
+      return;
+    }
+    myStoreId = data.user_roles[0].store_id;
+    const storeName = data.user_roles[0].stores.name;
+    const region = data.user_roles[0].stores.region;
+    substoreEl.textContent = `فروشگاه: ${storeName} — منطقه: ${region}`;
+    loadBatches();
+  }
+
+  async function loadBatches() {
+    const query = `
+      query MyBatches($store_id: uuid!) {
+        expiry_batches(
+          where: { store_id: { _eq: $store_id } }
+          order_by: { created_at: desc }
+          limit: 10
+        ) {
+          id
+          product_name
+          quantity
+          unit
+          expiry_date
+          status
+        }
+      }
+    `;
+    const data = await gql(query, { store_id: myStoreId });
+    const batches = data.expiry_batches;
+    if (!batches.length) return;
+    batchesTable.style.display = "table";
+    batchesBody.innerHTML = batches.map(b => `
+      <tr>
+        <td>${b.product_name}</td>
+        <td>${b.quantity} ${b.unit}</td>
+        <td>${b.expiry_date}</td>
+        <td><span class="badge">${b.status}</span></td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("productForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!myStoreId) return;
+
+    statusEl.className = "status";
+    statusEl.textContent = "";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "در حال ثبت...";
+
+    const mutation = `
+      mutation InsertBatch(
+        $store_id: uuid!
+        $product_name: String!
+        $quantity: numeric!
+        $unit: String!
+        $expiry_date: date!
+        $discount_percent: numeric
+        $created_by: uuid!
+      ) {
+        insert_expiry_batches_one(object: {
+          store_id: $store_id
+          product_name: $product_name
+          quantity: $quantity
+          unit: $unit
+          expiry_date: $expiry_date
+          discount_percent: $discount_percent
+          created_by: $created_by
+          status: "draft"
+        }) {
+          id
+        }
+      }
+    `;
+
+    try {
+      await gql(mutation, {
+        store_id: myStoreId,
+        product_name: document.getElementById("product_name").value.trim(),
+        quantity: parseFloat(document.getElementById("quantity").value),
+        unit: document.getElementById("unit").value.trim(),
+        expiry_date: document.getElementById("expiry_date").value,
+        discount_percent: parseFloat(document.getElementById("discount_percent").value) || 0,
+        created_by: userId
+      });
+
+      statusEl.className = "status success";
+      statusEl.textContent = "محصول با موفقیت به‌صورت پیش‌نویس ثبت شد.";
+      document.getElementById("productForm").reset();
+      loadBatches();
+
+    } catch (err) {
+      statusEl.className = "status error";
+      statusEl.textContent = "خطا: " + err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "ثبت پیش‌نویس";
+    }
+  });
+
+  loadMyStore().catch(err => {
+    substoreEl.textContent = "خطا در بارگذاری اطلاعات فروشگاه: " + err.message;
+  });
+</script>
+
+</body>
+</html>
