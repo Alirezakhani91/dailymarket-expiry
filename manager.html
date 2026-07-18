@@ -15,20 +15,30 @@
   </div>
   <div class="right">
     <span class="pill">مدیر منطقه</span>
-    <span class="context-label" id="regionLabel">در حال بارگذاری...</span>
+    <span class="context-label" id="managerLabel">در حال بارگذاری...</span>
     <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
   </div>
 </div>
 
 <div class="container">
   <div class="page-head">
-    <h1>بررسی پیش‌نویس‌های منطقه</h1>
-    <p>کالاهایی که اپراتورهای فروشگاه‌های این منطقه ثبت کرده‌اند.</p>
+    <h1>گزارش فروشگاه‌های تحت نظارت</h1>
+    <p>وضعیت کالاهای ثبت‌شده در تمام فروشگاه‌های شما، به تفکیک هر فروشگاه.</p>
   </div>
 
   <div id="alert" class="alert alert-error"></div>
 
   <div class="stat-grid" id="statGrid"></div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">گزارش فروشگاه‌ها</h2>
+    <div class="filter-bar">
+      <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
+      <label class="checkbox-inline"><input type="checkbox" id="onlyPending"> فقط دارای مورد در انتظار</label>
+      <span class="filter-count" id="reportCount"></span>
+    </div>
+    <div id="reportWrap"><div class="empty">در حال بارگذاری گزارش...</div></div>
+  </div>
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">در انتظار بررسی</h2>
@@ -43,15 +53,17 @@
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["region_manager"]);
-  let myRegion = null;
+  let myManagerName = null;
+  let storesReport = [];
   let allPending = [];
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
   const alertEl = document.getElementById("alert");
-  const regionLabel = document.getElementById("regionLabel");
-  const listWrap = document.getElementById("listWrap");
+  const managerLabel = document.getElementById("managerLabel");
   const statGrid = document.getElementById("statGrid");
+  const reportWrap = document.getElementById("reportWrap");
+  const listWrap = document.getElementById("listWrap");
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -64,49 +76,122 @@
     alertEl.classList.add("show");
   }
 
-  async function loadMyRegion() {
+  async function loadMyManager() {
     const query = `
       query MyRole($user_id: uuid!) {
-        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) { region }
+        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) { manager_name }
       }
     `;
     const data = await nhGql(query, { user_id: session.userId }, session.token);
-    if (!data.user_roles.length) {
-      regionLabel.textContent = "منطقه‌ای برای این حساب ثبت نشده";
+    if (!data.user_roles.length || !data.user_roles[0].manager_name) {
+      managerLabel.textContent = "نام مدیری برای این حساب ثبت نشده";
       return;
     }
-    myRegion = data.user_roles[0].region;
-    regionLabel.textContent = "منطقه: " + myRegion;
-    await Promise.all([loadRegionStats(), loadBatches()]);
+    myManagerName = data.user_roles[0].manager_name;
+    managerLabel.textContent = "مدیر منطقه: " + myManagerName;
+    await Promise.all([loadReport(), loadPending()]);
   }
 
-  async function loadRegionStats() {
+  async function loadReport() {
     const query = `
-      query RegionStats($region: String!) {
-        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" }, store: { region: { _eq: $region } } }) { aggregate { count } }
-        needs_correction: expiry_batches_aggregate(where: { status: { _eq: "needs_correction" }, store: { region: { _eq: $region } } }) { aggregate { count } }
-        approved: expiry_batches_aggregate(where: { status: { _eq: "approved" }, store: { region: { _eq: $region } } }) { aggregate { count } }
-        sold: expiry_batches_aggregate(where: { status: { _eq: "sold" }, store: { region: { _eq: $region } } }) { aggregate { count } }
-        rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" }, store: { region: { _eq: $region } } }) { aggregate { count } }
-        stores_aggregate(where: { region: { _eq: $region } }) { aggregate { count } }
+      query MyStoresReport($mgr: String!) {
+        stores(where: { region_manager_name: { _eq: $mgr } }, order_by: { name: asc }) {
+          id store_code name region
+          total: expiry_batches_aggregate { aggregate { count } }
+          draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
+          needs_correction: expiry_batches_aggregate(where: { status: { _eq: "needs_correction" } }) { aggregate { count } }
+          approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
+          sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+          rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
+        }
       }
     `;
-    const data = await nhGql(query, { region: myRegion }, session.token);
+    const data = await nhGql(query, { mgr: myManagerName }, session.token);
+    storesReport = data.stores.map(s => ({
+      id: s.id, store_code: s.store_code, name: s.name, region: s.region,
+      draft: s.draft.aggregate.count,
+      needs_correction: s.needs_correction.aggregate.count,
+      approved: s.approved.aggregate.count,
+      sold: s.sold.aggregate.count,
+      rejected: s.rejected.aggregate.count,
+      total: s.total.aggregate.count
+    }));
+
+    const sums = storesReport.reduce((acc, s) => {
+      acc.draft += s.draft; acc.needs_correction += s.needs_correction;
+      acc.approved += s.approved; acc.sold += s.sold; acc.rejected += s.rejected;
+      return acc;
+    }, { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 });
+
     statGrid.innerHTML = `
-      <div class="stat-card"><span class="num">${data.stores_aggregate.aggregate.count}</span><span class="lbl">فروشگاه این منطقه</span></div>
+      <div class="stat-card"><span class="num">${storesReport.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
       ${["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
-        <div class="stat-card"><span class="num">${data[k].aggregate.count}</span><span class="lbl">${STATUS_LABEL[k]}</span></div>
+        <div class="stat-card"><span class="num">${sums[k]}</span><span class="lbl">${STATUS_LABEL[k]}</span></div>
       `).join("")}
+    `;
+
+    renderReport();
+  }
+
+  function renderReport() {
+    const term = document.getElementById("reportSearch").value.trim();
+    const onlyPending = document.getElementById("onlyPending").checked;
+
+    let rows = storesReport;
+    if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
+    if (onlyPending) rows = rows.filter(s => s.draft + s.needs_correction > 0);
+
+    rows = [...rows].sort((a, b) => (b.draft + b.needs_correction) - (a.draft + a.needs_correction));
+
+    document.getElementById("reportCount").textContent =
+      storesReport.length ? `${rows.length} از ${storesReport.length} فروشگاه` : "";
+
+    if (!rows.length) {
+      reportWrap.innerHTML = storesReport.length
+        ? '<div class="empty">با این فیلتر فروشگاهی یافت نشد.</div>'
+        : '<div class="empty">فروشگاهی برای این مدیر ثبت نشده است.</div>';
+      return;
+    }
+
+    reportWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>کد</th><th>فروشگاه</th><th>منطقه</th>
+            <th>پیش‌نویس</th><th>اصلاح</th><th>تأیید</th><th>فروش</th><th>رد</th><th>مجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(s => `
+            <tr>
+              <td class="num">${s.store_code || "—"}</td>
+              <td>${s.name}</td>
+              <td>${s.region}</td>
+              <td class="num ${s.draft > 0 ? "cell-alert" : ""}">${s.draft}</td>
+              <td class="num ${s.needs_correction > 0 ? "cell-alert" : ""}">${s.needs_correction}</td>
+              <td class="num">${s.approved}</td>
+              <td class="num">${s.sold}</td>
+              <td class="num">${s.rejected}</td>
+              <td class="num">${s.total}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
     `;
   }
 
-  async function loadBatches() {
+  document.getElementById("reportSearch").addEventListener("input", renderReport);
+  document.getElementById("onlyPending").addEventListener("change", renderReport);
+
+  async function loadPending() {
     const query = `
-      query PendingBatches($region: String!) {
+      query PendingBatches($mgr: String!) {
         expiry_batches(
           where: {
             status: { _in: ["draft", "needs_correction"] }
-            store: { region: { _eq: $region } }
+            store: { region_manager_name: { _eq: $mgr } }
           }
           order_by: { created_at: asc }
         ) {
@@ -115,12 +200,12 @@
         }
       }
     `;
-    const data = await nhGql(query, { region: myRegion }, session.token);
+    const data = await nhGql(query, { mgr: myManagerName }, session.token);
     allPending = data.expiry_batches;
-    renderBatches();
+    renderPending();
   }
 
-  function renderBatches() {
+  function renderPending() {
     const term = document.getElementById("storeSearch").value.trim();
     const rows = term ? allPending.filter(b => b.store.name.includes(term)) : allPending;
 
@@ -160,7 +245,7 @@
     });
   }
 
-  document.getElementById("storeSearch").addEventListener("input", renderBatches);
+  document.getElementById("storeSearch").addEventListener("input", renderPending);
 
   async function reviewBatch(item, action) {
     const id = item.dataset.id;
@@ -185,14 +270,14 @@
 
     try {
       await nhGql(mutation, { id, status: action, note: note || null, reviewer: session.userId }, session.token);
-      await loadBatches();
+      await Promise.all([loadReport(), loadPending()]);
     } catch (err) {
       showError(err.message);
       buttons.forEach(b => b.disabled = false);
     }
   }
 
-  loadMyRegion().catch(err => showError(err.message));
+  loadMyManager().catch(err => showError(err.message));
 </script>
 
 </body>
