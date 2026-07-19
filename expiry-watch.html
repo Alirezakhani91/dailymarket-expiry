@@ -44,7 +44,7 @@
         <option value="group">بر اساس گروه کالایی</option>
       </select>
       <input type="text" id="search" placeholder="جست‌وجو در نام کالا/گروه...">
-      <label class="checkbox-inline"><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال (غیر از فروخته/ردشده)</label>
+      <label class="checkbox-inline"><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال (غیر از فروخته‌شده)</label>
       <span class="filter-count" id="rowCount"></span>
     </div>
     <div id="matrixWrap"><div class="empty">در حال بارگذاری...</div></div>
@@ -153,7 +153,7 @@
 
   function activeRows() {
     const onlyActive = document.getElementById("activeOnly").checked;
-    return onlyActive ? allBatches.filter(b => b.status !== "sold" && b.status !== "rejected") : allBatches;
+    return onlyActive ? allBatches.filter(b => b.status !== "sold") : allBatches;
   }
 
   function render() {
