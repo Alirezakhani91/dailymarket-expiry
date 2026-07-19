@@ -141,7 +141,7 @@
           order_by: { expiry_date: asc }
           limit: 5000
         ) {
-          id product_name product_group quantity unit expiry_date status
+          id product_id store_id created_by product_name product_group quantity unit expiry_date status
         }
       }
     `;
@@ -305,35 +305,121 @@
           const idx = parseInt(td.dataset.idx);
           const bucketKey = td.dataset.bucket;
           const [name] = entries[idx];
-          markSold(name, mode, bucketKey);
+          openSellModal(name, mode, bucketKey);
         });
       });
     }
   }
 
-  async function markSold(name, mode, bucketKey) {
+  function openSellModal(name, mode, bucketKey) {
     const key = mode === "group" ? "product_group" : "product_name";
     let targets = activeRows().filter(b => (b[key] || "نامشخص") === name && b.status !== "sold");
     if (bucketKey !== "all") targets = targets.filter(b => b.bucket === bucketKey);
     if (!targets.length) return;
 
-    const qty = sumQty(targets);
-    const bucketLabel = bucketKey === "all" ? "همه‌ی موارد" : BUCKETS.find(b => b.key === bucketKey).label;
-    const ok = confirm(`${qty} عدد/واحد از «${name}» (${bucketLabel}) به‌عنوان فروخته‌شده ثبت شود؟`);
-    if (!ok) return;
+    const totalQty = sumQty(targets);
+    const bucketLabel = bucketKey === "all" ? "همه‌ی بازه‌ها" : BUCKETS.find(b => b.key === bucketKey).label;
 
-    const mutation = `
-      mutation MarkSold($ids: [uuid!]!) {
-        update_expiry_batches(where: { id: { _in: $ids } }, _set: { status: "sold" }) {
-          affected_rows
-        }
-      }
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal-card">
+        <div class="modal-title">${name}</div>
+        <div class="modal-sub">${bucketLabel} · موجود: ${totalQty} عدد/واحد</div>
+        <label class="modal-label">چند عدد فروخته شد؟</label>
+        <div class="stepper">
+          <button type="button" class="stepper-btn" id="stepPlus">+</button>
+          <input type="number" id="soldQtyInput" min="1" max="${totalQty}" value="${totalQty}">
+          <button type="button" class="stepper-btn" id="stepMinus">−</button>
+        </div>
+        <button type="button" class="link-ghost" id="fillAllBtn" style="margin-top:10px; display:block;">انتخاب همه (${totalQty} عدد)</button>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="modalCancel">انصراف</button>
+          <button type="button" class="btn btn-primary" id="modalConfirm">ثبت فروش</button>
+        </div>
+      </div>
     `;
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector("#soldQtyInput");
+    overlay.querySelector("#stepMinus").addEventListener("click", () => {
+      input.value = Math.max(1, (parseInt(input.value) || 1) - 1);
+    });
+    overlay.querySelector("#stepPlus").addEventListener("click", () => {
+      input.value = Math.min(totalQty, (parseInt(input.value) || 0) + 1);
+    });
+    overlay.querySelector("#fillAllBtn").addEventListener("click", () => { input.value = totalQty; });
+    overlay.querySelector("#modalCancel").addEventListener("click", () => overlay.remove());
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector("#modalConfirm").addEventListener("click", async () => {
+      let soldQty = parseInt(input.value) || 0;
+      if (soldQty < 1) soldQty = 1;
+      if (soldQty > totalQty) soldQty = totalQty;
+      overlay.remove();
+      await executeSale(targets, soldQty, name);
+    });
+  }
+
+  async function executeSale(targets, soldQty, name) {
+    const sorted = [...targets].sort((a, b) => a.expiry_date.localeCompare(b.expiry_date));
+    let remaining = soldQty;
+    const fullIds = [];
+    let splitRow = null, splitAmount = 0;
+
+    for (const row of sorted) {
+      if (remaining <= 0) break;
+      const q = Number(row.quantity);
+      if (q <= remaining) {
+        fullIds.push(row.id);
+        remaining -= q;
+      } else {
+        splitRow = row;
+        splitAmount = remaining;
+        remaining = 0;
+      }
+    }
 
     try {
-      const ids = targets.map(b => b.id);
-      await nhGql(mutation, { ids }, session.token);
-      showSuccess(`${qty} عدد/واحد از «${name}» فروخته‌شده ثبت شد.`);
+      if (fullIds.length) {
+        await nhGql(`
+          mutation MarkSold($ids: [uuid!]!) {
+            update_expiry_batches(where: { id: { _in: $ids } }, _set: { status: "sold" }) { affected_rows }
+          }
+        `, { ids: fullIds }, session.token);
+      }
+
+      if (splitRow) {
+        await nhGql(`
+          mutation ReduceQty($id: uuid!, $qty: numeric!) {
+            update_expiry_batches_by_pk(pk_columns: { id: $id }, _set: { quantity: $qty }) { id }
+          }
+        `, { id: splitRow.id, qty: Number(splitRow.quantity) - splitAmount }, session.token);
+
+        await nhGql(`
+          mutation InsertSoldSplit(
+            $store_id: uuid!, $product_id: uuid, $product_name: String!, $product_group: String,
+            $quantity: numeric!, $unit: String!, $expiry_date: date!, $created_by: uuid!
+          ) {
+            insert_expiry_batches_one(object: {
+              store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group,
+              quantity: $quantity, unit: $unit, expiry_date: $expiry_date, discount_percent: 0,
+              created_by: $created_by, status: "sold"
+            }) { id }
+          }
+        `, {
+          store_id: splitRow.store_id,
+          product_id: splitRow.product_id || null,
+          product_name: splitRow.product_name,
+          product_group: splitRow.product_group || null,
+          quantity: splitAmount,
+          unit: splitRow.unit,
+          expiry_date: splitRow.expiry_date,
+          created_by: splitRow.created_by
+        }, session.token);
+      }
+
+      showSuccess(`${soldQty} عدد/واحد از «${name}» فروخته‌شده ثبت شد.`);
       await loadData();
     } catch (err) {
       showError(err.message);
