@@ -141,7 +141,7 @@
   }
 
   function storeStats(storeId) {
-    const s = { approved: 0, sold: 0, rejected: 0, total: 0 };
+    const s = { approved: 0, sold: 0, total: 0 };
     allBatches.forEach(b => {
       if (b.store.id === storeId) {
         if (s[b.status] !== undefined) s[b.status]++;
@@ -152,14 +152,13 @@
   }
 
   function renderStats() {
-    const sums = { approved: 0, sold: 0, rejected: 0 };
+    const sums = { approved: 0, sold: 0 };
     allBatches.forEach(b => { if (sums[b.status] !== undefined) sums[b.status]++; });
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
       <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
       <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
       <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
-      <div class="stat-card"><span class="num">${sums.rejected}</span><span class="lbl">${STATUS_LABEL.rejected}</span></div>
     `;
   }
 
@@ -167,12 +166,11 @@
     const byMgr = {};
     myStores.forEach(s => {
       const key = s.region_manager_name || "نامشخص";
-      if (!byMgr[key]) byMgr[key] = { stores: 0, approved: 0, sold: 0, rejected: 0, total: 0 };
+      if (!byMgr[key]) byMgr[key] = { stores: 0, approved: 0, sold: 0, total: 0 };
       byMgr[key].stores += 1;
       const st = storeStats(s.id);
       byMgr[key].approved += st.approved;
       byMgr[key].sold += st.sold;
-      byMgr[key].rejected += st.rejected;
       byMgr[key].total += st.total;
     });
 
@@ -189,7 +187,7 @@
         <thead>
           <tr>
             <th>مدیر منطقه</th><th>تعداد فروشگاه</th>
-            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>${STATUS_LABEL.rejected}</th><th>مجموع</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th>
           </tr>
         </thead>
         <tbody>
@@ -199,7 +197,6 @@
               <td class="num">${v.stores}</td>
               <td class="num">${v.approved}</td>
               <td class="num">${v.sold}</td>
-              <td class="num">${v.rejected}</td>
               <td class="num">${v.total}</td>
             </tr>
           `).join("")}
@@ -243,7 +240,7 @@
         <thead>
           <tr>
             <th>کد</th><th>فروشگاه</th><th>منطقه</th><th>مدیر منطقه</th>
-            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>${STATUS_LABEL.rejected}</th><th>مجموع</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th>
           </tr>
         </thead>
         <tbody>
@@ -255,7 +252,6 @@
               <td>${s.region_manager_name || "—"}</td>
               <td class="num">${s.approved}</td>
               <td class="num">${s.sold}</td>
-              <td class="num">${s.rejected}</td>
               <td class="num">${s.total}</td>
             </tr>
             ${expandedStoreId === s.id ? renderStoreDetail(s.id) : ""}
@@ -277,10 +273,10 @@
   function renderStoreDetail(storeId) {
     const items = allBatches.filter(b => b.store.id === storeId);
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="7"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="8">
+      <tr class="detail-row"><td colspan="7">
         <table>
           <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
