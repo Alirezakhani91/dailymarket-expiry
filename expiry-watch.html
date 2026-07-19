@@ -16,6 +16,7 @@
   <div class="right">
     <span class="pill" id="rolePill">...</span>
     <a href="#" class="link-ghost" id="backLink">بازگشت به گزارش کلی</a>
+    <a href="sales.html" class="link-ghost">فروش</a>
     <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
   </div>
 </div>
@@ -381,12 +382,14 @@
     }
 
     try {
+      const soldAt = new Date().toISOString();
+
       if (fullIds.length) {
         await nhGql(`
-          mutation MarkSold($ids: [uuid!]!) {
-            update_expiry_batches(where: { id: { _in: $ids } }, _set: { status: "sold" }) { affected_rows }
+          mutation MarkSold($ids: [uuid!]!, $sold_at: timestamptz!) {
+            update_expiry_batches(where: { id: { _in: $ids } }, _set: { status: "sold", sold_at: $sold_at }) { affected_rows }
           }
-        `, { ids: fullIds }, session.token);
+        `, { ids: fullIds, sold_at: soldAt }, session.token);
       }
 
       if (splitRow) {
@@ -399,12 +402,12 @@
         await nhGql(`
           mutation InsertSoldSplit(
             $store_id: uuid!, $product_id: uuid, $product_name: String!, $product_group: String,
-            $quantity: numeric!, $unit: String!, $expiry_date: date!, $created_by: uuid!
+            $quantity: numeric!, $unit: String!, $expiry_date: date!, $created_by: uuid!, $sold_at: timestamptz!
           ) {
             insert_expiry_batches_one(object: {
               store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group,
               quantity: $quantity, unit: $unit, expiry_date: $expiry_date, discount_percent: 0,
-              created_by: $created_by, status: "sold"
+              created_by: $created_by, status: "sold", sold_at: $sold_at
             }) { id }
           }
         `, {
@@ -415,7 +418,8 @@
           quantity: splitAmount,
           unit: splitRow.unit,
           expiry_date: splitRow.expiry_date,
-          created_by: splitRow.created_by
+          created_by: splitRow.created_by,
+          sold_at: soldAt
         }, session.token);
       }
 
