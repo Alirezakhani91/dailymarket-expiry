@@ -36,7 +36,6 @@
     <p style="font-size:12.5px; color:var(--muted); margin:-8px 0 14px;">برای دیدن کالاهای هر فروشگاه، روی ردیفش کلیک کنید.</p>
     <div class="filter-bar">
       <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
-      <label class="checkbox-inline"><input type="checkbox" id="onlyPending"> فقط دارای مورد در انتظار</label>
       <span class="filter-count" id="reportCount"></span>
     </div>
     <div id="reportWrap"><div class="empty">در حال بارگذاری گزارش...</div></div>
@@ -53,15 +52,6 @@
       <span class="filter-count" id="productCount"></span>
     </div>
     <div id="productReportWrap"><div class="empty">در حال بارگذاری...</div></div>
-  </div>
-
-  <div class="card">
-    <h2 style="font-size:15px; margin:0 0 14px;">در انتظار بررسی</h2>
-    <div class="filter-bar">
-      <input type="text" id="storeSearch" placeholder="جست‌وجو بر اساس نام فروشگاه...">
-      <span class="filter-count" id="filterCount"></span>
-    </div>
-    <div id="listWrap"><div class="empty">در حال بارگذاری فهرست...</div></div>
   </div>
 </div>
 
@@ -80,7 +70,6 @@
   const statGrid = document.getElementById("statGrid");
   const reportWrap = document.getElementById("reportWrap");
   const productReportWrap = document.getElementById("productReportWrap");
-  const listWrap = document.getElementById("listWrap");
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -124,7 +113,7 @@
           order_by: { created_at: desc }
           limit: 3000
         ) {
-          id product_name product_group quantity unit expiry_date discount_percent status
+          id product_name product_group quantity unit expiry_date status
           store { id }
         }
       }
@@ -139,22 +128,22 @@
     renderStats();
     renderReport();
     renderProductReport();
-    renderPending();
   }
 
   function renderStats() {
-    const sums = { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 };
+    const sums = { approved: 0, sold: 0, rejected: 0 };
     allBatches.forEach(b => { if (sums[b.status] !== undefined) sums[b.status]++; });
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
-      ${["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
-        <div class="stat-card"><span class="num">${sums[k]}</span><span class="lbl">${STATUS_LABEL[k]}</span></div>
-      `).join("")}
+      <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
+      <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
+      <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+      <div class="stat-card"><span class="num">${sums.rejected}</span><span class="lbl">${STATUS_LABEL.rejected}</span></div>
     `;
   }
 
   function storeStats(storeId) {
-    const s = { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0, total: 0 };
+    const s = { approved: 0, sold: 0, rejected: 0, total: 0 };
     allBatches.forEach(b => {
       if (b.store.id === storeId) {
         if (s[b.status] !== undefined) s[b.status]++;
@@ -166,12 +155,10 @@
 
   function renderReport() {
     const term = document.getElementById("reportSearch").value.trim();
-    const onlyPending = document.getElementById("onlyPending").checked;
 
     let rows = myStores.map(s => ({ ...s, ...storeStats(s.id) }));
     if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
-    if (onlyPending) rows = rows.filter(s => s.draft + s.needs_correction > 0);
-    rows = rows.sort((a, b) => (b.draft + b.needs_correction) - (a.draft + a.needs_correction));
+    rows = rows.sort((a, b) => b.total - a.total);
 
     document.getElementById("reportCount").textContent =
       myStores.length ? `${rows.length} از ${myStores.length} فروشگاه` : "";
@@ -189,7 +176,7 @@
         <thead>
           <tr>
             <th>کد</th><th>فروشگاه</th><th>منطقه</th>
-            <th>پیش‌نویس</th><th>اصلاح</th><th>تأیید</th><th>فروش</th><th>رد</th><th>مجموع</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>${STATUS_LABEL.rejected}</th><th>مجموع</th>
           </tr>
         </thead>
         <tbody>
@@ -198,8 +185,6 @@
               <td class="num">${s.store_code || "—"}</td>
               <td>${s.name} <span class="row-expand-icon ${expandedStoreId === s.id ? "open" : ""}">◀</span></td>
               <td>${s.region}</td>
-              <td class="num ${s.draft > 0 ? "cell-alert" : ""}">${s.draft}</td>
-              <td class="num ${s.needs_correction > 0 ? "cell-alert" : ""}">${s.needs_correction}</td>
               <td class="num">${s.approved}</td>
               <td class="num">${s.sold}</td>
               <td class="num">${s.rejected}</td>
@@ -224,10 +209,10 @@
   function renderStoreDetail(storeId) {
     const items = allBatches.filter(b => b.store.id === storeId);
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="9"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="7"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="9">
+      <tr class="detail-row"><td colspan="7">
         <table>
           <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
@@ -247,7 +232,6 @@
   }
 
   document.getElementById("reportSearch").addEventListener("input", renderReport);
-  document.getElementById("onlyPending").addEventListener("change", renderReport);
 
   function renderProductReport() {
     const mode = document.getElementById("groupByMode").value;
@@ -293,80 +277,6 @@
 
   document.getElementById("groupByMode").addEventListener("change", renderProductReport);
   document.getElementById("productSearch").addEventListener("input", renderProductReport);
-
-  function renderPending() {
-    const term = document.getElementById("storeSearch").value.trim();
-    let rows = allBatches.filter(b => b.status === "draft" || b.status === "needs_correction");
-    const storeNameById = {};
-    myStores.forEach(s => storeNameById[s.id] = s.name);
-    rows = rows.map(b => ({ ...b, storeName: storeNameById[b.store.id] || "" }));
-    if (term) rows = rows.filter(b => b.storeName.includes(term));
-
-    document.getElementById("filterCount").textContent =
-      allBatches.length ? `${rows.length} در انتظار` : "";
-
-    if (!rows.length) {
-      listWrap.innerHTML = '<div class="empty">در حال حاضر پیش‌نویسی برای بررسی وجود ندارد.</div>';
-      return;
-    }
-    listWrap.innerHTML = rows.map(b => `
-      <div class="review-item" data-id="${b.id}">
-        <div class="row1">
-          <div>
-            <div class="product">${b.product_name}</div>
-            <div class="meta">${b.storeName} · ${b.quantity} ${b.unit} · انقضا: ${nhIsoToJalaliStr(b.expiry_date)}</div>
-          </div>
-          <span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span>
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <textarea rows="2" placeholder="یادداشت بررسی (اختیاری برای تأیید، الزامی برای رد یا اصلاح)" class="note-input"></textarea>
-        </div>
-        <div class="review-actions">
-          <button class="btn btn-success btn-sm" data-action="approved">تأیید</button>
-          <button class="btn btn-outline btn-sm" data-action="needs_correction">نیاز به اصلاح</button>
-          <button class="btn btn-danger btn-sm" data-action="rejected">رد</button>
-        </div>
-      </div>
-    `).join("");
-
-    listWrap.querySelectorAll(".review-item").forEach(item => {
-      item.querySelectorAll("button[data-action]").forEach(btn => {
-        btn.addEventListener("click", () => reviewBatch(item, btn.dataset.action));
-      });
-    });
-  }
-
-  document.getElementById("storeSearch").addEventListener("input", renderPending);
-
-  async function reviewBatch(item, action) {
-    const id = item.dataset.id;
-    const note = item.querySelector(".note-input").value.trim();
-
-    if (action !== "approved" && !note) {
-      showError("برای رد یا درخواست اصلاح، نوشتن یادداشت بررسی الزامی است.");
-      return;
-    }
-
-    const buttons = item.querySelectorAll("button");
-    buttons.forEach(b => b.disabled = true);
-
-    const mutation = `
-      mutation ReviewBatch($id: uuid!, $status: String!, $note: String, $reviewer: uuid!) {
-        update_expiry_batches_by_pk(
-          pk_columns: { id: $id }
-          _set: { status: $status, review_note: $note, reviewed_by: $reviewer }
-        ) { id }
-      }
-    `;
-
-    try {
-      await nhGql(mutation, { id, status: action, note: note || null, reviewer: session.userId }, session.token);
-      await loadData();
-    } catch (err) {
-      showError(err.message);
-      buttons.forEach(b => b.disabled = false);
-    }
-  }
 
   loadMyManager().catch(err => showError(err.message));
 </script>
