@@ -235,7 +235,7 @@
                 <td>${b.product_name}</td>
                 <td>${b.product_group || "—"}</td>
                 <td class="num">${b.quantity} ${b.unit}</td>
-                <td class="num">${b.expiry_date}</td>
+                <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
                 <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               </tr>
             `).join("")}
@@ -313,7 +313,7 @@
         <div class="row1">
           <div>
             <div class="product">${b.product_name}</div>
-            <div class="meta">${b.storeName} · ${b.quantity} ${b.unit} · انقضا: ${b.expiry_date} · تخفیف پیشنهادی: ${b.discount_percent}٪</div>
+            <div class="meta">${b.storeName} · ${b.quantity} ${b.unit} · انقضا: ${nhIsoToJalaliStr(b.expiry_date)}</div>
           </div>
           <span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span>
         </div>
