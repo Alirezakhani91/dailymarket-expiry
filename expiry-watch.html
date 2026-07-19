@@ -236,6 +236,11 @@
     `).join("");
   }
 
+  function cellHtml(val, urgent) {
+    if (!val) return '<span class="cell-zero">–</span>';
+    return `<span class="qty-chip ${urgent ? "urgent" : ""}">${val}</span>`;
+  }
+
   function renderMatrix() {
     const mode = document.getElementById("groupByMode").value;
     const term = document.getElementById("search").value.trim();
@@ -283,10 +288,10 @@
             <tr>
               <td>${name}</td>
               ${BUCKETS.map(b => `
-                <td class="num ${URGENT_KEYS.includes(b.key) && v[b.key] > 0 ? "cell-alert" : ""} ${canSell && v[b.key] > 0 ? "cell-clickable" : ""}"
-                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${v[b.key]}</td>
+                <td class="num ${canSell && v[b.key] > 0 ? "cell-clickable" : ""}"
+                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${cellHtml(v[b.key], URGENT_KEYS.includes(b.key))}</td>
               `).join("")}
-              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${v.total}</td>
+              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${cellHtml(v.total, false)}</td>
             </tr>
           `).join("")}
         </tbody>
