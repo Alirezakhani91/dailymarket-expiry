@@ -38,15 +38,9 @@
         </div>
         <div id="selectedProduct" class="selected-chip"></div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="quantity">تعداد / مقدار</label>
-          <input type="number" id="quantity" required min="0" step="0.01">
-        </div>
-        <div class="field">
-          <label for="unit">واحد</label>
-          <input type="text" id="unit" required placeholder="عدد، کیلوگرم، بسته">
-        </div>
+      <div class="field">
+        <label for="quantity">تعداد</label>
+        <input type="number" id="quantity" required min="1" step="1">
       </div>
       <div class="field">
         <label for="expiry_day">تاریخ انقضا (شمسی)</label>
@@ -266,7 +260,7 @@
           order_by: { created_at: desc }
           limit: 30
         ) {
-          id product_name quantity unit expiry_date status review_note
+          id product_name quantity expiry_date status review_note
         }
       }
     `;
@@ -292,7 +286,7 @@
           ${rows.map(b => `
             <tr>
               <td>${b.product_name}</td>
-              <td class="num">${b.quantity} ${b.unit}</td>
+              <td class="num">${b.quantity}</td>
               <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
               <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               <td>${b.review_note || "—"}</td>
@@ -322,11 +316,11 @@
     const mutation = `
       mutation InsertBatch(
         $store_id: uuid!, $product_id: uuid!, $product_name: String!, $product_group: String, $quantity: numeric!,
-        $unit: String!, $expiry_date: date!, $created_by: uuid!
+        $expiry_date: date!, $created_by: uuid!
       ) {
         insert_expiry_batches_one(object: {
           store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group, quantity: $quantity,
-          unit: $unit, expiry_date: $expiry_date, discount_percent: 0,
+          unit: "عدد", expiry_date: $expiry_date, discount_percent: 0,
           created_by: $created_by, status: "approved"
         }) { id }
       }
@@ -344,8 +338,7 @@
         product_id: selectedProductId,
         product_name: selectedProductName,
         product_group: selectedProductGroup,
-        quantity: parseFloat(document.getElementById("quantity").value),
-        unit: document.getElementById("unit").value.trim(),
+        quantity: parseInt(document.getElementById("quantity").value),
         expiry_date: expiryIso,
         created_by: session.userId
       }, session.token);
