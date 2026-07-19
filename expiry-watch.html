@@ -32,6 +32,7 @@
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">تفکیک روزشمار</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin:-8px 0 14px;" id="hintText"></p>
     <div class="filter-bar">
       <select id="groupByMode">
         <option value="product">بر اساس کالا</option>
@@ -55,6 +56,11 @@
   document.getElementById("backLink").href = ROLE_HOME[session.role];
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
+  const canSell = session.role === "region_manager";
+  document.getElementById("hintText").textContent = canSell
+    ? "روی هر عدد کلیک کنید تا همان مقدار به‌عنوان فروخته‌شده ثبت شود. روی «مجموع» کلیک کنید تا کل آن کالا فروخته‌شده ثبت شود."
+    : "";
+
   const alertEl = document.getElementById("alert");
   const bucketGrid = document.getElementById("bucketGrid");
   const matrixWrap = document.getElementById("matrixWrap");
@@ -75,13 +81,19 @@
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
+      alertEl.className = "alert alert-error show";
       alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
-      alertEl.classList.add("show");
       setTimeout(nhLogout, 1500);
       return;
     }
+    alertEl.className = "alert alert-error show";
     alertEl.textContent = "خطا: " + message;
-    alertEl.classList.add("show");
+  }
+
+  function showSuccess(message) {
+    alertEl.className = "alert alert-success show";
+    alertEl.textContent = message;
+    setTimeout(() => alertEl.classList.remove("show"), 3000);
   }
 
   function dayBucket(isoDate) {
@@ -196,17 +208,59 @@
           </tr>
         </thead>
         <tbody>
-          ${entries.map(([name, v]) => `
+          ${entries.map(([name, v], idx) => `
             <tr>
               <td>${name}</td>
-              ${BUCKETS.map(b => `<td class="num ${URGENT_KEYS.includes(b.key) && v[b.key] > 0 ? "cell-alert" : ""}">${v[b.key]}</td>`).join("")}
-              <td class="num">${v.total}</td>
+              ${BUCKETS.map(b => `
+                <td class="num ${URGENT_KEYS.includes(b.key) && v[b.key] > 0 ? "cell-alert" : ""} ${canSell && v[b.key] > 0 ? "cell-clickable" : ""}"
+                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${v[b.key]}</td>
+              `).join("")}
+              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${v.total}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
       </div>
     `;
+
+    if (canSell) {
+      matrixWrap.querySelectorAll("td.cell-clickable").forEach(td => {
+        td.addEventListener("click", () => {
+          const idx = parseInt(td.dataset.idx);
+          const bucketKey = td.dataset.bucket;
+          const [name] = entries[idx];
+          markSold(name, mode, bucketKey);
+        });
+      });
+    }
+  }
+
+  async function markSold(name, mode, bucketKey) {
+    const key = mode === "group" ? "product_group" : "product_name";
+    let targets = activeRows().filter(b => (b[key] || "نامشخص") === name && b.status !== "sold");
+    if (bucketKey !== "all") targets = targets.filter(b => b.bucket === bucketKey);
+    if (!targets.length) return;
+
+    const bucketLabel = bucketKey === "all" ? "همه‌ی موارد" : BUCKETS.find(b => b.key === bucketKey).label;
+    const ok = confirm(`علامت‌گذاری ${targets.length} مورد «${name}» (${bucketLabel}) به‌عنوان فروخته‌شده؟`);
+    if (!ok) return;
+
+    const mutation = `
+      mutation MarkSold($ids: [uuid!]!) {
+        update_expiry_batches(where: { id: { _in: $ids } }, _set: { status: "sold" }) {
+          affected_rows
+        }
+      }
+    `;
+
+    try {
+      const ids = targets.map(b => b.id);
+      const data = await nhGql(mutation, { ids }, session.token);
+      showSuccess(`${data.update_expiry_batches.affected_rows} مورد فروخته‌شده ثبت شد.`);
+      await loadData();
+    } catch (err) {
+      showError(err.message);
+    }
   }
 
   document.getElementById("groupByMode").addEventListener("change", renderMatrix);
