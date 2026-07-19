@@ -325,7 +325,6 @@
       <table>
         <thead>
           <tr>
-            <th>روند</th>
             <th>${mode === "group" ? "گروه کالایی" : "کالا"}</th>
             ${BUCKETS.map(b => `<th>${b.label}</th>`).join("")}
             <th>مجموع</th>
@@ -336,7 +335,6 @@
             const rowMax = Math.max(...BUCKETS.map(b => v[b.key]));
             return `
             <tr>
-              <td>${sparkline(BUCKETS.map(b => v[b.key]))}</td>
               <td>${name}</td>
               ${BUCKETS.map(b => `
                 <td class="num ${canSell && v[b.key] > 0 ? "cell-clickable" : ""}"
