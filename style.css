@@ -314,6 +314,48 @@ td.cell-clickable:hover .qty-chip {
   color: inherit;
 }
 
+/* ---------- sell modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(32, 26, 24, .5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+  animation: fadeIn .15s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 100%; max-width: 380px;
+  padding: 26px;
+  animation: rise .25s ease both;
+}
+.modal-title { font-size: 16px; font-weight: 800; }
+.modal-sub { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.modal-label { display: block; font-size: 13px; font-weight: 600; margin: 20px 0 8px; }
+.stepper {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.stepper-btn {
+  width: 46px; border: none; background: var(--paper);
+  font-size: 20px; font-weight: 700; color: var(--brand);
+  cursor: pointer; transition: background .15s;
+}
+.stepper-btn:hover { background: var(--brand-soft); }
+.stepper input {
+  flex: 1; border: none; text-align: center;
+  font-size: 18px; font-weight: 800; font-family: inherit;
+  background: var(--surface); color: var(--ink);
+}
+.stepper input:focus { outline: none; }
+.stepper input::-webkit-outer-spin-button,
+.stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+.modal-actions .btn { flex: 1; }
+
 /* ---------- mobile ---------- */
 @media (max-width: 640px) {
   .topbar { padding: 12px 16px; }
