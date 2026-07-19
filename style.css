@@ -106,6 +106,13 @@ a { color: inherit; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
 
+.jalali-date-row { display: flex; gap: 8px; }
+.jalali-date-row select {
+  flex: 1; min-width: 0; padding: 11px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 13.5px; background: var(--paper); color: var(--ink);
+}
+.jalali-date-row select:focus { border-color: var(--brand); background: var(--surface); outline: none; }
+
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: none; border-radius: var(--radius-sm); padding: 12px 20px;
