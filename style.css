@@ -271,6 +271,26 @@ td.cell-clickable:hover {
   font-weight: 800;
 }
 
+/* ---------- expiry bucket chart ---------- */
+.bar-anim {
+  transform: scaleY(0);
+  transition: transform .7s cubic-bezier(.22,1,.36,1);
+}
+.bar-anim.grown { transform: scaleY(1); }
+.chart-value-label {
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.chart-day-label {
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+
 /* ---------- mobile ---------- */
 @media (max-width: 640px) {
   .topbar { padding: 12px 16px; }
