@@ -221,7 +221,7 @@
               <tr>
                 <td>${b.product_name}</td>
                 <td>${b.product_group || "—"}</td>
-                <td class="num">${b.quantity} ${b.unit}</td>
+                <td class="num">${b.quantity}</td>
                 <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
                 <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               </tr>
