@@ -23,17 +23,18 @@
 
 <div class="container">
   <div class="page-head">
-    <h1>پایش انقضا — روزشمار</h1>
-    <p>چند روز تا انقضای هر کالا مانده، به تفکیک کالا و گروه کالایی.</p>
+    <h1>پایش انقضا</h1>
+    <p>چند روز تا انقضای هر کالا مانده، و کجا باید همین حالا تصمیم بگیرید.</p>
   </div>
 
   <div id="alert" class="alert alert-error"></div>
 
+  <div id="heroWrap"></div>
+
   <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">روند روزانه</h2>
     <div id="chartWrap"></div>
   </div>
-
-  <div class="stat-grid" id="bucketGrid"></div>
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">تفکیک روزشمار</h2>
@@ -67,8 +68,8 @@
     : "";
 
   const alertEl = document.getElementById("alert");
+  const heroWrap = document.getElementById("heroWrap");
   const chartWrap = document.getElementById("chartWrap");
-  const bucketGrid = document.getElementById("bucketGrid");
   const matrixWrap = document.getElementById("matrixWrap");
 
   const BUCKETS = [
@@ -84,6 +85,7 @@
     { key: "more", label: "بیشتر از ۷ روز" }
   ];
   const URGENT_KEYS = ["expired", "d0", "d1", "d2", "d3"];
+  const WARN_KEYS = ["d4", "d5", "d6", "d7"];
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -157,11 +159,49 @@
   }
 
   function render() {
+    renderHero();
     renderChart();
-    renderBucketGrid();
     renderMatrix();
   }
 
+  // ---------- hero zone summary ----------
+  function renderHero() {
+    const rows = activeRows();
+    const urgentRows = rows.filter(b => URGENT_KEYS.includes(b.bucket));
+    const warnRows = rows.filter(b => WARN_KEYS.includes(b.bucket));
+    const safeRows = rows.filter(b => b.bucket === "more");
+
+    const qUrgent = sumQty(urgentRows);
+    const qWarn = sumQty(warnRows);
+    const qSafe = sumQty(safeRows);
+
+    const byProduct = {};
+    urgentRows.forEach(b => { byProduct[b.product_name] = (byProduct[b.product_name] || 0) + Number(b.quantity || 0); });
+    const top = Object.entries(byProduct).sort((a, b) => b[1] - a[1])[0];
+
+    heroWrap.innerHTML = `
+      <div class="hero-grid">
+        <div class="hero-card hero-urgent">
+          <div class="hero-num">${qUrgent}</div>
+          <div class="hero-lbl">نیاز به تصمیم فوری</div>
+          <div class="hero-sub">منقضی‌شده تا ۳ روز آینده</div>
+        </div>
+        <div class="hero-card hero-warn">
+          <div class="hero-num">${qWarn}</div>
+          <div class="hero-lbl">در حال نزدیک شدن</div>
+          <div class="hero-sub">۴ تا ۷ روز آینده</div>
+        </div>
+        <div class="hero-card hero-safe">
+          <div class="hero-num">${qSafe}</div>
+          <div class="hero-lbl">وضعیت پایدار</div>
+          <div class="hero-sub">بیشتر از ۷ روز فرصت</div>
+        </div>
+      </div>
+      ${top ? `<div class="insight-banner">بیشترین ریسک همین حالا: <strong>${top[0]}</strong> با ${top[1]} عدد در بازه‌ی فوری (۰ تا ۳ روز آینده).</div>` : ""}
+    `;
+  }
+
+  // ---------- daily trend chart ----------
   function lerpColor(c1, c2, t) {
     const p = hex => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
     const [r1, g1, b1] = p(c1), [r2, g2, b2] = p(c2);
@@ -177,12 +217,12 @@
     BUCKETS.forEach(b => counts[b.key] = 0);
     rows.forEach(b => counts[b.bucket] += Number(b.quantity) || 0);
 
-    const W = 900, H = 230;
+    const W = 900, H = 220;
     const barGap = 12;
     const n = BUCKETS.length;
     const barW = (W - barGap * (n + 1)) / n;
-    const chartTop = 34;
-    const chartBottom = H - 42;
+    const chartTop = 30;
+    const chartBottom = H - 40;
     const chartH = chartBottom - chartTop;
     const maxVal = Math.max(...BUCKETS.map(b => counts[b.key]), 1);
 
@@ -192,8 +232,7 @@
       const x = barGap + i * (barW + barGap);
       const y = chartBottom - h;
       const color = lerpColor("#9f2136", "#efe6e3", i / (n - 1));
-      const textColor = i / (n - 1) < 0.55 ? "#ffffff" : "var(--muted)";
-      return { x, y, h, val, label: b.label, color, textColor, cx: x + barW / 2 };
+      return { x, y, h, val, label: b.label, color, cx: x + barW / 2 };
     });
 
     chartWrap.innerHTML = `
@@ -210,7 +249,7 @@
                   rx="7" fill="${bar.color}" filter="url(#barShadow)"
                   style="transform-origin:${bar.cx}px ${chartBottom}px;"></rect>
             <text x="${bar.cx}" y="${bar.y - 10}" text-anchor="middle" class="chart-value-label">${bar.val}</text>
-            <text x="${bar.cx}" y="${H - 20}" text-anchor="middle" class="chart-day-label">${bar.label}</text>
+            <text x="${bar.cx}" y="${H - 18}" text-anchor="middle" class="chart-day-label">${bar.label}</text>
           </g>
         `).join("")}
       </svg>
@@ -223,23 +262,30 @@
     });
   }
 
-  function renderBucketGrid() {
-    const rows = activeRows();
-    const counts = {};
-    BUCKETS.forEach(b => counts[b.key] = 0);
-    rows.forEach(b => counts[b.bucket] += Number(b.quantity) || 0);
-
-    bucketGrid.innerHTML = BUCKETS.map(b => `
-      <div class="stat-card ${URGENT_KEYS.includes(b.key) ? "urgent" : ""}">
-        <span class="num">${counts[b.key]}</span>
-        <span class="lbl">${b.label}</span>
-      </div>
-    `).join("");
+  // ---------- sparkline mini chart per row ----------
+  function sparkline(values) {
+    const w = 96, h = 26, gap = 1.6;
+    const n = values.length;
+    const bw = (w - gap * (n + 1)) / n;
+    const max = Math.max(...values, 1);
+    const bars = values.map((v, i) => {
+      const bh = v > 0 ? Math.max((v / max) * h, 3) : 1.5;
+      const x = gap + i * (bw + gap);
+      const y = h - bh;
+      const urgent = URGENT_KEYS.includes(BUCKETS[i].key);
+      const fill = v === 0 ? "var(--line)" : (urgent ? "#9f2136" : "#d8b8bd");
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="1" fill="${fill}"/>`;
+    }).join("");
+    return `<svg viewBox="0 0 ${w} ${h}" class="spark">${bars}</svg>`;
   }
 
-  function cellHtml(val, urgent) {
+  // ---------- heatmap matrix ----------
+  function heatCell(val, rowMax) {
     if (!val) return '<span class="cell-zero">–</span>';
-    return `<span class="qty-chip ${urgent ? "urgent" : ""}">${val}</span>`;
+    const t = rowMax > 0 ? val / rowMax : 0;
+    const bg = `rgba(159,33,54,${(0.10 + t * 0.62).toFixed(2)})`;
+    const color = t > 0.5 ? "#ffffff" : "var(--ink)";
+    return `<span class="qty-chip heat" style="background:${bg}; color:${color};">${val}</span>`;
   }
 
   function renderMatrix() {
@@ -279,22 +325,26 @@
       <table>
         <thead>
           <tr>
+            <th>روند</th>
             <th>${mode === "group" ? "گروه کالایی" : "کالا"}</th>
             ${BUCKETS.map(b => `<th>${b.label}</th>`).join("")}
             <th>مجموع</th>
           </tr>
         </thead>
         <tbody>
-          ${entries.map(([name, v], idx) => `
+          ${entries.map(([name, v], idx) => {
+            const rowMax = Math.max(...BUCKETS.map(b => v[b.key]));
+            return `
             <tr>
+              <td>${sparkline(BUCKETS.map(b => v[b.key]))}</td>
               <td>${name}</td>
               ${BUCKETS.map(b => `
                 <td class="num ${canSell && v[b.key] > 0 ? "cell-clickable" : ""}"
-                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${cellHtml(v[b.key], URGENT_KEYS.includes(b.key))}</td>
+                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${heatCell(v[b.key], rowMax)}</td>
               `).join("")}
-              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${cellHtml(v.total, false)}</td>
+              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${heatCell(v.total, v.total)}</td>
             </tr>
-          `).join("")}
+          `}).join("")}
         </tbody>
       </table>
       </div>
@@ -326,7 +376,7 @@
     overlay.innerHTML = `
       <div class="modal-card">
         <div class="modal-title">${name}</div>
-        <div class="modal-sub">${bucketLabel} · موجود: ${totalQty} عدد/واحد</div>
+        <div class="modal-sub">${bucketLabel} · موجود: ${totalQty} عدد</div>
         <label class="modal-label">چند عدد فروخته شد؟</label>
         <div class="stepper">
           <button type="button" class="stepper-btn" id="stepPlus">+</button>
@@ -423,7 +473,7 @@
         }, session.token);
       }
 
-      showSuccess(`${soldQty} عدد/واحد از «${name}» فروخته‌شده ثبت شد.`);
+      showSuccess(`${soldQty} عدد از «${name}» فروخته‌شده ثبت شد.`);
       await loadData();
     } catch (err) {
       showError(err.message);
