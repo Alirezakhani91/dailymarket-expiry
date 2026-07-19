@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>گزارش فروش | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-group">
+    <div class="mark"><span>DM</span></div>
+    <div class="brand-name">dailymarket-expiry<small>سامانه مدیریت کالای نزدیک به انقضا</small></div>
+  </div>
+  <div class="right">
+    <span class="pill" id="rolePill">...</span>
+    <a href="#" class="link-ghost" id="backLink">بازگشت به گزارش کلی</a>
+    <a href="expiry-watch.html" class="link-ghost">پایش انقضا</a>
+    <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>گزارش فروش</h1>
+    <p>مجموع کالاهای فروخته‌شده در فروشگاه‌های تحت نظارت شما.</p>
+  </div>
+
+  <div id="alert" class="alert alert-error"></div>
+
+  <div class="stat-grid" id="statGrid"></div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">روند فروش (۱۴ روز اخیر)</h2>
+    <div id="chartWrap"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">فروش بر اساس کالا</h2>
+    <div class="filter-bar">
+      <select id="groupByMode">
+        <option value="product">بر اساس کالا</option>
+        <option value="group">بر اساس گروه کالایی</option>
+      </select>
+      <input type="text" id="productSearch" placeholder="جست‌وجو در نام کالا/گروه...">
+      <span class="filter-count" id="productCount"></span>
+    </div>
+    <div id="productReportWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;" id="breakdownTitle">تفکیک</h2>
+    <div id="breakdownWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">آخرین فروش‌ها</h2>
+    <div id="recentWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const session = nhRequireRole(["region_manager", "executive_manager"]);
+  let myManagerName = null;
+  let sales = [];
+
+  document.getElementById("rolePill").textContent = ROLE_LABEL[session.role];
+  document.getElementById("backLink").href = ROLE_HOME[session.role];
+  document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
+  document.getElementById("breakdownTitle").textContent =
+    session.role === "executive_manager" ? "تفکیک بر اساس مدیر منطقه" : "تفکیک بر اساس فروشگاه";
+
+  const alertEl = document.getElementById("alert");
+  const statGrid = document.getElementById("statGrid");
+  const chartWrap = document.getElementById("chartWrap");
+  const productReportWrap = document.getElementById("productReportWrap");
+  const breakdownWrap = document.getElementById("breakdownWrap");
+  const recentWrap = document.getElementById("recentWrap");
+
+  function showError(message) {
+    if (message === "SESSION_EXPIRED") {
+      alertEl.className = "alert alert-error show";
+      alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
+      setTimeout(nhLogout, 1500);
+      return;
+    }
+    alertEl.className = "alert alert-error show";
+    alertEl.textContent = "خطا: " + message;
+  }
+
+  function sumQty(list) {
+    return list.reduce((s, b) => s + (Number(b.quantity) || 0), 0);
+  }
+
+  function formatSoldAt(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    const datePart = nhIsoToJalaliStr(iso.slice(0, 10));
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${datePart} — ${hh}:${mm}`;
+  }
+
+  async function loadMyManager() {
+    const query = `
+      query MyRole($user_id: uuid!) {
+        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) { manager_name }
+      }
+    `;
+    const data = await nhGql(query, { user_id: session.userId }, session.token);
+    if (!data.user_roles.length || !data.user_roles[0].manager_name) {
+      showError("نام مدیری برای این حساب ثبت نشده است.");
+      return;
+    }
+    myManagerName = data.user_roles[0].manager_name;
+    await loadData();
+  }
+
+  async function loadData() {
+    const ownerField = session.role === "executive_manager" ? "executive_manager_name" : "region_manager_name";
+    const query = `
+      query MySales($mgr: String!) {
+        expiry_batches(
+          where: { status: { _eq: "sold" }, store: { ${ownerField}: { _eq: $mgr } } }
+          order_by: { sold_at: desc }
+          limit: 5000
+        ) {
+          id product_name product_group quantity unit sold_at
+          store { id name region region_manager_name }
+        }
+      }
+    `;
+    const data = await nhGql(query, { mgr: myManagerName }, session.token);
+    sales = data.expiry_batches;
+
+    renderStats();
+    renderChart();
+    renderProductReport();
+    renderBreakdown();
+    renderRecent();
+  }
+
+  function renderStats() {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const weekAgo = new Date(now.getTime() - 6 * 86400000);
+    const monthAgo = new Date(now.getTime() - 29 * 86400000);
+
+    const todaySales = sales.filter(s => s.sold_at && s.sold_at.slice(0, 10) === todayStr);
+    const weekSales = sales.filter(s => s.sold_at && new Date(s.sold_at) >= weekAgo);
+    const monthSales = sales.filter(s => s.sold_at && new Date(s.sold_at) >= monthAgo);
+
+    statGrid.innerHTML = `
+      <div class="stat-card"><span class="num">${sales.length}</span><span class="lbl">تعداد تراکنش فروش</span></div>
+      <div class="stat-card"><span class="num">${sumQty(sales)}</span><span class="lbl">مجموع مقدار فروخته‌شده</span></div>
+      <div class="stat-card urgent"><span class="num">${sumQty(todaySales)}</span><span class="lbl">فروش امروز</span></div>
+      <div class="stat-card"><span class="num">${sumQty(weekSales)}</span><span class="lbl">فروش ۷ روز اخیر</span></div>
+      <div class="stat-card"><span class="num">${sumQty(monthSales)}</span><span class="lbl">فروش ۳۰ روز اخیر</span></div>
+    `;
+  }
+
+  function lerpColor(c1, c2, t) {
+    const p = hex => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+    const [r1, g1, b1] = p(c1), [r2, g2, b2] = p(c2);
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function renderChart() {
+    const days = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 86400000);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    const sumsByDay = {};
+    days.forEach(d => sumsByDay[d] = 0);
+    sales.forEach(s => {
+      if (!s.sold_at) return;
+      const d = s.sold_at.slice(0, 10);
+      if (sumsByDay[d] !== undefined) sumsByDay[d] += Number(s.quantity) || 0;
+    });
+
+    const W = 900, H = 230;
+    const barGap = 8;
+    const n = days.length;
+    const barW = (W - barGap * (n + 1)) / n;
+    const chartTop = 34;
+    const chartBottom = H - 42;
+    const chartH = chartBottom - chartTop;
+    const maxVal = Math.max(...days.map(d => sumsByDay[d]), 1);
+
+    const bars = days.map((d, i) => {
+      const val = sumsByDay[d];
+      const h = (val / maxVal) * chartH;
+      const x = barGap + i * (barW + barGap);
+      const y = chartBottom - h;
+      const [, jm, jd] = nhGregorianToJalali(...d.split("-").map(Number));
+      const color = lerpColor("#efe6e3", "#9f2136", i / (n - 1));
+      return { x, y, h, val, label: `${jd}/${jm}`, color, cx: x + barW / 2 };
+    });
+
+    chartWrap.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block; overflow:visible;">
+        <defs>
+          <filter id="salesBarShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#9f2136" flood-opacity="0.18"/>
+          </filter>
+        </defs>
+        <line x1="0" y1="${chartBottom}" x2="${W}" y2="${chartBottom}" style="stroke:var(--line); stroke-width:1;"/>
+        ${bars.map(bar => `
+          <g>
+            <rect class="bar-anim" x="${bar.x}" y="${bar.y}" width="${barW}" height="${Math.max(bar.h, 2)}"
+                  rx="5" fill="${bar.color}" filter="url(#salesBarShadow)"
+                  style="transform-origin:${bar.cx}px ${chartBottom}px;"></rect>
+            ${bar.val > 0 ? `<text x="${bar.cx}" y="${bar.y - 8}" text-anchor="middle" class="chart-value-label" style="font-size:13px;">${bar.val}</text>` : ""}
+            <text x="${bar.cx}" y="${H - 20}" text-anchor="middle" class="chart-day-label" style="font-size:10.5px;">${bar.label}</text>
+          </g>
+        `).join("")}
+      </svg>
+    `;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        chartWrap.querySelectorAll(".bar-anim").forEach(el => el.classList.add("grown"));
+      });
+    });
+  }
+
+  function renderProductReport() {
+    const mode = document.getElementById("groupByMode").value;
+    const term = document.getElementById("productSearch").value.trim();
+    const key = mode === "group" ? "product_group" : "product_name";
+
+    const grouped = {};
+    sales.forEach(s => {
+      const k = s[key] || "نامشخص";
+      if (!grouped[k]) grouped[k] = { count: 0, qty: 0 };
+      grouped[k].count += 1;
+      grouped[k].qty += Number(s.quantity) || 0;
+    });
+
+    let rows = Object.entries(grouped);
+    if (term) rows = rows.filter(([name]) => name.includes(term));
+    rows.sort((a, b) => b[1].qty - a[1].qty);
+
+    document.getElementById("productCount").textContent = rows.length ? `${rows.length} مورد` : "";
+
+    if (!rows.length) {
+      productReportWrap.innerHTML = '<div class="empty">هنوز فروشی ثبت نشده است.</div>';
+      return;
+    }
+
+    productReportWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>${mode === "group" ? "گروه کالایی" : "کالا"}</th><th>تعداد تراکنش</th><th>مجموع مقدار</th></tr></thead>
+        <tbody>
+          ${rows.map(([name, v]) => `
+            <tr><td>${name}</td><td class="num">${v.count}</td><td class="num">${v.qty}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+  }
+
+  document.getElementById("groupByMode").addEventListener("change", renderProductReport);
+  document.getElementById("productSearch").addEventListener("input", renderProductReport);
+
+  function renderBreakdown() {
+    const isExec = session.role === "executive_manager";
+    const grouped = {};
+    sales.forEach(s => {
+      const key = isExec ? (s.store.region_manager_name || "نامشخص") : s.store.name;
+      if (!grouped[key]) grouped[key] = { qty: 0, count: 0 };
+      grouped[key].qty += Number(s.quantity) || 0;
+      grouped[key].count += 1;
+    });
+
+    const rows = Object.entries(grouped).sort((a, b) => b[1].qty - a[1].qty);
+
+    if (!rows.length) {
+      breakdownWrap.innerHTML = '<div class="empty">هنوز فروشی ثبت نشده است.</div>';
+      return;
+    }
+
+    breakdownWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>${isExec ? "مدیر منطقه" : "فروشگاه"}</th><th>تعداد تراکنش</th><th>مجموع مقدار</th></tr></thead>
+        <tbody>
+          ${rows.map(([name, v]) => `
+            <tr><td>${name}</td><td class="num">${v.count}</td><td class="num">${v.qty}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+  }
+
+  function renderRecent() {
+    const rows = sales.slice(0, 30);
+    if (!rows.length) {
+      recentWrap.innerHTML = '<div class="empty">هنوز فروشی ثبت نشده است.</div>';
+      return;
+    }
+    recentWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>کالا</th><th>فروشگاه</th><th>مقدار</th><th>زمان فروش</th></tr></thead>
+        <tbody>
+          ${rows.map(s => `
+            <tr>
+              <td>${s.product_name}</td>
+              <td>${s.store.name}</td>
+              <td class="num">${s.quantity} ${s.unit}</td>
+              <td class="num">${formatSoldAt(s.sold_at)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+  }
+
+  loadMyManager().catch(err => showError(err.message));
+</script>
+
+</body>
+</html>
