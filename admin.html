@@ -63,9 +63,7 @@
     <div class="filter-bar">
       <select id="statusFilter">
         <option value="">همه‌ی وضعیت‌ها</option>
-        <option value="draft">پیش‌نویس</option>
-        <option value="needs_correction">نیاز به اصلاح</option>
-        <option value="approved">تأییدشده</option>
+        <option value="approved">ثبت‌شده</option>
         <option value="sold">فروخته‌شده</option>
         <option value="rejected">ردشده</option>
       </select>
@@ -181,17 +179,17 @@
     const query = `
       query AdminStats {
         stores_aggregate { aggregate { count } }
-        draft: expiry_batches_aggregate(where: { status: { _eq: "draft" } }) { aggregate { count } }
         approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
         sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+        rejected: expiry_batches_aggregate(where: { status: { _eq: "rejected" } }) { aggregate { count } }
       }
     `;
     const data = await nhGql(query, {}, session.token);
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${data.stores_aggregate.aggregate.count}</span><span class="lbl">فروشگاه ثبت‌شده</span></div>
-      <div class="stat-card"><span class="num">${data.draft.aggregate.count}</span><span class="lbl">${STATUS_LABEL.draft}</span></div>
       <div class="stat-card"><span class="num">${data.approved.aggregate.count}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
       <div class="stat-card"><span class="num">${data.sold.aggregate.count}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+      <div class="stat-card"><span class="num">${data.rejected.aggregate.count}</span><span class="lbl">${STATUS_LABEL.rejected}</span></div>
     `;
   }
 
