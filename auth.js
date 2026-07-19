@@ -21,7 +21,7 @@ const ROLE_LABEL = {
 const STATUS_LABEL = {
   draft: "پیش‌نویس",
   needs_correction: "نیاز به اصلاح",
-  approved: "تأییدشده",
+  approved: "ثبت‌شده",
   sold: "فروخته‌شده",
   rejected: "ردشده"
 };
