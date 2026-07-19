@@ -108,6 +108,10 @@
     return "more";
   }
 
+  function sumQty(list) {
+    return list.reduce((s, b) => s + (Number(b.quantity) || 0), 0);
+  }
+
   async function loadMyManager() {
     const query = `
       query MyRole($user_id: uuid!) {
@@ -155,7 +159,7 @@
     const rows = activeRows();
     const counts = {};
     BUCKETS.forEach(b => counts[b.key] = 0);
-    rows.forEach(b => counts[b.bucket]++);
+    rows.forEach(b => counts[b.bucket] += Number(b.quantity) || 0);
 
     bucketGrid.innerHTML = BUCKETS.map(b => `
       <div class="stat-card ${URGENT_KEYS.includes(b.key) ? "urgent" : ""}">
@@ -178,8 +182,8 @@
         grouped[k] = { total: 0 };
         BUCKETS.forEach(bk => grouped[k][bk.key] = 0);
       }
-      grouped[k][b.bucket]++;
-      grouped[k].total++;
+      grouped[k][b.bucket] += Number(b.quantity) || 0;
+      grouped[k].total += Number(b.quantity) || 0;
     });
 
     let entries = Object.entries(grouped);
@@ -241,8 +245,9 @@
     if (bucketKey !== "all") targets = targets.filter(b => b.bucket === bucketKey);
     if (!targets.length) return;
 
+    const qty = sumQty(targets);
     const bucketLabel = bucketKey === "all" ? "همه‌ی موارد" : BUCKETS.find(b => b.key === bucketKey).label;
-    const ok = confirm(`علامت‌گذاری ${targets.length} مورد «${name}» (${bucketLabel}) به‌عنوان فروخته‌شده؟`);
+    const ok = confirm(`${qty} عدد/واحد از «${name}» (${bucketLabel}) به‌عنوان فروخته‌شده ثبت شود؟`);
     if (!ok) return;
 
     const mutation = `
@@ -255,8 +260,8 @@
 
     try {
       const ids = targets.map(b => b.id);
-      const data = await nhGql(mutation, { ids }, session.token);
-      showSuccess(`${data.update_expiry_batches.affected_rows} مورد فروخته‌شده ثبت شد.`);
+      await nhGql(mutation, { ids }, session.token);
+      showSuccess(`${qty} عدد/واحد از «${name}» فروخته‌شده ثبت شد.`);
       await loadData();
     } catch (err) {
       showError(err.message);
