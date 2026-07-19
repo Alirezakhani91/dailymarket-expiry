@@ -48,14 +48,12 @@
           <input type="text" id="unit" required placeholder="عدد، کیلوگرم، بسته">
         </div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="expiry_date">تاریخ انقضا</label>
-          <input type="date" id="expiry_date" required>
-        </div>
-        <div class="field">
-          <label for="discount_percent">درصد تخفیف پیشنهادی</label>
-          <input type="number" id="discount_percent" min="0" max="100" step="1" value="0">
+      <div class="field">
+        <label for="expiry_day">تاریخ انقضا (شمسی)</label>
+        <div class="jalali-date-row">
+          <select id="expiry_year"></select>
+          <select id="expiry_month"></select>
+          <select id="expiry_day"></select>
         </div>
       </div>
       <button type="submit" id="submitBtn" class="btn btn-primary btn-block">ثبت پیش‌نویس</button>
@@ -153,8 +151,7 @@
   }
 
   let activeResultIndex = -1;
-  searchInput.addEventListener("keydown", (e) => {
-    const items = resultsBox.querySelectorAll(".search-item");
+  searchInput.addEventListener("keydown", (e) => {    const items = resultsBox.querySelectorAll(".search-item");
     if (!items.length || !resultsBox.classList.contains("show")) return;
 
     if (e.key === "ArrowDown") {
@@ -179,6 +176,34 @@
     items.forEach((el, i) => el.classList.toggle("active", i === activeResultIndex));
     if (items[activeResultIndex]) items[activeResultIndex].scrollIntoView({ block: "nearest" });
   }
+
+  function populateJalaliSelects() {
+    const yearSel = document.getElementById("expiry_year");
+    const monthSel = document.getElementById("expiry_month");
+    const daySel = document.getElementById("expiry_day");
+
+    const [ty] = nhTodayJalali();
+    yearSel.innerHTML = "";
+    for (let y = ty; y <= ty + 3; y++) {
+      yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+    }
+
+    monthSel.innerHTML = JALALI_MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
+
+    function refreshDays() {
+      const jm = parseInt(monthSel.value);
+      const maxDay = nhDaysInJalaliMonth(jm);
+      const prevDay = daySel.value ? parseInt(daySel.value) : 1;
+      daySel.innerHTML = "";
+      for (let d = 1; d <= maxDay; d++) {
+        daySel.innerHTML += `<option value="${d}">${d}</option>`;
+      }
+      daySel.value = Math.min(prevDay, maxDay);
+    }
+    monthSel.addEventListener("change", refreshDays);
+    refreshDays();
+  }
+  populateJalaliSelects();
 
   function selectProduct(id, name, group) {
     selectedProductId = id;
@@ -270,7 +295,7 @@
             <tr>
               <td>${b.product_name}</td>
               <td class="num">${b.quantity} ${b.unit}</td>
-              <td class="num">${b.expiry_date}</td>
+              <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
               <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               <td>${b.review_note || "—"}</td>
             </tr>
@@ -299,15 +324,21 @@
     const mutation = `
       mutation InsertBatch(
         $store_id: uuid!, $product_id: uuid!, $product_name: String!, $product_group: String, $quantity: numeric!,
-        $unit: String!, $expiry_date: date!, $discount_percent: numeric, $created_by: uuid!
+        $unit: String!, $expiry_date: date!, $created_by: uuid!
       ) {
         insert_expiry_batches_one(object: {
           store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group, quantity: $quantity,
-          unit: $unit, expiry_date: $expiry_date, discount_percent: $discount_percent,
+          unit: $unit, expiry_date: $expiry_date, discount_percent: 0,
           created_by: $created_by, status: "draft"
         }) { id }
       }
     `;
+
+    const expiryIso = nhJalaliToIso(
+      parseInt(document.getElementById("expiry_year").value),
+      parseInt(document.getElementById("expiry_month").value),
+      parseInt(document.getElementById("expiry_day").value)
+    );
 
     try {
       await nhGql(mutation, {
@@ -317,13 +348,13 @@
         product_group: selectedProductGroup,
         quantity: parseFloat(document.getElementById("quantity").value),
         unit: document.getElementById("unit").value.trim(),
-        expiry_date: document.getElementById("expiry_date").value,
-        discount_percent: parseFloat(document.getElementById("discount_percent").value) || 0,
+        expiry_date: expiryIso,
         created_by: session.userId
       }, session.token);
 
       document.getElementById("productForm").reset();
       clearProduct();
+      populateJalaliSelects();
       await loadBatches();
 
     } catch (err) {
