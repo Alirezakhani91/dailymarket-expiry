@@ -308,11 +308,44 @@ td.cell-clickable:hover {
   color: var(--brand-dark);
   border-color: var(--brand);
 }
+.qty-chip.heat { border: none; }
 td.cell-clickable:hover .qty-chip {
   background: transparent;
   border-color: transparent;
   color: inherit;
 }
+
+/* ---------- hero zone summary ---------- */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.hero-card {
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  animation: rise .35s ease both;
+}
+.hero-num { font-size: 36px; font-weight: 900; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.hero-lbl { font-size: 14.5px; font-weight: 700; margin-bottom: 3px; }
+.hero-sub { font-size: 12.5px; color: var(--muted); }
+.hero-urgent { background: var(--brand-soft); border-color: var(--brand); }
+.hero-urgent .hero-num { color: var(--brand-dark); }
+.hero-warn { background: #faf1e2; border-color: var(--st-draft); }
+.hero-warn .hero-num { color: #8a5d16; }
+.hero-safe { background: #eaf6ee; border-color: var(--st-approved); }
+.hero-safe .hero-num { color: var(--st-approved); }
+.insight-banner {
+  margin-top: 4px; padding: 13px 18px; border-radius: var(--radius-sm);
+  background: var(--paper); border: 1px dashed var(--line); font-size: 13.5px; color: var(--ink);
+}
+.insight-banner strong { color: var(--brand); }
+
+/* ---------- sparkline ---------- */
+.spark { width: 96px; height: 26px; display: block; }
 
 /* ---------- sell modal ---------- */
 .modal-overlay {
@@ -371,6 +404,8 @@ td.cell-clickable:hover .qty-chip {
   .field-row { gap: 10px; }
   .review-actions .btn { flex: 1; }
   .filter-bar { flex-direction: column; align-items: stretch; }
+  .hero-num { font-size: 28px; }
+  .hero-card { padding: 18px 16px; }
 }
 
 /* ---------- auth / splash screens ---------- */
