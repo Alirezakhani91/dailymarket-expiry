@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پایش انقضا | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-group">
+    <div class="mark"><span>DM</span></div>
+    <div class="brand-name">dailymarket-expiry<small>سامانه مدیریت کالای نزدیک به انقضا</small></div>
+  </div>
+  <div class="right">
+    <span class="pill" id="rolePill">...</span>
+    <a href="#" class="link-ghost" id="backLink">بازگشت به گزارش کلی</a>
+    <a href="#" class="link-ghost" id="logoutBtn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <h1>پایش انقضا — روزشمار</h1>
+    <p>چند روز تا انقضای هر کالا مانده، به تفکیک کالا و گروه کالایی.</p>
+  </div>
+
+  <div id="alert" class="alert alert-error"></div>
+
+  <div class="stat-grid" id="bucketGrid"></div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 14px;">تفکیک روزشمار</h2>
+    <div class="filter-bar">
+      <select id="groupByMode">
+        <option value="product">بر اساس کالا</option>
+        <option value="group">بر اساس گروه کالایی</option>
+      </select>
+      <input type="text" id="search" placeholder="جست‌وجو در نام کالا/گروه...">
+      <label class="checkbox-inline"><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال (غیر از فروخته/ردشده)</label>
+      <span class="filter-count" id="rowCount"></span>
+    </div>
+    <div id="matrixWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  const session = nhRequireRole(["region_manager", "executive_manager"]);
+  let myManagerName = null;
+  let allBatches = [];
+
+  document.getElementById("rolePill").textContent = ROLE_LABEL[session.role];
+  document.getElementById("backLink").href = ROLE_HOME[session.role];
+  document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
+
+  const alertEl = document.getElementById("alert");
+  const bucketGrid = document.getElementById("bucketGrid");
+  const matrixWrap = document.getElementById("matrixWrap");
+
+  const BUCKETS = [
+    { key: "expired", label: "منقضی‌شده" },
+    { key: "d0", label: "امروز" },
+    { key: "d1", label: "۱ روز" },
+    { key: "d2", label: "۲ روز" },
+    { key: "d3", label: "۳ روز" },
+    { key: "d4", label: "۴ روز" },
+    { key: "d5", label: "۵ روز" },
+    { key: "d6", label: "۶ روز" },
+    { key: "d7", label: "۷ روز" },
+    { key: "more", label: "بیشتر از ۷ روز" }
+  ];
+  const URGENT_KEYS = ["expired", "d0", "d1", "d2", "d3"];
+
+  function showError(message) {
+    if (message === "SESSION_EXPIRED") {
+      alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
+      alertEl.classList.add("show");
+      setTimeout(nhLogout, 1500);
+      return;
+    }
+    alertEl.textContent = "خطا: " + message;
+    alertEl.classList.add("show");
+  }
+
+  function dayBucket(isoDate) {
+    const [gy, gm, gd] = isoDate.split("-").map(Number);
+    const target = Date.UTC(gy, gm - 1, gd);
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.round((target - today) / 86400000);
+    if (diff < 0) return "expired";
+    if (diff === 0) return "d0";
+    if (diff >= 1 && diff <= 7) return "d" + diff;
+    return "more";
+  }
+
+  async function loadMyManager() {
+    const query = `
+      query MyRole($user_id: uuid!) {
+        user_roles(where: { user_id: { _eq: $user_id } }, limit: 1) { manager_name }
+      }
+    `;
+    const data = await nhGql(query, { user_id: session.userId }, session.token);
+    if (!data.user_roles.length || !data.user_roles[0].manager_name) {
+      showError("نام مدیری برای این حساب ثبت نشده است.");
+      return;
+    }
+    myManagerName = data.user_roles[0].manager_name;
+    await loadData();
+  }
+
+  async function loadData() {
+    const ownerField = session.role === "executive_manager" ? "executive_manager_name" : "region_manager_name";
+    const query = `
+      query MyBatches($mgr: String!) {
+        expiry_batches(
+          where: { store: { ${ownerField}: { _eq: $mgr } } }
+          order_by: { expiry_date: asc }
+          limit: 5000
+        ) {
+          id product_name product_group quantity unit expiry_date status
+        }
+      }
+    `;
+    const data = await nhGql(query, { mgr: myManagerName }, session.token);
+    allBatches = data.expiry_batches.map(b => ({ ...b, bucket: dayBucket(b.expiry_date) }));
+    render();
+  }
+
+  function activeRows() {
+    const onlyActive = document.getElementById("activeOnly").checked;
+    return onlyActive ? allBatches.filter(b => b.status !== "sold" && b.status !== "rejected") : allBatches;
+  }
+
+  function render() {
+    renderBucketGrid();
+    renderMatrix();
+  }
+
+  function renderBucketGrid() {
+    const rows = activeRows();
+    const counts = {};
+    BUCKETS.forEach(b => counts[b.key] = 0);
+    rows.forEach(b => counts[b.bucket]++);
+
+    bucketGrid.innerHTML = BUCKETS.map(b => `
+      <div class="stat-card ${URGENT_KEYS.includes(b.key) ? "urgent" : ""}">
+        <span class="num">${counts[b.key]}</span>
+        <span class="lbl">${b.label}</span>
+      </div>
+    `).join("");
+  }
+
+  function renderMatrix() {
+    const mode = document.getElementById("groupByMode").value;
+    const term = document.getElementById("search").value.trim();
+    const key = mode === "group" ? "product_group" : "product_name";
+    const rows = activeRows();
+
+    const grouped = {};
+    rows.forEach(b => {
+      const k = b[key] || "نامشخص";
+      if (!grouped[k]) {
+        grouped[k] = { total: 0 };
+        BUCKETS.forEach(bk => grouped[k][bk.key] = 0);
+      }
+      grouped[k][b.bucket]++;
+      grouped[k].total++;
+    });
+
+    let entries = Object.entries(grouped);
+    if (term) entries = entries.filter(([name]) => name.includes(term));
+    entries.sort((a, b) => {
+      const urgentA = URGENT_KEYS.reduce((s, k) => s + a[1][k], 0);
+      const urgentB = URGENT_KEYS.reduce((s, k) => s + b[1][k], 0);
+      return urgentB - urgentA;
+    });
+
+    document.getElementById("rowCount").textContent = entries.length ? `${entries.length} مورد` : "";
+
+    if (!entries.length) {
+      matrixWrap.innerHTML = '<div class="empty">داده‌ای برای نمایش وجود ندارد.</div>';
+      return;
+    }
+
+    matrixWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>${mode === "group" ? "گروه کالایی" : "کالا"}</th>
+            ${BUCKETS.map(b => `<th>${b.label}</th>`).join("")}
+            <th>مجموع</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${entries.map(([name, v]) => `
+            <tr>
+              <td>${name}</td>
+              ${BUCKETS.map(b => `<td class="num ${URGENT_KEYS.includes(b.key) && v[b.key] > 0 ? "cell-alert" : ""}">${v[b.key]}</td>`).join("")}
+              <td class="num">${v.total}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+    `;
+  }
+
+  document.getElementById("groupByMode").addEventListener("change", renderMatrix);
+  document.getElementById("search").addEventListener("input", renderMatrix);
+  document.getElementById("activeOnly").addEventListener("change", render);
+
+  loadMyManager().catch(err => showError(err.message));
+</script>
+
+</body>
+</html>
