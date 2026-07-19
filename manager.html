@@ -132,19 +132,18 @@
   }
 
   function renderStats() {
-    const sums = { approved: 0, sold: 0, rejected: 0 };
+    const sums = { approved: 0, sold: 0 };
     allBatches.forEach(b => { if (sums[b.status] !== undefined) sums[b.status]++; });
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
       <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
       <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
       <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
-      <div class="stat-card"><span class="num">${sums.rejected}</span><span class="lbl">${STATUS_LABEL.rejected}</span></div>
     `;
   }
 
   function storeStats(storeId) {
-    const s = { approved: 0, sold: 0, rejected: 0, total: 0 };
+    const s = { approved: 0, sold: 0, total: 0 };
     allBatches.forEach(b => {
       if (b.store.id === storeId) {
         if (s[b.status] !== undefined) s[b.status]++;
@@ -177,7 +176,7 @@
         <thead>
           <tr>
             <th>کد</th><th>فروشگاه</th><th>منطقه</th>
-            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>${STATUS_LABEL.rejected}</th><th>مجموع</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th>
           </tr>
         </thead>
         <tbody>
@@ -188,7 +187,6 @@
               <td>${s.region}</td>
               <td class="num">${s.approved}</td>
               <td class="num">${s.sold}</td>
-              <td class="num">${s.rejected}</td>
               <td class="num">${s.total}</td>
             </tr>
             ${expandedStoreId === s.id ? renderStoreDetail(s.id) : ""}
@@ -210,10 +208,10 @@
   function renderStoreDetail(storeId) {
     const items = allBatches.filter(b => b.store.id === storeId);
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="7"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="6"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="7">
+      <tr class="detail-row"><td colspan="6">
         <table>
           <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
