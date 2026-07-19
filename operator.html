@@ -23,7 +23,7 @@
 <div class="container">
   <div class="page-head">
     <h1>ثبت کالای نزدیک به انقضا</h1>
-    <p>پس از ثبت، کالا به‌صورت پیش‌نویس برای بررسی مدیر منطقه ارسال می‌شود.</p>
+    <p>پس از ثبت، کالا بلافاصله در فهرست فروشگاه شما فعال می‌شود.</p>
   </div>
 
   <div id="alert" class="alert alert-error"></div>
@@ -56,7 +56,7 @@
           <select id="expiry_day"></select>
         </div>
       </div>
-      <button type="submit" id="submitBtn" class="btn btn-primary btn-block">ثبت پیش‌نویس</button>
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-block">ثبت کالا</button>
     </form>
   </div>
 
@@ -65,9 +65,7 @@
     <div class="filter-bar">
       <select id="statusFilter">
         <option value="">همه‌ی وضعیت‌ها</option>
-        <option value="draft">پیش‌نویس</option>
-        <option value="needs_correction">نیاز به اصلاح</option>
-        <option value="approved">تأییدشده</option>
+        <option value="approved">ثبت‌شده</option>
         <option value="sold">فروخته‌شده</option>
         <option value="rejected">ردشده</option>
       </select>
@@ -283,7 +281,7 @@
     if (!rows.length) {
       listWrap.innerHTML = allBatches.length
         ? '<div class="empty">با این فیلتر کالایی یافت نشد.</div>'
-        : '<div class="empty">هنوز کالایی ثبت نشده است. اولین پیش‌نویس را ثبت کنید.</div>';
+        : '<div class="empty">هنوز کالایی ثبت نشده است. اولین کالا را ثبت کنید.</div>';
       return;
     }
     listWrap.innerHTML = `
@@ -329,7 +327,7 @@
         insert_expiry_batches_one(object: {
           store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group, quantity: $quantity,
           unit: $unit, expiry_date: $expiry_date, discount_percent: 0,
-          created_by: $created_by, status: "draft"
+          created_by: $created_by, status: "approved"
         }) { id }
       }
     `;
@@ -361,7 +359,7 @@
       showError(err.message);
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "ثبت پیش‌نویس";
+      submitBtn.textContent = "ثبت کالا";
     }
   });
 
