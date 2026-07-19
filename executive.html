@@ -42,7 +42,6 @@
     <div class="filter-bar">
       <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
       <select id="mgrFilter"><option value="">همه‌ی مدیران منطقه</option></select>
-      <label class="checkbox-inline"><input type="checkbox" id="onlyPending"> فقط دارای مورد در انتظار</label>
       <span class="filter-count" id="reportCount"></span>
     </div>
     <div id="reportWrap"><div class="empty">در حال بارگذاری گزارش...</div></div>
@@ -141,7 +140,7 @@
   }
 
   function storeStats(storeId) {
-    const s = { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0, total: 0 };
+    const s = { approved: 0, sold: 0, rejected: 0, total: 0 };
     allBatches.forEach(b => {
       if (b.store.id === storeId) {
         if (s[b.status] !== undefined) s[b.status]++;
@@ -152,13 +151,14 @@
   }
 
   function renderStats() {
-    const sums = { draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 };
+    const sums = { approved: 0, sold: 0, rejected: 0 };
     allBatches.forEach(b => { if (sums[b.status] !== undefined) sums[b.status]++; });
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
-      ${["draft", "needs_correction", "approved", "sold", "rejected"].map(k => `
-        <div class="stat-card"><span class="num">${sums[k]}</span><span class="lbl">${STATUS_LABEL[k]}</span></div>
-      `).join("")}
+      <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
+      <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
+      <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+      <div class="stat-card"><span class="num">${sums.rejected}</span><span class="lbl">${STATUS_LABEL.rejected}</span></div>
     `;
   }
 
@@ -166,17 +166,16 @@
     const byMgr = {};
     myStores.forEach(s => {
       const key = s.region_manager_name || "نامشخص";
-      if (!byMgr[key]) byMgr[key] = { stores: 0, draft: 0, needs_correction: 0, approved: 0, sold: 0, rejected: 0 };
+      if (!byMgr[key]) byMgr[key] = { stores: 0, approved: 0, sold: 0, rejected: 0, total: 0 };
       byMgr[key].stores += 1;
       const st = storeStats(s.id);
-      byMgr[key].draft += st.draft;
-      byMgr[key].needs_correction += st.needs_correction;
       byMgr[key].approved += st.approved;
       byMgr[key].sold += st.sold;
       byMgr[key].rejected += st.rejected;
+      byMgr[key].total += st.total;
     });
 
-    const rows = Object.entries(byMgr).sort((a, b) => (b[1].draft + b[1].needs_correction) - (a[1].draft + a[1].needs_correction));
+    const rows = Object.entries(byMgr).sort((a, b) => b[1].total - a[1].total);
 
     if (!rows.length) {
       rollupWrap.innerHTML = '<div class="empty">فروشگاهی برای این مدیر ارشد ثبت نشده است.</div>';
@@ -189,7 +188,7 @@
         <thead>
           <tr>
             <th>مدیر منطقه</th><th>تعداد فروشگاه</th>
-            <th>پیش‌نویس</th><th>اصلاح</th><th>تأیید</th><th>فروش</th><th>رد</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>${STATUS_LABEL.rejected}</th><th>مجموع</th>
           </tr>
         </thead>
         <tbody>
@@ -197,11 +196,10 @@
             <tr>
               <td>${name}</td>
               <td class="num">${v.stores}</td>
-              <td class="num ${v.draft > 0 ? "cell-alert" : ""}">${v.draft}</td>
-              <td class="num ${v.needs_correction > 0 ? "cell-alert" : ""}">${v.needs_correction}</td>
               <td class="num">${v.approved}</td>
               <td class="num">${v.sold}</td>
               <td class="num">${v.rejected}</td>
+              <td class="num">${v.total}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -222,13 +220,11 @@
   function renderReport() {
     const term = document.getElementById("reportSearch").value.trim();
     const mgr = document.getElementById("mgrFilter").value;
-    const onlyPending = document.getElementById("onlyPending").checked;
 
     let rows = myStores.map(s => ({ ...s, ...storeStats(s.id) }));
     if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
     if (mgr) rows = rows.filter(s => s.region_manager_name === mgr);
-    if (onlyPending) rows = rows.filter(s => s.draft + s.needs_correction > 0);
-    rows = rows.sort((a, b) => (b.draft + b.needs_correction) - (a.draft + a.needs_correction));
+    rows = rows.sort((a, b) => b.total - a.total);
 
     document.getElementById("reportCount").textContent =
       myStores.length ? `${rows.length} از ${myStores.length} فروشگاه` : "";
@@ -246,7 +242,7 @@
         <thead>
           <tr>
             <th>کد</th><th>فروشگاه</th><th>منطقه</th><th>مدیر منطقه</th>
-            <th>پیش‌نویس</th><th>اصلاح</th><th>تأیید</th><th>فروش</th><th>رد</th><th>مجموع</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>${STATUS_LABEL.rejected}</th><th>مجموع</th>
           </tr>
         </thead>
         <tbody>
@@ -256,8 +252,6 @@
               <td>${s.name} <span class="row-expand-icon ${expandedStoreId === s.id ? "open" : ""}">◀</span></td>
               <td>${s.region}</td>
               <td>${s.region_manager_name || "—"}</td>
-              <td class="num ${s.draft > 0 ? "cell-alert" : ""}">${s.draft}</td>
-              <td class="num ${s.needs_correction > 0 ? "cell-alert" : ""}">${s.needs_correction}</td>
               <td class="num">${s.approved}</td>
               <td class="num">${s.sold}</td>
               <td class="num">${s.rejected}</td>
@@ -282,10 +276,10 @@
   function renderStoreDetail(storeId) {
     const items = allBatches.filter(b => b.store.id === storeId);
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="10"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="10">
+      <tr class="detail-row"><td colspan="8">
         <table>
           <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
@@ -306,7 +300,6 @@
 
   document.getElementById("reportSearch").addEventListener("input", renderReport);
   document.getElementById("mgrFilter").addEventListener("change", renderReport);
-  document.getElementById("onlyPending").addEventListener("change", renderReport);
 
   function renderProductReport() {
     const mode = document.getElementById("groupByMode").value;
