@@ -147,7 +147,7 @@
     const query = `
       query RecentBatches {
         expiry_batches(${whereClause} order_by: { created_at: desc }, limit: 30) {
-          id product_name quantity unit expiry_date status store { name }
+          id product_name quantity unit unit_price expiry_date status store { name }
         }
       }
     `;
@@ -155,13 +155,14 @@
     batchesWrap.innerHTML = data.expiry_batches.length ? `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>کالا</th><th>فروشگاه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+        <thead><tr><th>کالا</th><th>فروشگاه</th><th>تعداد</th><th>ارزش ریالی</th><th>انقضا</th><th>وضعیت</th></tr></thead>
         <tbody>
           ${data.expiry_batches.map(b => `
             <tr>
               <td>${b.product_name}</td>
               <td>${b.store.name}</td>
               <td class="num">${b.quantity}</td>
+              <td class="num">${b.unit_price ? nhFormatRial(b.unit_price * b.quantity) : "—"}</td>
               <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
               <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
             </tr>
@@ -180,13 +181,21 @@
         stores_aggregate { aggregate { count } }
         approved: expiry_batches_aggregate(where: { status: { _eq: "approved" } }) { aggregate { count } }
         sold: expiry_batches_aggregate(where: { status: { _eq: "sold" } }) { aggregate { count } }
+        approvedItems: expiry_batches(where: { status: { _eq: "approved" } }, limit: 5000) { quantity unit_price }
+        soldItems: expiry_batches(where: { status: { _eq: "sold" } }, limit: 5000) { quantity unit_price }
       }
     `;
     const data = await nhGql(query, {}, session.token);
+    const rialSum = list => list.reduce((s, b) => s + (Number(b.quantity) || 0) * (Number(b.unit_price) || 0), 0);
+    const approvedRial = rialSum(data.approvedItems);
+    const soldRial = rialSum(data.soldItems);
+
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${data.stores_aggregate.aggregate.count}</span><span class="lbl">فروشگاه ثبت‌شده</span></div>
       <div class="stat-card"><span class="num">${data.approved.aggregate.count}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
       <div class="stat-card"><span class="num">${data.sold.aggregate.count}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+      <div class="stat-card"><span class="num" style="font-size:17px;">${nhFormatRial(approvedRial)}</span><span class="lbl">ارزش ریالی موجودی فعال</span></div>
+      <div class="stat-card"><span class="num" style="font-size:17px;">${nhFormatRial(soldRial)}</span><span class="lbl">ارزش ریالی فروش کل</span></div>
     `;
   }
 
