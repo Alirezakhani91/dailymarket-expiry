@@ -123,7 +123,7 @@
           order_by: { created_at: desc }
           limit: 5000
         ) {
-          id product_name product_group quantity unit expiry_date status created_at
+          id product_name product_group quantity unit unit_price expiry_date status created_at
           store { id }
         }
       }
@@ -143,11 +143,12 @@
   }
 
   function storeStats(storeId) {
-    const s = { approved: 0, sold: 0, total: 0, lastCreated: null };
+    const s = { approved: 0, sold: 0, total: 0, rial: 0, lastCreated: null };
     allBatches.forEach(b => {
       if (b.store.id === storeId) {
         if (s[b.status] !== undefined) s[b.status]++;
         s.total++;
+        s.rial += (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
         if (!s.lastCreated || b.created_at > s.lastCreated) s.lastCreated = b.created_at;
       }
     });
@@ -172,12 +173,17 @@
 
   function renderStats() {
     const sums = { approved: 0, sold: 0 };
-    allBatches.forEach(b => { if (sums[b.status] !== undefined) sums[b.status]++; });
+    let totalRial = 0;
+    allBatches.forEach(b => {
+      if (sums[b.status] !== undefined) sums[b.status]++;
+      totalRial += (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
+    });
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
       <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
       <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
       <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+      <div class="stat-card"><span class="num" style="font-size:18px;">${nhFormatRial(totalRial)}</span><span class="lbl">ارزش ریالی کل</span></div>
     `;
   }
 
@@ -185,15 +191,16 @@
     const byMgr = {};
     myStores.forEach(s => {
       const key = s.region_manager_name || "نامشخص";
-      if (!byMgr[key]) byMgr[key] = { stores: 0, approved: 0, sold: 0, total: 0 };
+      if (!byMgr[key]) byMgr[key] = { stores: 0, approved: 0, sold: 0, total: 0, rial: 0 };
       byMgr[key].stores += 1;
       const st = storeStats(s.id);
       byMgr[key].approved += st.approved;
       byMgr[key].sold += st.sold;
       byMgr[key].total += st.total;
+      byMgr[key].rial += st.rial;
     });
 
-    const rows = Object.entries(byMgr).sort((a, b) => b[1].total - a[1].total);
+    const rows = Object.entries(byMgr).sort((a, b) => b[1].rial - a[1].rial);
 
     if (!rows.length) {
       rollupWrap.innerHTML = '<div class="empty">فروشگاهی برای این مدیر ارشد ثبت نشده است.</div>';
@@ -206,7 +213,7 @@
         <thead>
           <tr>
             <th>مدیر منطقه</th><th>تعداد فروشگاه</th>
-            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th>
+            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th><th>ارزش ریالی</th>
           </tr>
         </thead>
         <tbody>
@@ -217,6 +224,7 @@
               <td class="num">${v.approved}</td>
               <td class="num">${v.sold}</td>
               <td class="num">${v.total}</td>
+              <td class="num">${nhFormatRial(v.rial)}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -261,7 +269,7 @@
         <thead>
           <tr>
             ${th("کد", "code")}${th("فروشگاه", "name")}${th("منطقه", "region")}${th("مدیر منطقه", "regionManager")}${th("آخرین ثبت", "stale")}
-            ${th(STATUS_LABEL.approved, "approved")}${th(STATUS_LABEL.sold, "sold")}${th("مجموع", "total")}
+            ${th(STATUS_LABEL.approved, "approved")}${th(STATUS_LABEL.sold, "sold")}${th("مجموع", "total")}${th("ارزش ریالی", "rial")}
           </tr>
         </thead>
         <tbody>
@@ -275,6 +283,7 @@
               <td class="num">${s.approved}</td>
               <td class="num">${s.sold}</td>
               <td class="num">${s.total}</td>
+              <td class="num">${nhFormatRial(s.rial)}</td>
             </tr>
             ${expandedStoreId === s.id ? renderStoreDetail(s.id) : ""}
           `).join("")}
@@ -327,6 +336,7 @@
         case "approved": return mul * (a.approved - b.approved);
         case "sold": return mul * (a.sold - b.sold);
         case "total": return mul * (a.total - b.total);
+        case "rial": return mul * (a.rial - b.rial);
         default: return 0;
       }
     });
@@ -335,18 +345,19 @@
   function renderStoreDetail(storeId) {
     const items = allBatches.filter(b => b.store.id === storeId);
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="9"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="8">
+      <tr class="detail-row"><td colspan="9">
         <table>
-          <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+          <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>ارزش ریالی</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
             ${items.map(b => `
               <tr>
                 <td>${b.product_name}</td>
                 <td>${b.product_group || "—"}</td>
                 <td class="num">${b.quantity}</td>
+                <td class="num">${b.unit_price ? nhFormatRial(b.unit_price * b.quantity) : "—"}</td>
                 <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
                 <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               </tr>
