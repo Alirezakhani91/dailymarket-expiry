@@ -43,6 +43,7 @@
     <div class="filter-bar">
       <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
       <select id="mgrFilter"><option value="">همه‌ی مدیران منطقه</option></select>
+      <label class="checkbox-inline"><input type="checkbox" id="silentOnly"> فقط فروشگاه‌های ساکت (بیش از ۱۴ روز)</label>
       <span class="filter-count" id="reportCount"></span>
     </div>
     <div id="reportWrap"><div class="empty">در حال بارگذاری گزارش...</div></div>
@@ -121,7 +122,7 @@
           order_by: { created_at: desc }
           limit: 5000
         ) {
-          id product_name product_group quantity unit expiry_date status
+          id product_name product_group quantity unit expiry_date status created_at
           store { id }
         }
       }
@@ -141,14 +142,30 @@
   }
 
   function storeStats(storeId) {
-    const s = { approved: 0, sold: 0, total: 0 };
+    const s = { approved: 0, sold: 0, total: 0, lastCreated: null };
     allBatches.forEach(b => {
       if (b.store.id === storeId) {
         if (s[b.status] !== undefined) s[b.status]++;
         s.total++;
+        if (!s.lastCreated || b.created_at > s.lastCreated) s.lastCreated = b.created_at;
       }
     });
     return s;
+  }
+
+  function daysSince(iso) {
+    if (!iso) return null;
+    return Math.floor((new Date() - new Date(iso)) / 86400000);
+  }
+
+  function lastRegisteredCell(iso) {
+    const days = daysSince(iso);
+    if (days === null) return '<span class="stamp stamp-rejected">هرگز</span>';
+    const label = days <= 0 ? "امروز" : days === 1 ? "دیروز" : `${days} روز پیش`;
+    let cls = "stamp-approved";
+    if (days > 14) cls = "stamp-sold";
+    else if (days > 3) cls = "stamp-draft";
+    return `<span class="stamp ${cls}">${label}</span>`;
   }
 
   function renderStats() {
@@ -218,11 +235,17 @@
   function renderReport() {
     const term = document.getElementById("reportSearch").value.trim();
     const mgr = document.getElementById("mgrFilter").value;
+    const silentOnly = document.getElementById("silentOnly").checked;
 
     let rows = myStores.map(s => ({ ...s, ...storeStats(s.id) }));
     if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
     if (mgr) rows = rows.filter(s => s.region_manager_name === mgr);
-    rows = rows.sort((a, b) => b.total - a.total);
+    if (silentOnly) rows = rows.filter(s => { const d = daysSince(s.lastCreated); return d === null || d > 14; });
+    rows = rows.sort((a, b) => {
+      const da = daysSince(a.lastCreated), db = daysSince(b.lastCreated);
+      const va = da === null ? 9999 : da, vb = db === null ? 9999 : db;
+      return vb - va;
+    });
 
     document.getElementById("reportCount").textContent =
       myStores.length ? `${rows.length} از ${myStores.length} فروشگاه` : "";
@@ -239,7 +262,7 @@
       <table>
         <thead>
           <tr>
-            <th>کد</th><th>فروشگاه</th><th>منطقه</th><th>مدیر منطقه</th>
+            <th>کد</th><th>فروشگاه</th><th>منطقه</th><th>مدیر منطقه</th><th>آخرین ثبت</th>
             <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th>
           </tr>
         </thead>
@@ -250,6 +273,7 @@
               <td>${s.name} <span class="row-expand-icon ${expandedStoreId === s.id ? "open" : ""}">◀</span></td>
               <td>${s.region}</td>
               <td>${s.region_manager_name || "—"}</td>
+              <td>${lastRegisteredCell(s.lastCreated)}</td>
               <td class="num">${s.approved}</td>
               <td class="num">${s.sold}</td>
               <td class="num">${s.total}</td>
@@ -273,10 +297,10 @@
   function renderStoreDetail(storeId) {
     const items = allBatches.filter(b => b.store.id === storeId);
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="7"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="7">
+      <tr class="detail-row"><td colspan="8">
         <table>
           <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
@@ -297,6 +321,7 @@
 
   document.getElementById("reportSearch").addEventListener("input", renderReport);
   document.getElementById("mgrFilter").addEventListener("change", renderReport);
+  document.getElementById("silentOnly").addEventListener("change", renderReport);
 
   function renderProductReport() {
     const mode = document.getElementById("groupByMode").value;
