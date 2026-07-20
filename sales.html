@@ -30,6 +30,7 @@
   <div id="alert" class="alert alert-error"></div>
 
   <div class="stat-grid" id="statGrid"></div>
+  <div class="stat-grid" id="rialGrid"></div>
 
   <div class="card">
     <h2 style="font-size:15px; margin:0 0 14px;">روند فروش (۱۴ روز اخیر)</h2>
@@ -127,7 +128,7 @@
           order_by: { sold_at: desc }
           limit: 5000
         ) {
-          id product_name product_group quantity unit sold_at
+          id product_name product_group quantity unit unit_price sold_at
           store { id name region region_manager_name }
         }
       }
@@ -140,6 +141,10 @@
     renderProductReport();
     renderBreakdown();
     renderRecent();
+  }
+
+  function sumRial(list) {
+    return list.reduce((s, b) => s + (Number(b.quantity) || 0) * (Number(b.unit_price) || 0), 0);
   }
 
   function renderStats() {
@@ -158,6 +163,13 @@
       <div class="stat-card urgent"><span class="num">${sumQty(todaySales)}</span><span class="lbl">فروش امروز</span></div>
       <div class="stat-card"><span class="num">${sumQty(weekSales)}</span><span class="lbl">فروش ۷ روز اخیر</span></div>
       <div class="stat-card"><span class="num">${sumQty(monthSales)}</span><span class="lbl">فروش ۳۰ روز اخیر</span></div>
+    `;
+
+    document.getElementById("rialGrid").innerHTML = `
+      <div class="stat-card"><span class="num" style="font-size:19px;">${nhFormatRial(sumRial(sales))}</span><span class="lbl">مجموع ارزش فروش</span></div>
+      <div class="stat-card urgent"><span class="num" style="font-size:19px;">${nhFormatRial(sumRial(todaySales))}</span><span class="lbl">ارزش فروش امروز</span></div>
+      <div class="stat-card"><span class="num" style="font-size:19px;">${nhFormatRial(sumRial(weekSales))}</span><span class="lbl">ارزش فروش ۷ روز اخیر</span></div>
+      <div class="stat-card"><span class="num" style="font-size:19px;">${nhFormatRial(sumRial(monthSales))}</span><span class="lbl">ارزش فروش ۳۰ روز اخیر</span></div>
     `;
   }
 
@@ -239,14 +251,15 @@
     const grouped = {};
     sales.forEach(s => {
       const k = s[key] || "نامشخص";
-      if (!grouped[k]) grouped[k] = { count: 0, qty: 0 };
+      if (!grouped[k]) grouped[k] = { count: 0, qty: 0, rial: 0 };
       grouped[k].count += 1;
       grouped[k].qty += Number(s.quantity) || 0;
+      grouped[k].rial += (Number(s.quantity) || 0) * (Number(s.unit_price) || 0);
     });
 
     let rows = Object.entries(grouped);
     if (term) rows = rows.filter(([name]) => name.includes(term));
-    rows.sort((a, b) => b[1].qty - a[1].qty);
+    rows.sort((a, b) => b[1].rial - a[1].rial);
 
     document.getElementById("productCount").textContent = rows.length ? `${rows.length} مورد` : "";
 
@@ -258,10 +271,10 @@
     productReportWrap.innerHTML = `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>${mode === "group" ? "گروه کالایی" : "کالا"}</th><th>تعداد تراکنش</th><th>مجموع مقدار</th></tr></thead>
+        <thead><tr><th>${mode === "group" ? "گروه کالایی" : "کالا"}</th><th>تعداد تراکنش</th><th>مجموع مقدار</th><th>ارزش ریالی</th></tr></thead>
         <tbody>
           ${rows.map(([name, v]) => `
-            <tr><td>${name}</td><td class="num">${v.count}</td><td class="num">${v.qty}</td></tr>
+            <tr><td>${name}</td><td class="num">${v.count}</td><td class="num">${v.qty}</td><td class="num">${nhFormatRial(v.rial)}</td></tr>
           `).join("")}
         </tbody>
       </table>
@@ -277,12 +290,13 @@
     const grouped = {};
     sales.forEach(s => {
       const key = isExec ? (s.store.region_manager_name || "نامشخص") : s.store.name;
-      if (!grouped[key]) grouped[key] = { qty: 0, count: 0 };
+      if (!grouped[key]) grouped[key] = { qty: 0, count: 0, rial: 0 };
       grouped[key].qty += Number(s.quantity) || 0;
       grouped[key].count += 1;
+      grouped[key].rial += (Number(s.quantity) || 0) * (Number(s.unit_price) || 0);
     });
 
-    const rows = Object.entries(grouped).sort((a, b) => b[1].qty - a[1].qty);
+    const rows = Object.entries(grouped).sort((a, b) => b[1].rial - a[1].rial);
 
     if (!rows.length) {
       breakdownWrap.innerHTML = '<div class="empty">هنوز فروشی ثبت نشده است.</div>';
@@ -292,10 +306,10 @@
     breakdownWrap.innerHTML = `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>${isExec ? "مدیر منطقه" : "فروشگاه"}</th><th>تعداد تراکنش</th><th>مجموع مقدار</th></tr></thead>
+        <thead><tr><th>${isExec ? "مدیر منطقه" : "فروشگاه"}</th><th>تعداد تراکنش</th><th>مجموع مقدار</th><th>ارزش ریالی</th></tr></thead>
         <tbody>
           ${rows.map(([name, v]) => `
-            <tr><td>${name}</td><td class="num">${v.count}</td><td class="num">${v.qty}</td></tr>
+            <tr><td>${name}</td><td class="num">${v.count}</td><td class="num">${v.qty}</td><td class="num">${nhFormatRial(v.rial)}</td></tr>
           `).join("")}
         </tbody>
       </table>
@@ -312,13 +326,14 @@
     recentWrap.innerHTML = `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>کالا</th><th>فروشگاه</th><th>مقدار</th><th>زمان فروش</th></tr></thead>
+        <thead><tr><th>کالا</th><th>فروشگاه</th><th>مقدار</th><th>ارزش ریالی</th><th>زمان فروش</th></tr></thead>
         <tbody>
           ${rows.map(s => `
             <tr>
               <td>${s.product_name}</td>
               <td>${s.store.name}</td>
               <td class="num">${s.quantity}</td>
+              <td class="num">${s.unit_price ? nhFormatRial(s.quantity * s.unit_price) : "—"}</td>
               <td class="num">${formatSoldAt(s.sold_at)}</td>
             </tr>
           `).join("")}
