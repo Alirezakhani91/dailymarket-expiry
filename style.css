@@ -154,6 +154,15 @@ tbody tr:last-child td { border-bottom: none; }
 tbody tr { transition: background .15s; }
 tbody tr:hover { background: var(--paper); }
 .num { font-variant-numeric: tabular-nums; }
+.cell-subdate { font-size: 11px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color .15s;
+  white-space: nowrap;
+}
+thead th.sortable:hover { color: var(--brand); }
 
 /* ---------- stamp badge (signature element) ---------- */
 .stamp {
