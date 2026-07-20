@@ -173,26 +173,28 @@
     const monthSel = document.getElementById("expiry_month");
     const daySel = document.getElementById("expiry_day");
 
-    const [ty] = nhTodayJalali();
+    const [ty, tm, td] = nhTodayJalali();
     yearSel.innerHTML = "";
     for (let y = ty; y <= ty + 3; y++) {
       yearSel.innerHTML += `<option value="${y}">${y}</option>`;
     }
+    yearSel.value = ty;
 
     monthSel.innerHTML = JALALI_MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
+    monthSel.value = tm;
 
-    function refreshDays() {
+    function refreshDays(preferredDay) {
       const jm = parseInt(monthSel.value);
       const maxDay = nhDaysInJalaliMonth(jm);
-      const prevDay = daySel.value ? parseInt(daySel.value) : 1;
+      const prevDay = preferredDay || (daySel.value ? parseInt(daySel.value) : 1);
       daySel.innerHTML = "";
       for (let d = 1; d <= maxDay; d++) {
         daySel.innerHTML += `<option value="${d}">${d}</option>`;
       }
       daySel.value = Math.min(prevDay, maxDay);
     }
-    monthSel.addEventListener("change", refreshDays);
-    refreshDays();
+    monthSel.addEventListener("change", () => refreshDays());
+    refreshDays(td);
   }
   populateJalaliSelects();
 
