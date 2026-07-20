@@ -311,6 +311,18 @@
       return;
     }
 
+    const expiryIso = nhJalaliToIso(
+      parseInt(document.getElementById("expiry_year").value),
+      parseInt(document.getElementById("expiry_month").value),
+      parseInt(document.getElementById("expiry_day").value)
+    );
+
+    const todayIso = new Date().toISOString().slice(0, 10);
+    if (expiryIso < todayIso) {
+      showError("تاریخ انقضا نمی‌تواند قبل از امروز باشد.");
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = "در حال ثبت...";
 
@@ -326,12 +338,6 @@
         }) { id }
       }
     `;
-
-    const expiryIso = nhJalaliToIso(
-      parseInt(document.getElementById("expiry_year").value),
-      parseInt(document.getElementById("expiry_month").value),
-      parseInt(document.getElementById("expiry_day").value)
-    );
 
     try {
       await nhGql(mutation, {
