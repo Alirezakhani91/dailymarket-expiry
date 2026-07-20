@@ -70,6 +70,7 @@
   let myStores = [];
   let allBatches = [];
   let expandedStoreId = null;
+  let sortState = { key: "stale", dir: "desc" };
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -165,7 +166,8 @@
     let cls = "stamp-approved";
     if (days > 14) cls = "stamp-sold";
     else if (days > 3) cls = "stamp-draft";
-    return `<span class="stamp ${cls}">${label}</span>`;
+    const dateStr = nhIsoToJalaliStr(iso.slice(0, 10));
+    return `<span class="stamp ${cls}">${label}</span><div class="cell-subdate">${dateStr}</div>`;
   }
 
   function renderStats() {
@@ -241,11 +243,7 @@
     if (term) rows = rows.filter(s => s.name.includes(term) || (s.store_code || "").includes(term));
     if (mgr) rows = rows.filter(s => s.region_manager_name === mgr);
     if (silentOnly) rows = rows.filter(s => { const d = daysSince(s.lastCreated); return d === null || d > 14; });
-    rows = rows.sort((a, b) => {
-      const da = daysSince(a.lastCreated), db = daysSince(b.lastCreated);
-      const va = da === null ? 9999 : da, vb = db === null ? 9999 : db;
-      return vb - va;
-    });
+    rows = sortRows(rows);
 
     document.getElementById("reportCount").textContent =
       myStores.length ? `${rows.length} از ${myStores.length} فروشگاه` : "";
@@ -262,8 +260,8 @@
       <table>
         <thead>
           <tr>
-            <th>کد</th><th>فروشگاه</th><th>منطقه</th><th>مدیر منطقه</th><th>آخرین ثبت</th>
-            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th>
+            ${th("کد", "code")}${th("فروشگاه", "name")}${th("منطقه", "region")}${th("مدیر منطقه", "regionManager")}${th("آخرین ثبت", "stale")}
+            ${th(STATUS_LABEL.approved, "approved")}${th(STATUS_LABEL.sold, "sold")}${th("مجموع", "total")}
           </tr>
         </thead>
         <tbody>
@@ -291,6 +289,46 @@
         expandedStoreId = expandedStoreId === id ? null : id;
         renderReport();
       });
+    });
+
+    reportWrap.querySelectorAll("th.sortable").forEach(el => {
+      el.addEventListener("click", () => {
+        const key = el.dataset.key;
+        if (sortState.key === key) {
+          sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+        } else {
+          sortState.key = key;
+          sortState.dir = ["name", "region", "code", "regionManager"].includes(key) ? "asc" : "desc";
+        }
+        renderReport();
+      });
+    });
+  }
+
+  function th(label, key) {
+    const active = sortState.key === key;
+    const arrow = active ? (sortState.dir === "asc" ? " ▲" : " ▼") : "";
+    return `<th class="sortable" data-key="${key}">${label}${arrow}</th>`;
+  }
+
+  function sortRows(rows) {
+    const { key, dir } = sortState;
+    const mul = dir === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      switch (key) {
+        case "code": return mul * (a.store_code || "").localeCompare(b.store_code || "");
+        case "name": return mul * a.name.localeCompare(b.name);
+        case "region": return mul * a.region.localeCompare(b.region);
+        case "regionManager": return mul * (a.region_manager_name || "").localeCompare(b.region_manager_name || "");
+        case "stale": {
+          const va = daysSince(a.lastCreated); const vb = daysSince(b.lastCreated);
+          return mul * ((va === null ? 9999 : va) - (vb === null ? 9999 : vb));
+        }
+        case "approved": return mul * (a.approved - b.approved);
+        case "sold": return mul * (a.sold - b.sold);
+        case "total": return mul * (a.total - b.total);
+        default: return 0;
+      }
     });
   }
 
