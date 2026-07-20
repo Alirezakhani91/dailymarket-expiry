@@ -293,6 +293,13 @@ td.cell-clickable:hover {
   fill: var(--ink);
   font-variant-numeric: tabular-nums;
 }
+.chart-rial-label {
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 .chart-day-label {
   font-family: 'Vazirmatn', sans-serif;
   font-size: 13px;
@@ -318,6 +325,7 @@ td.cell-clickable:hover {
   border-color: var(--brand);
 }
 .qty-chip.heat { border: none; }
+.chip-rial { display: block; font-size: 9.5px; font-weight: 600; opacity: .85; margin-top: 1px; }
 td.cell-clickable:hover .qty-chip {
   background: transparent;
   border-color: transparent;
