@@ -331,6 +331,7 @@ td.cell-clickable:hover .qty-chip {
   gap: 16px;
   margin-bottom: 12px;
 }
+.hero-grid-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .hero-card {
   border-radius: var(--radius);
   padding: 24px 22px;
@@ -339,23 +340,50 @@ td.cell-clickable:hover .qty-chip {
   animation: rise .35s ease both;
 }
 .hero-num { font-size: 36px; font-weight: 900; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
-.hero-lbl { font-size: 14.5px; font-weight: 700; margin-bottom: 3px; }
-.hero-sub { font-size: 12.5px; color: var(--muted); }
+.hero-lbl { font-size: 14px; font-weight: 700; margin-bottom: 3px; margin-top: 8px; }
+.hero-sub { font-size: 12px; color: var(--muted); }
 .hero-value {
   margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,.1);
   font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
+.hero-value-primary {
+  margin-top: 0; padding-top: 0; border-top: none;
+  font-size: 24px; font-weight: 900; line-height: 1.15; font-variant-numeric: tabular-nums;
+}
+.hero-num-secondary { margin-top: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hero-lost { background: #f4dde1; border-color: #7a1929; border-width: 2px; }
+.hero-lost .hero-value-primary { color: #5c1420; }
+.hero-lost .hero-lbl { color: #7a1929; }
 .hero-urgent { background: var(--brand-soft); border-color: var(--brand); }
-.hero-urgent .hero-num { color: var(--brand-dark); }
+.hero-urgent .hero-value-primary { color: var(--brand-dark); }
 .hero-warn { background: #faf1e2; border-color: var(--st-draft); }
-.hero-warn .hero-num { color: #8a5d16; }
+.hero-warn .hero-value-primary { color: #8a5d16; }
 .hero-safe { background: #eaf6ee; border-color: var(--st-approved); }
-.hero-safe .hero-num { color: var(--st-approved); }
+.hero-safe .hero-value-primary { color: var(--st-approved); }
 .insight-banner {
   margin-top: 4px; padding: 13px 18px; border-radius: var(--radius-sm);
   background: var(--paper); border: 1px dashed var(--line); font-size: 13.5px; color: var(--ink);
 }
 .insight-banner strong { color: var(--brand); }
+
+/* ---------- dramatic loss banner ---------- */
+.loss-banner {
+  display: flex; align-items: center; gap: 20px;
+  background: linear-gradient(135deg, #7a1929, #9f2136 60%, #b8384f);
+  color: #fff; border-radius: var(--radius-lg);
+  padding: 26px 28px; margin-bottom: 16px;
+  box-shadow: 0 14px 34px -14px rgba(122,25,41,.6);
+  animation: rise .4s ease both;
+}
+.loss-banner-ok {
+  background: linear-gradient(135deg, #2f6f4f, #3d8862);
+  box-shadow: 0 14px 34px -14px rgba(47,111,79,.5);
+}
+.loss-banner-icon { flex-shrink: 0; width: 44px; height: 44px; color: #fff; }
+.loss-banner-text { min-width: 0; }
+.loss-banner-figure { font-size: 30px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.loss-banner-sub { font-size: 13.5px; opacity: .95; margin-top: 6px; }
+.loss-banner-pct { font-size: 12.5px; opacity: .82; margin-top: 6px; font-weight: 600; }
 
 /* ---------- sparkline ---------- */
 .spark { width: 96px; height: 26px; display: block; }
@@ -417,8 +445,10 @@ td.cell-clickable:hover .qty-chip {
   .field-row { gap: 10px; }
   .review-actions .btn { flex: 1; }
   .filter-bar { flex-direction: column; align-items: stretch; }
-  .hero-num { font-size: 28px; }
-  .hero-card { padding: 18px 16px; }
+  .hero-value-primary { font-size: 19px; }
+  .hero-card { padding: 16px 14px; }
+  .loss-banner { flex-direction: column; align-items: flex-start; text-align: right; padding: 20px; }
+  .loss-banner-figure { font-size: 24px; }
 }
 
 /* ---------- auth / splash screens ---------- */
