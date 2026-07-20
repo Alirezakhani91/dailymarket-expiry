@@ -29,6 +29,7 @@
 
   <div id="alert" class="alert alert-error"></div>
 
+  <div id="lossBanner"></div>
   <div id="heroWrap"></div>
 
   <div class="card">
@@ -45,8 +46,8 @@
         <option value="group">بر اساس گروه کالایی</option>
       </select>
       <select id="valueMode">
+        <option value="rial" selected>نمایش مبلغ (ریال)</option>
         <option value="qty">نمایش تعداد</option>
-        <option value="rial">نمایش مبلغ (ریال)</option>
       </select>
       <input type="text" id="search" placeholder="جست‌وجو در نام کالا/گروه...">
       <label class="checkbox-inline"><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال (غیر از فروخته‌شده)</label>
@@ -73,6 +74,7 @@
 
   const alertEl = document.getElementById("alert");
   const heroWrap = document.getElementById("heroWrap");
+  const lossBanner = document.getElementById("lossBanner");
   const chartWrap = document.getElementById("chartWrap");
   const matrixWrap = document.getElementById("matrixWrap");
 
@@ -177,48 +179,93 @@
   }
 
   function render() {
+    renderLossBanner();
     renderHero();
     renderChart();
     renderMatrix();
   }
 
+  // ---------- dramatic loss banner ----------
+  function renderLossBanner() {
+    const rows = activeRows();
+    const totalAllRial = sumRial(rows);
+    const expiredRows = rows.filter(b => b.bucket === "expired");
+    const imminentRows = rows.filter(b => ["d0", "d1", "d2", "d3"].includes(b.bucket));
+    const atRiskRial = sumRial(expiredRows) + sumRial(imminentRows);
+    const pct = totalAllRial > 0 ? Math.round((atRiskRial / totalAllRial) * 100) : 0;
+
+    if (atRiskRial <= 0) {
+      lossBanner.innerHTML = `
+        <div class="loss-banner loss-banner-ok">
+          <svg class="loss-banner-icon" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="loss-banner-text">
+            <div class="loss-banner-figure">وضعیت مطلوب</div>
+            <div class="loss-banner-sub">در حال حاضر هیچ ارزش قابل‌توجهی در معرض خطر فوری نیست.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    lossBanner.innerHTML = `
+      <div class="loss-banner">
+        <svg class="loss-banner-icon" viewBox="0 0 24 24" fill="none"><path d="M12 2L1 21h22L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.15" fill="currentColor"/></svg>
+        <div class="loss-banner-text">
+          <div class="loss-banner-figure">${nhFormatRial(atRiskRial)}</div>
+          <div class="loss-banner-sub">از دست رفته یا در آستانه‌ی از دست رفتن است (منقضی‌شده تا ۳ روز آینده)</div>
+          ${totalAllRial > 0 ? `<div class="loss-banner-pct">معادل ${pct}٪ از کل ارزش موجودی فعال شما</div>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
   // ---------- hero zone summary ----------
   function renderHero() {
     const rows = activeRows();
-    const urgentRows = rows.filter(b => URGENT_KEYS.includes(b.bucket));
+    const expiredRows = rows.filter(b => b.bucket === "expired");
+    const imminentRows = rows.filter(b => ["d0", "d1", "d2", "d3"].includes(b.bucket));
     const warnRows = rows.filter(b => WARN_KEYS.includes(b.bucket));
     const safeRows = rows.filter(b => b.bucket === "more");
 
-    const qUrgent = sumQty(urgentRows), rUrgent = sumRial(urgentRows);
+    const qExpired = sumQty(expiredRows), rExpired = sumRial(expiredRows);
+    const qImminent = sumQty(imminentRows), rImminent = sumRial(imminentRows);
     const qWarn = sumQty(warnRows), rWarn = sumRial(warnRows);
     const qSafe = sumQty(safeRows), rSafe = sumRial(safeRows);
 
     const byProduct = {};
-    urgentRows.forEach(b => { byProduct[b.product_name] = (byProduct[b.product_name] || 0) + Number(b.quantity || 0); });
+    [...expiredRows, ...imminentRows].forEach(b => {
+      byProduct[b.product_name] = (byProduct[b.product_name] || 0) + (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
+    });
     const top = Object.entries(byProduct).sort((a, b) => b[1] - a[1])[0];
 
     heroWrap.innerHTML = `
-      <div class="hero-grid">
+      <div class="hero-grid hero-grid-4">
+        <div class="hero-card hero-lost">
+          <div class="hero-value hero-value-primary">${nhFormatRial(rExpired)}</div>
+          <div class="hero-lbl">ضرر قطعی</div>
+          <div class="hero-sub">منقضی‌شده، دیگر قابل فروش نیست</div>
+          <div class="hero-num-secondary">${qExpired} عدد</div>
+        </div>
         <div class="hero-card hero-urgent">
-          <div class="hero-num">${qUrgent}</div>
-          <div class="hero-lbl">نیاز به تصمیم فوری</div>
-          <div class="hero-sub">منقضی‌شده تا ۳ روز آینده</div>
-          <div class="hero-value">${nhFormatRial(rUrgent)}</div>
+          <div class="hero-value hero-value-primary">${nhFormatRial(rImminent)}</div>
+          <div class="hero-lbl">هنوز وقت هست، تصمیم فوری بگیر</div>
+          <div class="hero-sub">۰ تا ۳ روز تا انقضا</div>
+          <div class="hero-num-secondary">${qImminent} عدد</div>
         </div>
         <div class="hero-card hero-warn">
-          <div class="hero-num">${qWarn}</div>
+          <div class="hero-value hero-value-primary">${nhFormatRial(rWarn)}</div>
           <div class="hero-lbl">در حال نزدیک شدن</div>
           <div class="hero-sub">۴ تا ۷ روز آینده</div>
-          <div class="hero-value">${nhFormatRial(rWarn)}</div>
+          <div class="hero-num-secondary">${qWarn} عدد</div>
         </div>
         <div class="hero-card hero-safe">
-          <div class="hero-num">${qSafe}</div>
+          <div class="hero-value hero-value-primary">${nhFormatRial(rSafe)}</div>
           <div class="hero-lbl">وضعیت پایدار</div>
           <div class="hero-sub">بیشتر از ۷ روز فرصت</div>
-          <div class="hero-value">${nhFormatRial(rSafe)}</div>
+          <div class="hero-num-secondary">${qSafe} عدد</div>
         </div>
       </div>
-      ${top ? `<div class="insight-banner">بیشترین ریسک همین حالا: <strong>${top[0]}</strong> با ${top[1]} عدد در بازه‌ی فوری (۰ تا ۳ روز آینده).</div>` : ""}
+      ${top ? `<div class="insight-banner">بیشترین ریسک مالی همین حالا: <strong>${top[0]}</strong> با ${nhFormatRial(top[1])} در معرض ضایعات یا از‌دست‌رفته.</div>` : ""}
     `;
   }
 
