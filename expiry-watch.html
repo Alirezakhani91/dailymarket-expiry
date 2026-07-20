@@ -241,28 +241,28 @@
     heroWrap.innerHTML = `
       <div class="hero-grid hero-grid-4">
         <div class="hero-card hero-lost">
-          <div class="hero-value hero-value-primary">${nhFormatRial(rExpired)}</div>
+          <div class="hero-value-primary">${qExpired}</div>
           <div class="hero-lbl">ضرر قطعی</div>
           <div class="hero-sub">منقضی‌شده، دیگر قابل فروش نیست</div>
-          <div class="hero-num-secondary">${qExpired} عدد</div>
+          <div class="hero-num-secondary">${nhFormatRial(rExpired)}</div>
         </div>
         <div class="hero-card hero-urgent">
-          <div class="hero-value hero-value-primary">${nhFormatRial(rImminent)}</div>
+          <div class="hero-value-primary">${qImminent}</div>
           <div class="hero-lbl">هنوز وقت هست، تصمیم فوری بگیر</div>
           <div class="hero-sub">۰ تا ۳ روز تا انقضا</div>
-          <div class="hero-num-secondary">${qImminent} عدد</div>
+          <div class="hero-num-secondary">${nhFormatRial(rImminent)}</div>
         </div>
         <div class="hero-card hero-warn">
-          <div class="hero-value hero-value-primary">${nhFormatRial(rWarn)}</div>
+          <div class="hero-value-primary">${qWarn}</div>
           <div class="hero-lbl">در حال نزدیک شدن</div>
           <div class="hero-sub">۴ تا ۷ روز آینده</div>
-          <div class="hero-num-secondary">${qWarn} عدد</div>
+          <div class="hero-num-secondary">${nhFormatRial(rWarn)}</div>
         </div>
         <div class="hero-card hero-safe">
-          <div class="hero-value hero-value-primary">${nhFormatRial(rSafe)}</div>
+          <div class="hero-value-primary">${qSafe}</div>
           <div class="hero-lbl">وضعیت پایدار</div>
           <div class="hero-sub">بیشتر از ۷ روز فرصت</div>
-          <div class="hero-num-secondary">${qSafe} عدد</div>
+          <div class="hero-num-secondary">${nhFormatRial(rSafe)}</div>
         </div>
       </div>
       ${top ? `<div class="insight-banner">بیشترین ریسک مالی همین حالا: <strong>${top[0]}</strong> با ${nhFormatRial(top[1])} در معرض ضایعات یا از‌دست‌رفته.</div>` : ""}
