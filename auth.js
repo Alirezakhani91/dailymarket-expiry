@@ -177,3 +177,8 @@ function nhDaysInJalaliMonth(jm) {
   if (jm <= 11) return 30;
   return 29;
 }
+
+function nhFormatRial(n) {
+  const num = Math.round(Number(n) || 0);
+  return num.toLocaleString("en-US") + " ریال";
+}
