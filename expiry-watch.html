@@ -44,6 +44,10 @@
         <option value="product">بر اساس کالا</option>
         <option value="group">بر اساس گروه کالایی</option>
       </select>
+      <select id="valueMode">
+        <option value="qty">نمایش تعداد</option>
+        <option value="rial">نمایش مبلغ (ریال)</option>
+      </select>
       <input type="text" id="search" placeholder="جست‌وجو در نام کالا/گروه...">
       <label class="checkbox-inline"><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال (غیر از فروخته‌شده)</label>
       <span class="filter-count" id="rowCount"></span>
@@ -120,6 +124,20 @@
     return list.reduce((s, b) => s + (Number(b.quantity) || 0), 0);
   }
 
+  function sumRial(list) {
+    return list.reduce((s, b) => s + (Number(b.quantity) || 0) * (Number(b.unit_price) || 0), 0);
+  }
+
+  function metricValue(b) {
+    return document.getElementById("valueMode").value === "rial"
+      ? (Number(b.quantity) || 0) * (Number(b.unit_price) || 0)
+      : (Number(b.quantity) || 0);
+  }
+
+  function formatMetric(n) {
+    return document.getElementById("valueMode").value === "rial" ? nhFormatRial(n) : String(n);
+  }
+
   async function loadMyManager() {
     const query = `
       query MyRole($user_id: uuid!) {
@@ -144,7 +162,7 @@
           order_by: { expiry_date: asc }
           limit: 5000
         ) {
-          id product_id store_id created_by product_name product_group quantity unit expiry_date status
+          id product_id store_id created_by product_name product_group quantity unit unit_price expiry_date status
         }
       }
     `;
@@ -171,9 +189,9 @@
     const warnRows = rows.filter(b => WARN_KEYS.includes(b.bucket));
     const safeRows = rows.filter(b => b.bucket === "more");
 
-    const qUrgent = sumQty(urgentRows);
-    const qWarn = sumQty(warnRows);
-    const qSafe = sumQty(safeRows);
+    const qUrgent = sumQty(urgentRows), rUrgent = sumRial(urgentRows);
+    const qWarn = sumQty(warnRows), rWarn = sumRial(warnRows);
+    const qSafe = sumQty(safeRows), rSafe = sumRial(safeRows);
 
     const byProduct = {};
     urgentRows.forEach(b => { byProduct[b.product_name] = (byProduct[b.product_name] || 0) + Number(b.quantity || 0); });
@@ -185,16 +203,19 @@
           <div class="hero-num">${qUrgent}</div>
           <div class="hero-lbl">نیاز به تصمیم فوری</div>
           <div class="hero-sub">منقضی‌شده تا ۳ روز آینده</div>
+          <div class="hero-value">${nhFormatRial(rUrgent)}</div>
         </div>
         <div class="hero-card hero-warn">
           <div class="hero-num">${qWarn}</div>
           <div class="hero-lbl">در حال نزدیک شدن</div>
           <div class="hero-sub">۴ تا ۷ روز آینده</div>
+          <div class="hero-value">${nhFormatRial(rWarn)}</div>
         </div>
         <div class="hero-card hero-safe">
           <div class="hero-num">${qSafe}</div>
           <div class="hero-lbl">وضعیت پایدار</div>
           <div class="hero-sub">بیشتر از ۷ روز فرصت</div>
+          <div class="hero-value">${nhFormatRial(rSafe)}</div>
         </div>
       </div>
       ${top ? `<div class="insight-banner">بیشترین ریسک همین حالا: <strong>${top[0]}</strong> با ${top[1]} عدد در بازه‌ی فوری (۰ تا ۳ روز آینده).</div>` : ""}
@@ -211,11 +232,19 @@
     return `rgb(${r},${g},${b})`;
   }
 
+  function formatCompact(n, mode) {
+    if (mode !== "rial") return String(n);
+    if (n >= 1000000) return (Math.round(n / 100000) / 10).toString().replace(/\.0$/, "") + "م";
+    if (n >= 1000) return Math.round(n / 1000) + "ه";
+    return String(n);
+  }
+
   function renderChart() {
+    const mode = document.getElementById("valueMode").value;
     const rows = activeRows();
     const counts = {};
     BUCKETS.forEach(b => counts[b.key] = 0);
-    rows.forEach(b => counts[b.bucket] += Number(b.quantity) || 0);
+    rows.forEach(b => counts[b.bucket] += metricValue(b));
 
     const W = 900, H = 220;
     const barGap = 12;
@@ -248,7 +277,7 @@
             <rect class="bar-anim" x="${bar.x}" y="${bar.y}" width="${barW}" height="${Math.max(bar.h, 2)}"
                   rx="7" fill="${bar.color}" filter="url(#barShadow)"
                   style="transform-origin:${bar.cx}px ${chartBottom}px;"></rect>
-            <text x="${bar.cx}" y="${bar.y - 10}" text-anchor="middle" class="chart-value-label">${bar.val}</text>
+            <text x="${bar.cx}" y="${bar.y - 10}" text-anchor="middle" class="chart-value-label">${formatCompact(bar.val, mode)}</text>
             <text x="${bar.cx}" y="${H - 18}" text-anchor="middle" class="chart-day-label">${bar.label}</text>
           </g>
         `).join("")}
@@ -280,16 +309,18 @@
   }
 
   // ---------- heatmap matrix ----------
-  function heatCell(val, rowMax) {
+  function heatCell(val, rowMax, mode) {
     if (!val) return '<span class="cell-zero">–</span>';
     const t = rowMax > 0 ? val / rowMax : 0;
     const bg = `rgba(159,33,54,${(0.10 + t * 0.62).toFixed(2)})`;
     const color = t > 0.5 ? "#ffffff" : "var(--ink)";
-    return `<span class="qty-chip heat" style="background:${bg}; color:${color};">${val}</span>`;
+    const label = mode === "rial" ? formatCompact(val, "rial") : val;
+    return `<span class="qty-chip heat" style="background:${bg}; color:${color};">${label}</span>`;
   }
 
   function renderMatrix() {
     const mode = document.getElementById("groupByMode").value;
+    const valueMode = document.getElementById("valueMode").value;
     const term = document.getElementById("search").value.trim();
     const key = mode === "group" ? "product_group" : "product_name";
     const rows = activeRows();
@@ -301,8 +332,8 @@
         grouped[k] = { total: 0 };
         BUCKETS.forEach(bk => grouped[k][bk.key] = 0);
       }
-      grouped[k][b.bucket] += Number(b.quantity) || 0;
-      grouped[k].total += Number(b.quantity) || 0;
+      grouped[k][b.bucket] += metricValue(b);
+      grouped[k].total += metricValue(b);
     });
 
     let entries = Object.entries(grouped);
@@ -338,9 +369,9 @@
               <td>${name}</td>
               ${BUCKETS.map(b => `
                 <td class="num ${canSell && v[b.key] > 0 ? "cell-clickable" : ""}"
-                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${heatCell(v[b.key], rowMax)}</td>
+                    ${canSell && v[b.key] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${heatCell(v[b.key], rowMax, valueMode)}</td>
               `).join("")}
-              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${heatCell(v.total, v.total)}</td>
+              <td class="num ${canSell && v.total > 0 ? "cell-clickable" : ""}" ${canSell && v.total > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${heatCell(v.total, v.total, valueMode)}</td>
             </tr>
           `}).join("")}
         </tbody>
@@ -450,12 +481,12 @@
         await nhGql(`
           mutation InsertSoldSplit(
             $store_id: uuid!, $product_id: uuid, $product_name: String!, $product_group: String,
-            $quantity: numeric!, $unit: String!, $expiry_date: date!, $created_by: uuid!, $sold_at: timestamptz!
+            $quantity: numeric!, $unit: String!, $expiry_date: date!, $created_by: uuid!, $sold_at: timestamptz!, $unit_price: numeric
           ) {
             insert_expiry_batches_one(object: {
               store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group,
               quantity: $quantity, unit: $unit, expiry_date: $expiry_date, discount_percent: 0,
-              created_by: $created_by, status: "sold", sold_at: $sold_at
+              created_by: $created_by, status: "sold", sold_at: $sold_at, unit_price: $unit_price
             }) { id }
           }
         `, {
@@ -467,7 +498,8 @@
           unit: splitRow.unit,
           expiry_date: splitRow.expiry_date,
           created_by: splitRow.created_by,
-          sold_at: soldAt
+          sold_at: soldAt,
+          unit_price: splitRow.unit_price || null
         }, session.token);
       }
 
@@ -479,6 +511,7 @@
   }
 
   document.getElementById("groupByMode").addEventListener("change", renderMatrix);
+  document.getElementById("valueMode").addEventListener("change", () => { renderChart(); renderMatrix(); });
   document.getElementById("search").addEventListener("input", renderMatrix);
   document.getElementById("activeOnly").addEventListener("change", render);
 
