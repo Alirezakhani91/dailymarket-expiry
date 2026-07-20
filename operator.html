@@ -74,6 +74,7 @@
   let selectedProductId = null;
   let selectedProductName = null;
   let selectedProductGroup = null;
+  let selectedProductPrice = null;
   let allBatches = [];
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
@@ -111,7 +112,7 @@
           where: { _or: [{ name: { _ilike: $q } }, { barcode: { _ilike: $q } }] }
           limit: 15
           order_by: { name: asc }
-        ) { id name barcode product_group }
+        ) { id name barcode product_group price }
       }
     `;
     try {
@@ -130,14 +131,14 @@
       return;
     }
     resultsBox.innerHTML = items.map(p => `
-      <div class="search-item" data-id="${p.id}" data-name="${p.name.replace(/"/g, "&quot;")}" data-group="${(p.product_group || "").replace(/"/g, "&quot;")}">
+      <div class="search-item" data-id="${p.id}" data-name="${p.name.replace(/"/g, "&quot;")}" data-group="${(p.product_group || "").replace(/"/g, "&quot;")}" data-price="${p.price || ""}">
         <span class="search-item-name">${p.name}</span>
-        <span class="search-item-meta">${p.product_group ? p.product_group + " · " : ""}${p.barcode}</span>
+        <span class="search-item-meta">${p.product_group ? p.product_group + " · " : ""}${p.price ? nhFormatRial(p.price) + " · " : ""}${p.barcode}</span>
       </div>
     `).join("");
     resultsBox.classList.add("show");
     resultsBox.querySelectorAll(".search-item").forEach(el => {
-      el.addEventListener("click", () => selectProduct(el.dataset.id, el.dataset.name, el.dataset.group));
+      el.addEventListener("click", () => selectProduct(el.dataset.id, el.dataset.name, el.dataset.group, el.dataset.price));
     });
   }
 
@@ -198,15 +199,16 @@
   }
   populateJalaliSelects();
 
-  function selectProduct(id, name, group) {
+  function selectProduct(id, name, group, price) {
     selectedProductId = id;
     selectedProductName = name;
     selectedProductGroup = group || null;
+    selectedProductPrice = price ? Number(price) : null;
     searchInput.value = "";
     resultsBox.innerHTML = "";
     resultsBox.classList.remove("show");
     selectedBox.innerHTML = `
-      <span class="selected-chip-name">${name}</span>
+      <span class="selected-chip-name">${name}${selectedProductPrice ? " — " + nhFormatRial(selectedProductPrice) : ""}</span>
       <button type="button" id="clearProductBtn" class="link-ghost">تغییر کالا</button>
     `;
     selectedBox.classList.add("show");
@@ -217,6 +219,7 @@
     selectedProductId = null;
     selectedProductName = null;
     selectedProductGroup = null;
+    selectedProductPrice = null;
     selectedBox.innerHTML = "";
     selectedBox.classList.remove("show");
   }
@@ -261,7 +264,7 @@
           order_by: { created_at: desc }
           limit: 30
         ) {
-          id product_name quantity expiry_date status review_note
+          id product_name quantity expiry_date status review_note unit_price
         }
       }
     `;
@@ -282,12 +285,13 @@
     listWrap.innerHTML = `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>کالا</th><th>تعداد</th><th>انقضا</th><th>وضعیت</th><th>یادداشت بررسی</th></tr></thead>
+        <thead><tr><th>کالا</th><th>تعداد</th><th>ارزش ریالی</th><th>انقضا</th><th>وضعیت</th><th>یادداشت بررسی</th></tr></thead>
         <tbody>
           ${rows.map(b => `
             <tr>
               <td>${b.product_name}</td>
               <td class="num">${b.quantity}</td>
+              <td class="num">${b.unit_price ? nhFormatRial(b.unit_price * b.quantity) : "—"}</td>
               <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
               <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               <td>${b.review_note || "—"}</td>
@@ -329,11 +333,11 @@
     const mutation = `
       mutation InsertBatch(
         $store_id: uuid!, $product_id: uuid!, $product_name: String!, $product_group: String, $quantity: numeric!,
-        $expiry_date: date!, $created_by: uuid!
+        $expiry_date: date!, $created_by: uuid!, $unit_price: numeric
       ) {
         insert_expiry_batches_one(object: {
           store_id: $store_id, product_id: $product_id, product_name: $product_name, product_group: $product_group, quantity: $quantity,
-          unit: "عدد", expiry_date: $expiry_date, discount_percent: 0,
+          unit: "عدد", expiry_date: $expiry_date, discount_percent: 0, unit_price: $unit_price,
           created_by: $created_by, status: "approved"
         }) { id }
       }
@@ -345,6 +349,7 @@
         product_id: selectedProductId,
         product_name: selectedProductName,
         product_group: selectedProductGroup,
+        unit_price: selectedProductPrice,
         quantity: parseInt(document.getElementById("quantity").value),
         expiry_date: expiryIso,
         created_by: session.userId
