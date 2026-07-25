@@ -5,6 +5,186 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>اپراتور | dailymarket-expiry</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+  /* ===== Operator waste summary ===== */
+  .operator-risk-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 18px;
+  }
+
+  .operator-risk-card {
+    position: relative;
+    min-height: 154px;
+    padding: 18px;
+    border-radius: 24px;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 14px 34px rgba(36, 31, 27, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+  }
+
+  .operator-risk-card::before {
+    content: "";
+    position: absolute;
+    width: 118px;
+    height: 118px;
+    left: -36px;
+    bottom: -54px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    z-index: -1;
+  }
+
+  .operator-risk-card::after {
+    content: "";
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    right: -24px;
+    top: -28px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    z-index: -1;
+  }
+
+  .operator-risk-card.is-wasted {
+    color: #7a2d2d;
+    background:
+      radial-gradient(circle at 92% 4%, rgba(255,255,255,.42), transparent 32%),
+      linear-gradient(145deg, #fff0ed 0%, #f9d7d0 100%);
+  }
+
+  .operator-risk-card.is-danger {
+    color: #72420d;
+    background:
+      radial-gradient(circle at 92% 4%, rgba(255,255,255,.48), transparent 32%),
+      linear-gradient(145deg, #fff8e9 0%, #f7dfad 100%);
+  }
+
+  .operator-risk-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .operator-risk-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.8;
+  }
+
+  .operator-risk-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.56);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  }
+
+  .operator-risk-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .operator-risk-value {
+    margin-top: 18px;
+    min-height: 34px;
+    font-size: clamp(20px, 5vw, 29px);
+    font-weight: 900;
+    line-height: 1.35;
+    letter-spacing: -0.6px;
+    overflow-wrap: anywhere;
+  }
+
+  .operator-risk-meta {
+    margin-top: 7px;
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1.8;
+    opacity: 0.72;
+  }
+
+  .operator-risk-loading {
+    display: inline-block;
+    width: 76%;
+    height: 22px;
+    border-radius: 10px;
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,.25),
+      rgba(255,255,255,.72),
+      rgba(255,255,255,.25)
+    );
+    background-size: 220% 100%;
+    animation: operatorRiskShimmer 1.25s linear infinite;
+  }
+
+  @keyframes operatorRiskShimmer {
+    to { background-position: -220% 0; }
+  }
+
+  @media (max-width: 620px) {
+    .operator-risk-grid {
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .operator-risk-card {
+      min-height: 145px;
+      padding: 14px;
+      border-radius: 20px;
+      box-shadow: 0 10px 26px rgba(36, 31, 27, 0.07);
+    }
+
+    .operator-risk-title {
+      font-size: 11.5px;
+    }
+
+    .operator-risk-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 13px;
+    }
+
+    .operator-risk-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .operator-risk-value {
+      margin-top: 15px;
+      font-size: clamp(17px, 5.3vw, 23px);
+    }
+
+    .operator-risk-meta {
+      font-size: 10.5px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .operator-risk-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .operator-risk-card {
+      min-height: 132px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .operator-risk-loading {
+      animation: none;
+    }
+  }
+</style>
 </head>
 <body>
 
@@ -27,6 +207,43 @@
   </div>
 
   <div id="alert" class="alert alert-error"></div>
+
+  <section class="operator-risk-grid" aria-label="خلاصه وضعیت ضایعات فروشگاه">
+    <article class="operator-risk-card is-wasted">
+      <div class="operator-risk-head">
+        <span class="operator-risk-title">ریال ضایعات‌شده</span>
+        <span class="operator-risk-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h16"/>
+            <path d="M9 3h6l1 4H8l1-4Z"/>
+            <path d="M7 7l1 13h8l1-13"/>
+            <path d="M10 11v5M14 11v5"/>
+          </svg>
+        </span>
+      </div>
+      <div class="operator-risk-value" id="wastedRial">
+        <span class="operator-risk-loading" aria-label="در حال محاسبه"></span>
+      </div>
+      <div class="operator-risk-meta" id="wastedMeta">در حال بررسی ثبت‌های منقضی‌شده...</div>
+    </article>
+
+    <article class="operator-risk-card is-danger">
+      <div class="operator-risk-head">
+        <span class="operator-risk-title">ریال در معرض ضایعات</span>
+        <span class="operator-risk-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+            <path d="M18.4 5.6 20 4"/>
+          </svg>
+        </span>
+      </div>
+      <div class="operator-risk-value" id="dangerRial">
+        <span class="operator-risk-loading" aria-label="در حال محاسبه"></span>
+      </div>
+      <div class="operator-risk-meta" id="dangerMeta">کالاهای دارای ۰ تا ۳ روز فرصت...</div>
+    </article>
+  </section>
 
   <div class="card">
     <form id="productForm">
@@ -86,6 +303,10 @@
   const searchInput = document.getElementById("product_search");
   const resultsBox = document.getElementById("productResults");
   const selectedBox = document.getElementById("selectedProduct");
+  const wastedRialEl = document.getElementById("wastedRial");
+  const wastedMetaEl = document.getElementById("wastedMeta");
+  const dangerRialEl = document.getElementById("dangerRial");
+  const dangerMetaEl = document.getElementById("dangerMeta");
   let searchTimer = null;
 
   searchInput.addEventListener("input", () => {
@@ -240,6 +461,87 @@
     alertEl.classList.add("show");
   }
 
+
+  function localIsoDate(offsetDays = 0) {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + offsetDays);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function faNumber(value) {
+    return new Intl.NumberFormat("fa-IR", {
+      maximumFractionDigits: 3
+    }).format(Number(value) || 0);
+  }
+
+  function summarizeRiskRows(rows) {
+    return rows.reduce((summary, row) => {
+      const quantity = Number(row.quantity) || 0;
+      const unitPrice = Number(row.unit_price);
+
+      summary.records += 1;
+      summary.quantity += quantity;
+
+      if (Number.isFinite(unitPrice)) {
+        summary.rial += quantity * unitPrice;
+      } else {
+        summary.withoutPrice += 1;
+      }
+
+      return summary;
+    }, {
+      records: 0,
+      quantity: 0,
+      rial: 0,
+      withoutPrice: 0
+    });
+  }
+
+  function riskMetaText(summary, emptyText) {
+    if (!summary.records) return emptyText;
+
+    const parts = [
+      `${faNumber(summary.records)} قلم`,
+      `${faNumber(summary.quantity)} واحد`
+    ];
+
+    if (summary.withoutPrice) {
+      parts.push(`${faNumber(summary.withoutPrice)} قلم بدون قیمت`);
+    }
+
+    return parts.join(" · ");
+  }
+
+  function renderRiskCards(wastedRows, dangerRows) {
+    const wasted = summarizeRiskRows(wastedRows);
+    const danger = summarizeRiskRows(dangerRows);
+
+    wastedRialEl.textContent = nhFormatRial(wasted.rial);
+    wastedMetaEl.textContent = riskMetaText(
+      wasted,
+      "هیچ کالای منقضی‌شده و فروش‌نرفته‌ای وجود ندارد."
+    );
+
+    dangerRialEl.textContent = nhFormatRial(danger.rial);
+    dangerMetaEl.textContent = riskMetaText(
+      danger,
+      "تا ۳ روز آینده کالایی در معرض ضایعات نیست."
+    );
+  }
+
+  function renderRiskCardsError() {
+    wastedRialEl.textContent = "—";
+    dangerRialEl.textContent = "—";
+    wastedMetaEl.textContent = "محاسبه این شاخص با خطا مواجه شد.";
+    dangerMetaEl.textContent = "محاسبه این شاخص با خطا مواجه شد.";
+  }
+
   async function loadMyStore() {
     const query = `
       query MyRole($user_id: uuid!) {
@@ -258,24 +560,71 @@
     myStoreId = data.user_roles[0].store_id;
     const s = data.user_roles[0].store;
     storeLabel.textContent = s.name + " — " + s.region;
-    await loadBatches();
+    await loadOperatorDashboard();
   }
 
-  async function loadBatches() {
+  async function loadOperatorDashboard() {
+    const today = localIsoDate(0);
+    const dangerEnd = localIsoDate(3);
+
     const query = `
-      query MyBatches($store_id: uuid!) {
-        expiry_batches(
+      query OperatorDashboard(
+        $store_id: uuid!,
+        $today: date!,
+        $danger_end: date!
+      ) {
+        recent: expiry_batches(
           where: { store_id: { _eq: $store_id } }
           order_by: { created_at: desc }
           limit: 30
         ) {
-          id product_name quantity expiry_date status review_note unit_price
+          id
+          product_name
+          quantity
+          expiry_date
+          status
+          review_note
+          unit_price
+        }
+
+        wasted: expiry_batches(
+          where: {
+            store_id: { _eq: $store_id }
+            status: { _nin: ["sold", "cancelled", "rejected"] }
+            expiry_date: { _lt: $today }
+          }
+        ) {
+          quantity
+          unit_price
+        }
+
+        danger: expiry_batches(
+          where: {
+            store_id: { _eq: $store_id }
+            status: { _nin: ["sold", "cancelled", "rejected"] }
+            expiry_date: { _gte: $today, _lte: $danger_end }
+          }
+        ) {
+          quantity
+          unit_price
         }
       }
     `;
-    const data = await nhGql(query, { store_id: myStoreId }, session.token);
-    allBatches = data.expiry_batches;
-    renderBatches();
+
+    try {
+      const data = await nhGql(query, {
+        store_id: myStoreId,
+        today,
+        danger_end: dangerEnd
+      }, session.token);
+
+      allBatches = data.recent || [];
+      renderBatches();
+      renderRiskCards(data.wasted || [], data.danger || []);
+    } catch (err) {
+      renderRiskCardsError();
+      throw err;
+    }
   }
 
   function renderBatches() {
@@ -326,7 +675,7 @@
       parseInt(document.getElementById("expiry_day").value)
     );
 
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = localIsoDate(0);
     if (expiryIso < todayIso) {
       showError("تاریخ انقضا نمی‌تواند قبل از امروز باشد.");
       return;
@@ -363,7 +712,7 @@
       document.getElementById("productForm").reset();
       clearProduct();
       populateJalaliSelects();
-      await loadBatches();
+      await loadOperatorDashboard();
 
     } catch (err) {
       showError(err.message);
