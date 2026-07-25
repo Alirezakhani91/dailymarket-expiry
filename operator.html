@@ -327,25 +327,91 @@
   });
 
   async function runProductSearch(term) {
-    const query = `
-      query SearchProducts($q: String!) {
+    const normalizedTerm = term.trim();
+    const variables = { q: `%${normalizedTerm}%` };
+
+    const activeProductsQuery = `
+      query SearchActiveProducts($q: String!) {
         products(
           where: {
             _and: [
               { is_active: { _eq: true } },
-              { _or: [{ name: { _ilike: $q } }, { barcode: { _ilike: $q } }] }
+              { _or: [
+                { name: { _ilike: $q } },
+                { barcode: { _ilike: $q } }
+              ] }
             ]
           }
           limit: 15
           order_by: { name: asc }
-        ) { id name barcode product_group price }
+        ) {
+          id
+          name
+          barcode
+          product_group
+          price
+        }
       }
     `;
+
+    const compatibleProductsQuery = `
+      query SearchProducts($q: String!) {
+        products(
+          where: {
+            _or: [
+              { name: { _ilike: $q } },
+              { barcode: { _ilike: $q } }
+            ]
+          }
+          limit: 15
+          order_by: { name: asc }
+        ) {
+          id
+          name
+          barcode
+          product_group
+          price
+        }
+      }
+    `;
+
+    resultsBox.innerHTML = '<div class="search-empty">در حال جست‌وجو...</div>';
+    resultsBox.classList.add("show");
+
     try {
-      const data = await nhGql(query, { q: `%${term}%` }, session.token);
-      renderProductResults(data.products);
+      let data;
+
+      try {
+        /*
+          مسیر اصلی: فقط محصولات فعال.
+          اگر ستون is_active هنوز در Permission نقش اپراتور مجاز نباشد،
+          جست‌وجو خودکار با Query سازگار قبلی تکرار می‌شود.
+        */
+        data = await nhGql(activeProductsQuery, variables, session.token);
+      } catch (activeQueryError) {
+        console.warn(
+          "Active product filter is unavailable; using compatible product search.",
+          activeQueryError
+        );
+
+        data = await nhGql(compatibleProductsQuery, variables, session.token);
+      }
+
+      /*
+        اگر کاربر هنگام دریافت پاسخ عبارت دیگری نوشته باشد،
+        پاسخ قدیمی نباید روی نتیجه جدید نمایش داده شود.
+      */
+      if (searchInput.value.trim() !== normalizedTerm) return;
+
+      renderProductResults(data.products || []);
     } catch (err) {
-      // جست‌وجو غیرحیاتی است؛ خطا را بی‌صدا نادیده می‌گیریم
+      console.error("Product search failed:", err);
+
+      if (searchInput.value.trim() !== normalizedTerm) return;
+
+      resultsBox.innerHTML =
+        '<div class="search-empty">جست‌وجوی کالا با خطا مواجه شد. دوباره تلاش کنید.</div>';
+      resultsBox.classList.add("show");
     }
   }
 
