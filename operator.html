@@ -109,7 +109,12 @@
     const query = `
       query SearchProducts($q: String!) {
         products(
-          where: { _or: [{ name: { _ilike: $q } }, { barcode: { _ilike: $q } }] }
+          where: {
+            _and: [
+              { is_active: { _eq: true } },
+              { _or: [{ name: { _ilike: $q } }, { barcode: { _ilike: $q } }] }
+            ]
+          }
           limit: 15
           order_by: { name: asc }
         ) { id name barcode product_group price }
