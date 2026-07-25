@@ -64,7 +64,8 @@
   let myStores = [];
   let allBatches = [];
   let expandedStoreId = null;
-  let sortState = { key: "stale", dir: "desc" };
+  // آخرین ثبت به‌صورت پیش‌فرض از جدیدترین تاریخ دقیق به قدیمی‌ترین مرتب می‌شود.
+  let sortState = { key: "lastCreated", dir: "desc" };
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -101,6 +102,7 @@
     await loadData();
   }
 
+
   async function loadData() {
     const storesQuery = `
       query MyStores($mgr: String!) {
@@ -109,29 +111,116 @@
         }
       }
     `;
-    const batchesQuery = `
-      query MyBatches($mgr: String!) {
+
+    const storesData = await nhGql(storesQuery, { mgr: myManagerName }, session.token);
+    myStores = storesData.stores || [];
+    allBatches = await loadAllBatches();
+    rebuildStoreIndex();
+
+    renderStats();
+    renderReport();
+    renderProductReport();
+  }
+
+  async function loadAllBatches() {
+    const query = `
+      query MyBatches($mgr: String!, $limit: Int!, $offset: Int!) {
         expiry_batches(
           where: { store: { region_manager_name: { _eq: $mgr } } }
-          order_by: { created_at: desc }
-          limit: 3000
+          order_by: [{ created_at: desc }, { id: desc }]
+          limit: $limit
+          offset: $offset
         ) {
           id product_name product_group quantity unit unit_price expiry_date status created_at
           store { id }
         }
       }
     `;
-    const [storesData, batchesData] = await Promise.all([
-      nhGql(storesQuery, { mgr: myManagerName }, session.token),
-      nhGql(batchesQuery, { mgr: myManagerName }, session.token)
-    ]);
-    myStores = storesData.stores;
-    allBatches = batchesData.expiry_batches;
 
-    renderStats();
-    renderReport();
-    renderProductReport();
+    const rowsById = new Map();
+    let offset = 0;
+
+    while (offset < MAX_REPORT_ROWS) {
+      const data = await nhGql(
+        query,
+        { mgr: myManagerName, limit: REPORT_PAGE_SIZE, offset },
+        session.token
+      );
+
+      const page = data.expiry_batches || [];
+      page.forEach(row => rowsById.set(String(row.id), row));
+
+      if (page.length < REPORT_PAGE_SIZE) return [...rowsById.values()];
+      offset += page.length;
+    }
+
+    throw new Error("حجم گزارش از سقف ایمن عبور کرده است. برای ادامه باید گزارش به‌صورت سمت‌سرور صفحه‌بندی شود.");
   }
+
+  const REPORT_PAGE_SIZE = 1000;
+  const MAX_REPORT_ROWS = 100000;
+  let storeStatsMap = new Map();
+  let storeBatchesMap = new Map();
+
+  function createEmptyStoreStats() {
+    return {
+      approved: 0,
+      sold: 0,
+      total: 0,
+      rial: 0,
+      lastCreated: null,
+      lastCreatedMs: null
+    };
+  }
+
+  function parseIsoTimestamp(value) {
+    if (!value) return null;
+    const timestamp = Date.parse(value);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
+  function rebuildStoreIndex() {
+    storeStatsMap = new Map();
+    storeBatchesMap = new Map();
+
+    myStores.forEach(store => {
+      const storeId = String(store.id);
+      storeStatsMap.set(storeId, createEmptyStoreStats());
+      storeBatchesMap.set(storeId, []);
+    });
+
+    allBatches.forEach(batch => {
+      const storeId = batch.store?.id ? String(batch.store.id) : null;
+      if (!storeId || !storeStatsMap.has(storeId)) return;
+
+      const stats = storeStatsMap.get(storeId);
+      const quantity = Number(batch.quantity) || 0;
+      const unitPrice = Number(batch.unit_price) || 0;
+      const createdAtMs = parseIsoTimestamp(batch.created_at);
+
+      if (stats[batch.status] !== undefined) stats[batch.status] += 1;
+      stats.total += 1;
+      stats.rial += quantity * unitPrice;
+
+      if (
+        createdAtMs !== null &&
+        (stats.lastCreatedMs === null || createdAtMs > stats.lastCreatedMs)
+      ) {
+        stats.lastCreated = batch.created_at;
+        stats.lastCreatedMs = createdAtMs;
+      }
+
+      storeBatchesMap.get(storeId).push(batch);
+    });
+
+    storeBatchesMap.forEach(items => {
+      items.sort((a, b) =>
+        (parseIsoTimestamp(b.created_at) ?? -Infinity) -
+        (parseIsoTimestamp(a.created_at) ?? -Infinity)
+      );
+    });
+  }
+
 
   function renderStats() {
     const sums = { approved: 0, sold: 0 };
@@ -202,7 +291,7 @@
       <table>
         <thead>
           <tr>
-            ${th("کد", "code")}${th("فروشگاه", "name")}${th("منطقه", "region")}${th("آخرین ثبت", "stale")}
+            ${th("کد", "code")}${th("فروشگاه", "name")}${th("منطقه", "region")}${th("آخرین ثبت", "lastCreated")}
             ${th(STATUS_LABEL.approved, "approved")}${th(STATUS_LABEL.sold, "sold")}${th("مجموع", "total")}${th("ارزش ریالی", "rial")}
           </tr>
         </thead>
@@ -255,41 +344,100 @@
 
   function sortRows(rows) {
     const { key, dir } = sortState;
-    const mul = dir === "asc" ? 1 : -1;
+    const multiplier = dir === "asc" ? 1 : -1;
+
     return [...rows].sort((a, b) => {
+      let result = 0;
+
       switch (key) {
-        case "code": return mul * (a.store_code || "").localeCompare(b.store_code || "");
-        case "name": return mul * a.name.localeCompare(b.name);
-        case "region": return mul * a.region.localeCompare(b.region);
-        case "stale": {
-          const va = daysSince(a.lastCreated); const vb = daysSince(b.lastCreated);
-          return mul * ((va === null ? 9999 : va) - (vb === null ? 9999 : vb));
+        case "code":
+          result = (a.store_code || "").localeCompare(
+            b.store_code || "",
+            "fa",
+            { numeric: true, sensitivity: "base" }
+          );
+          break;
+
+        case "name":
+          result = (a.name || "").localeCompare(b.name || "", "fa", { sensitivity: "base" });
+          break;
+
+        case "region":
+          result = (a.region || "").localeCompare(b.region || "", "fa", { sensitivity: "base" });
+          break;
+
+        case "lastCreated": {
+          const aTime = a.lastCreatedMs;
+          const bTime = b.lastCreatedMs;
+
+          // فروشگاه‌های بدون سابقه ثبت، در هر دو جهت همیشه انتهای جدول می‌مانند.
+          if (aTime === null && bTime === null) result = 0;
+          else if (aTime === null) return 1;
+          else if (bTime === null) return -1;
+          else result = aTime - bTime;
+          break;
         }
-        case "approved": return mul * (a.approved - b.approved);
-        case "sold": return mul * (a.sold - b.sold);
-        case "total": return mul * (a.total - b.total);
-        case "rial": return mul * (a.rial - b.rial);
-        default: return 0;
+
+        case "approved":
+          result = a.approved - b.approved;
+          break;
+
+        case "sold":
+          result = a.sold - b.sold;
+          break;
+
+        case "total":
+          result = a.total - b.total;
+          break;
+
+        case "rial":
+          result = a.rial - b.rial;
+          break;
+
+        default:
+          result = 0;
       }
+
+      if (result !== 0) return multiplier * result;
+
+      // مرتب‌سازی پایدار و قابل‌پیش‌بینی در صورت برابر بودن مقدار اصلی
+      return (a.store_code || a.name || "").localeCompare(
+        b.store_code || b.name || "",
+        "fa",
+        { numeric: true, sensitivity: "base" }
+      );
     });
   }
 
   function renderStoreDetail(storeId) {
-    const items = allBatches.filter(b => b.store.id === storeId);
+    const items = storeBatchesMap.get(String(storeId)) || [];
+
     if (!items.length) {
       return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
+
     return `
       <tr class="detail-row"><td colspan="8">
         <table>
-          <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>ارزش ریالی</th><th>انقضا</th><th>وضعیت</th></tr></thead>
+          <thead>
+            <tr>
+              <th>کالا</th>
+              <th>گروه</th>
+              <th>تعداد</th>
+              <th>ارزش ریالی</th>
+              <th>تاریخ ثبت</th>
+              <th>انقضا</th>
+              <th>وضعیت</th>
+            </tr>
+          </thead>
           <tbody>
             ${items.map(b => `
               <tr>
                 <td>${b.product_name}</td>
                 <td>${b.product_group || "—"}</td>
                 <td class="num">${b.quantity}</td>
-                <td class="num">${b.unit_price ? nhFormatRial(b.unit_price * b.quantity) : "—"}</td>
+                <td class="num">${b.unit_price ? nhFormatRial(Number(b.unit_price) * Number(b.quantity)) : "—"}</td>
+                <td class="num">${formatJalaliDateTime(b.created_at)}</td>
                 <td class="num">${nhIsoToJalaliStr(b.expiry_date)}</td>
                 <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               </tr>
