@@ -64,8 +64,13 @@
   let myStores = [];
   let allBatches = [];
   let expandedStoreId = null;
-  // آخرین ثبت به‌صورت پیش‌فرض از جدیدترین تاریخ دقیق به قدیمی‌ترین مرتب می‌شود.
+  // مرتب‌سازی پیش‌فرض: جدیدترین ثبت واقعی در ابتدای جدول و فروشگاه‌های بدون ثبت در انتها.
   let sortState = { key: "lastCreated", dir: "desc" };
+
+  const REPORT_PAGE_SIZE = 1000;
+  const MAX_REPORT_ROWS = 100000;
+  let storeStatsMap = new Map();
+  let storeBatchesMap = new Map();
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -101,7 +106,6 @@
     managerLabel.textContent = "مدیر منطقه: " + myManagerName;
     await loadData();
   }
-
 
   async function loadData() {
     const storesQuery = `
@@ -154,13 +158,24 @@
       offset += page.length;
     }
 
-    throw new Error("حجم گزارش از سقف ایمن عبور کرده است. برای ادامه باید گزارش به‌صورت سمت‌سرور صفحه‌بندی شود.");
+    throw new Error("تعداد رکوردهای گزارش از سقف ایمن عبور کرده است. گزارش باید به‌صورت سمت‌سرور صفحه‌بندی شود.");
   }
 
-  const REPORT_PAGE_SIZE = 1000;
-  const MAX_REPORT_ROWS = 100000;
-  let storeStatsMap = new Map();
-  let storeBatchesMap = new Map();
+  function renderStats() {
+    const sums = { approved: 0, sold: 0 };
+    let totalRial = 0;
+    allBatches.forEach(b => {
+      if (sums[b.status] !== undefined) sums[b.status]++;
+      totalRial += (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
+    });
+    statGrid.innerHTML = `
+      <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
+      <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
+      <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
+      <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
+      <div class="stat-card"><span class="num" style="font-size:18px;">${nhFormatRial(totalRial)}</span><span class="lbl">ارزش ریالی کل</span></div>
+    `;
+  }
 
   function createEmptyStoreStats() {
     return {
@@ -221,50 +236,64 @@
     });
   }
 
-
-  function renderStats() {
-    const sums = { approved: 0, sold: 0 };
-    let totalRial = 0;
-    allBatches.forEach(b => {
-      if (sums[b.status] !== undefined) sums[b.status]++;
-      totalRial += (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
-    });
-    statGrid.innerHTML = `
-      <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
-      <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
-      <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
-      <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
-      <div class="stat-card"><span class="num" style="font-size:18px;">${nhFormatRial(totalRial)}</span><span class="lbl">ارزش ریالی کل</span></div>
-    `;
+  function storeStats(storeId) {
+    return storeStatsMap.get(String(storeId)) || createEmptyStoreStats();
   }
 
-  function storeStats(storeId) {
-    const s = { approved: 0, sold: 0, total: 0, rial: 0, lastCreated: null };
-    allBatches.forEach(b => {
-      if (b.store.id === storeId) {
-        if (s[b.status] !== undefined) s[b.status]++;
-        s.total++;
-        s.rial += (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
-        if (!s.lastCreated || b.created_at > s.lastCreated) s.lastCreated = b.created_at;
-      }
-    });
-    return s;
+  function tehranDayNumber(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(date);
+
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return Math.floor(Date.UTC(
+      Number(values.year),
+      Number(values.month) - 1,
+      Number(values.day)
+    ) / 86400000);
   }
 
   function daysSince(iso) {
     if (!iso) return null;
-    return Math.floor((new Date() - new Date(iso)) / 86400000);
+    const createdDay = tehranDayNumber(iso);
+    const today = tehranDayNumber(new Date());
+    if (createdDay === null || today === null) return null;
+    return Math.max(0, today - createdDay);
+  }
+
+  function formatJalaliDateTime(iso) {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "تاریخ نامعتبر";
+
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(date);
   }
 
   function lastRegisteredCell(iso) {
     const days = daysSince(iso);
-    if (days === null) return '<span class="stamp stamp-rejected">هرگز</span>';
-    const label = days <= 0 ? "امروز" : days === 1 ? "دیروز" : `${days} روز پیش`;
+    if (days === null) {
+      return '<span class="stamp stamp-rejected">هرگز</span><div class="cell-subdate">بدون سابقه ثبت</div>';
+    }
+
+    const label = days === 0 ? "امروز" : days === 1 ? "دیروز" : `${days.toLocaleString("fa-IR")} روز پیش`;
     let cls = "stamp-approved";
     if (days > 14) cls = "stamp-sold";
     else if (days > 3) cls = "stamp-draft";
-    const dateStr = nhIsoToJalaliStr(iso.slice(0, 10));
-    return `<span class="stamp ${cls}">${label}</span><div class="cell-subdate">${dateStr}</div>`;
+
+    return `<span class="stamp ${cls}">${label}</span><div class="cell-subdate">${formatJalaliDateTime(iso)}</div>`;
   }
 
   function renderReport() {
@@ -344,7 +373,7 @@
 
   function sortRows(rows) {
     const { key, dir } = sortState;
-    const multiplier = dir === "asc" ? 1 : -1;
+    const direction = dir === "asc" ? 1 : -1;
 
     return [...rows].sort((a, b) => {
       let result = 0;
@@ -357,50 +386,32 @@
             { numeric: true, sensitivity: "base" }
           );
           break;
-
         case "name":
           result = (a.name || "").localeCompare(b.name || "", "fa", { sensitivity: "base" });
           break;
-
         case "region":
           result = (a.region || "").localeCompare(b.region || "", "fa", { sensitivity: "base" });
           break;
-
         case "lastCreated": {
-          const aTime = a.lastCreatedMs;
-          const bTime = b.lastCreatedMs;
+          const aTime = Number.isFinite(a.lastCreatedMs) ? a.lastCreatedMs : null;
+          const bTime = Number.isFinite(b.lastCreatedMs) ? b.lastCreatedMs : null;
 
-          // فروشگاه‌های بدون سابقه ثبت، در هر دو جهت همیشه انتهای جدول می‌مانند.
+          // فروشگاه‌های بدون ثبت، مستقل از جهت مرتب‌سازی همیشه در انتهای جدول هستند.
           if (aTime === null && bTime === null) result = 0;
           else if (aTime === null) return 1;
           else if (bTime === null) return -1;
           else result = aTime - bTime;
           break;
         }
-
-        case "approved":
-          result = a.approved - b.approved;
-          break;
-
-        case "sold":
-          result = a.sold - b.sold;
-          break;
-
-        case "total":
-          result = a.total - b.total;
-          break;
-
-        case "rial":
-          result = a.rial - b.rial;
-          break;
-
-        default:
-          result = 0;
+        case "approved": result = a.approved - b.approved; break;
+        case "sold": result = a.sold - b.sold; break;
+        case "total": result = a.total - b.total; break;
+        case "rial": result = a.rial - b.rial; break;
+        default: result = 0;
       }
 
-      if (result !== 0) return multiplier * result;
+      if (result !== 0) return direction * result;
 
-      // مرتب‌سازی پایدار و قابل‌پیش‌بینی در صورت برابر بودن مقدار اصلی
       return (a.store_code || a.name || "").localeCompare(
         b.store_code || b.name || "",
         "fa",
@@ -411,25 +422,13 @@
 
   function renderStoreDetail(storeId) {
     const items = storeBatchesMap.get(String(storeId)) || [];
-
     if (!items.length) {
       return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
     }
-
     return `
       <tr class="detail-row"><td colspan="8">
         <table>
-          <thead>
-            <tr>
-              <th>کالا</th>
-              <th>گروه</th>
-              <th>تعداد</th>
-              <th>ارزش ریالی</th>
-              <th>تاریخ ثبت</th>
-              <th>انقضا</th>
-              <th>وضعیت</th>
-            </tr>
-          </thead>
+          <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>ارزش ریالی</th><th>تاریخ ثبت</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
             ${items.map(b => `
               <tr>
