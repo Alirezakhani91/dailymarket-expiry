@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>رصد سراسری | dailymarket-expiry</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--pbg:#f7f3ef;--pc:#fff;--pi:#28221f;--pm:#766d67;--pl:#e8dfd8;--pg:#315c49;--pgr:#e8f1ec;--pr:#a52b3f;--prs:#fbe8ec;--pa:#9a5a0d;--pas:#fff1d5}
+*{box-sizing:border-box}body{font-family:Vazirmatn,Tahoma,sans-serif;background:linear-gradient(180deg,#faf7f3,var(--pbg));color:var(--pi)}
+.admin-wrap{width:min(1480px,calc(100% - 28px));margin:auto;padding:24px 0 56px}
+.admin-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.admin-head h1{margin:0;font-size:clamp(25px,3vw,38px);font-weight:900}.admin-head p{margin:6px 0 0;color:var(--pm);font-size:13px}
+.live-box{display:flex;align-items:center;gap:12px;background:#ffffffd9;border:1px solid var(--pl);border-radius:18px;padding:11px 13px;min-width:260px;box-shadow:0 10px 28px #382c2410}
+.live-dot{width:10px;height:10px;border-radius:50%;background:#259c61;box-shadow:0 0 0 5px #259c611c}.live-dot.loading{background:#d1851f;box-shadow:0 0 0 5px #d1851f22;animation:pulse 1s infinite alternate}.live-dot.error{background:var(--pr);box-shadow:0 0 0 5px #a52b3f1e}@keyframes pulse{to{opacity:.45}}
+.live-main{font-size:12px;font-weight:800}.live-sub{font-size:10px;color:var(--pm);margin-top:2px}.refresh{margin-right:auto;width:40px;height:40px;border:0;border-radius:13px;background:var(--pgr);color:var(--pg);font-size:20px;cursor:pointer}
+.alert-admin{display:none;background:var(--prs);color:var(--pr);padding:12px 14px;border-radius:14px;margin-bottom:14px;border:1px solid #a52b3f20}.alert-admin.show{display:block}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin-bottom:15px}.stat{min-height:125px;padding:15px;border-radius:21px;border:1px solid #ffffffc7;background:#fff;box-shadow:0 11px 28px #372c2410}.stat.green{background:linear-gradient(145deg,#eef6f1,#dcece3);color:#295442}.stat.red{background:linear-gradient(145deg,#fff0f2,#f5d8dd);color:#92273a}.stat.amber{background:linear-gradient(145deg,#fff8e8,#f5dfb2);color:#85500e}.stat.blue{background:linear-gradient(145deg,#eef5fa,#dbe8f2);color:#315c81}.stat-l{font-size:11px;font-weight:800;opacity:.75}.stat-v{font-size:clamp(20px,2.2vw,29px);font-weight:900;margin-top:14px;line-height:1.25;overflow-wrap:anywhere}.stat-s{font-size:10px;opacity:.68;margin-top:7px}
+.card-admin{background:#ffffffed;border:1px solid var(--pl);border-radius:23px;padding:17px;margin-bottom:15px;box-shadow:0 12px 30px #352b2410}.card-admin h2{font-size:16px;margin:0;font-weight:900}.desc{font-size:11.5px;color:var(--pm);margin:5px 0 13px}
+.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr auto;gap:9px;align-items:end}.field label{display:block;font-size:10.5px;color:var(--pm);font-weight:800;margin-bottom:5px}.field input,.field select{width:100%;height:43px;border:1px solid var(--pl);border-radius:12px;background:#faf8f6;padding:0 11px;outline:none}.clear{height:43px;border:0;border-radius:12px;background:#eee8e3;color:#665d57;padding:0 15px;font-weight:800}.filter-foot{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:11px;color:var(--pm)}.filter-foot input{accent-color:var(--pg)}
+.grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:15px}
+.region-list{display:grid;gap:8px}.region-row{display:grid;grid-template-columns:1.25fr repeat(4,.7fr);gap:8px;align-items:center;border:1px solid var(--pl);border-radius:14px;padding:11px;background:#fff}.region-row strong{display:block;font-size:12px}.region-row small{font-size:9.5px;color:var(--pm)}.region-title{font-weight:900;font-size:12px}
+.table-shell{overflow:auto;border:1px solid var(--pl);border-radius:16px;background:#fff}.admin-table{width:100%;min-width:950px;border-collapse:collapse}.admin-table th{position:sticky;top:0;z-index:1;text-align:right;padding:11px 10px;background:#f7f3f0;color:#6d645f;font-size:10.5px;white-space:nowrap;border-bottom:1px solid var(--pl)}.admin-table td{padding:11px 10px;font-size:11.5px;border-bottom:1px solid #eee7e1;vertical-align:middle}.admin-table tbody tr:hover{background:#fcfaf8}.title{font-weight:800}.sub{font-size:9.5px;color:var(--pm);margin-top:2px}.num{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:9.5px;font-weight:900;white-space:nowrap}.expired{background:var(--prs);color:var(--pr)}.urgent{background:var(--pas);color:var(--pa)}.warn{background:#fff8d9;color:#7f6013}.safe{background:var(--pgr);color:var(--pg)}.sold{background:#eeeae7;color:#655f5b}
+.expand{cursor:pointer}.detail td{padding:0;background:#fbf8f6}.detail-box{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px}.store-pill{padding:6px 9px;border:1px solid var(--pl);border-radius:10px;background:#fff;font-size:10px}.empty{padding:34px 15px;text-align:center;color:var(--pm);font-size:12px}
+@media(max-width:1180px){.stats{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
+@media(max-width:720px){.admin-wrap{width:calc(100% - 18px);padding-top:15px}.admin-head{display:block}.live-box{width:100%;margin-top:13px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{min-height:116px;padding:13px}.stat-v{font-size:20px}.card-admin{padding:12px;border-radius:19px}.filters{grid-template-columns:1fr 1fr}.search-wide{grid-column:1/-1}.region-row{grid-template-columns:1fr 1fr}.region-row>div:first-child{grid-column:1/-1}.filter-foot{flex-direction:column}}
+@media(max-width:410px){.filters{grid-template-columns:1fr}.search-wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand-group"><div class="mark"><span>DM</span></div><div class="brand-name">dailymarket-expiry<small>سامانه مدیریت کالای نزدیک به انقضا</small></div></div>
+  <div class="right"><span class="pill">مدیر پلتفرم</span><span class="context-label">نمای کل شبکه</span><a href="expiry-watch.html" class="link-ghost">پایش انقضا</a><a href="#" class="link-ghost" id="logoutBtn">خروج</a></div>
+</div>
+
+<main class="admin-wrap">
+  <div class="admin-head">
+    <div><h1>رصد زنده ثبت کالا در تمام مناطق</h1><p>مشاهده محصول، فروشگاه، منطقه، ارزش ریالی و زمان باقی‌مانده تا انقضا.</p></div>
+    <div class="live-box"><span class="live-dot loading" id="liveDot"></span><div><div class="live-main" id="liveText">در حال دریافت اطلاعات</div><div class="live-sub" id="lastUpdate">هنوز به‌روزرسانی نشده</div></div><button class="refresh" id="refreshBtn" title="به‌روزرسانی">↻</button></div>
+  </div>
+
+  <div class="alert-admin" id="alert"></div>
+  <div class="stats" id="stats"></div>
+
+  <section class="card-admin">
+    <h2>فیلتر نمای مدیریتی</h2><p class="desc">تمام جدول‌ها و کارت‌ها با فیلترهای زیر تغییر می‌کنند.</p>
+    <div class="filters">
+      <div class="field"><label>منطقه</label><select id="regionFilter"><option value="">همه مناطق</option></select></div>
+      <div class="field"><label>فروشگاه</label><select id="storeFilter"><option value="">همه فروشگاه‌ها</option></select></div>
+      <div class="field"><label>گروه کالایی</label><select id="groupFilter"><option value="">همه گروه‌ها</option></select></div>
+      <div class="field"><label>زمان باقی‌مانده</label><select id="daysFilter"><option value="">همه بازه‌ها</option><option value="expired">منقضی‌شده</option><option value="0-3">۰ تا ۳ روز</option><option value="4-7">۴ تا ۷ روز</option><option value="8+">بیشتر از ۷ روز</option></select></div>
+      <div class="field search-wide"><label>جست‌وجوی محصول، بارکد، آرتیکل یا فروشگاه</label><input id="search" type="search" placeholder="نام محصول، بارکد، آرتیکل یا فروشگاه..."></div>
+      <button class="clear" id="clearBtn">پاک‌کردن</button>
+    </div>
+    <div class="filter-foot"><label><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال و فروش‌نرفته</label><span id="resultCount">در حال محاسبه...</span></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card-admin"><h2>وضعیت تمام مناطق</h2><p class="desc">مقایسه سریع مناطق بر اساس ارزش و ریسک فوری.</p><div id="regionOverview" class="region-list"></div></section>
+    <section class="card-admin"><h2>آخرین ثبت‌های شبکه</h2><p class="desc">جدیدترین ثبت‌ها در همه مناطق.</p><div id="latestWrap"></div></section>
+  </div>
+
+  <section class="card-admin"><h2>محصولات ثبت‌شده به تفکیک منطقه</h2><p class="desc">برای دیدن فروشگاه‌های هر محصول، روی ردیف آن کلیک کنید.</p><div id="summaryWrap"></div></section>
+</main>
+
+<script src="auth.js"></script>
+<script>
+const session=nhRequireRole(["system_admin","platform_admin"]);
+const REFRESH_MS=60000,PAGE=1000,MAX=100000;
+let stores=[],batches=[],storeMap=new Map(),productMap=new Map(),expanded=null,busy=false,timer=null;
+const $=id=>document.getElementById(id);
+$("logoutBtn").onclick=e=>{e.preventDefault();nhLogout()};
+$("refreshBtn").onclick=()=>refresh(true);
+["regionFilter","storeFilter","groupFilter","daysFilter","activeOnly"].forEach(id=>$(id).onchange=()=>{if(id==="regionFilter")fillStores();render()});
+let st=null;$("search").oninput=()=>{clearTimeout(st);st=setTimeout(render,180)};
+$("clearBtn").onclick=()=>{["regionFilter","storeFilter","groupFilter","daysFilter","search"].forEach(id=>$(id).value="");$("activeOnly").checked=true;fillStores();render()};
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function fa(v,d=3){return new Intl.NumberFormat("fa-IR",{maximumFractionDigits:d}).format(Number(v)||0)}
+function dt(v){if(!v)return"—";const d=new Date(v);if(isNaN(d))return"—";return new Intl.DateTimeFormat("fa-IR-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
+function dayNo(v){const d=v instanceof Date?v:new Date(v);if(isNaN(d))return null;const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);const o=Object.fromEntries(p.map(x=>[x.type,x.value]));return Math.floor(Date.UTC(+o.year,+o.month-1,+o.day)/86400000)}
+function daysLeft(v){if(!v)return null;const a=dayNo(v+"T12:00:00"),b=dayNo(new Date());return a===null||b===null?null:a-b}
+function risk(b){if(b.status==="sold")return{key:"sold",label:"فروخته‌شده",cls:"sold"};const d=daysLeft(b.expiry_date);if(d===null)return{key:"unknown",label:"نامشخص",cls:"sold"};if(d<0)return{key:"expired",label:"منقضی‌شده",cls:"expired"};if(d<=3)return{key:"0-3",label:d===0?"امروز":fa(d,0)+" روز",cls:"urgent"};if(d<=7)return{key:"4-7",label:fa(d,0)+" روز",cls:"warn"};return{key:"8+",label:fa(d,0)+" روز",cls:"safe"}}
+function active(b){return!["sold","cancelled","rejected"].includes(b.status)}
+function val(b){return(Number(b.quantity)||0)*(Number(b.unit_price)||0)}
+function live(state,text){$("liveDot").className="live-dot"+(state==="loading"?" loading":state==="error"?" error":"");$("liveText").textContent=text}
+function err(m){$("alert").textContent="خطا: "+m;$("alert").classList.add("show");live("error","اتصال با خطا مواجه شد")}
+function ok(){ $("alert").classList.remove("show") }
+
+async function loadStores(){
+ const q=`query{stores(order_by:[{region:asc},{name:asc}]){id store_code name region region_manager_name executive_manager_name}}`;
+ const d=await nhGql(q,{},session.token);stores=d.stores||[];storeMap=new Map(stores.map(s=>[String(s.id),s]));
+}
+async function loadBatches(){
+ const q=`query($limit:Int!,$offset:Int!){expiry_batches(order_by:[{created_at:desc},{id:desc}],limit:$limit,offset:$offset){id product_id store_id product_name product_group quantity unit unit_price expiry_date status created_at}}`;
+ const m=new Map();let off=0;
+ while(off<MAX){const d=await nhGql(q,{limit:PAGE,offset:off},session.token),p=d.expiry_batches||[];p.forEach(x=>m.set(String(x.id),x));if(p.length<PAGE)return[...m.values()];off+=p.length}
+ throw new Error("تعداد رکوردها از سقف ایمن عبور کرده است.");
+}
+async function loadProducts(rows){
+ const ids=[...new Set(rows.map(x=>x.product_id).filter(Boolean).map(String))].filter(id=>!productMap.has(id));if(!ids.length)return;
+ for(let i=0;i<ids.length;i+=300){const part=ids.slice(i,i+300);let d;
+  try{d=await nhGql(`query($ids:[uuid!]!){products(where:{id:{_in:$ids}}){id name barcode article product_group price}}`,{ids:part},session.token)}
+  catch(e){d=await nhGql(`query($ids:[uuid!]!){products(where:{id:{_in:$ids}}){id name barcode product_group price}}`,{ids:part},session.token)}
+  (d.products||[]).forEach(p=>productMap.set(String(p.id),p));
+ }
+}
+async function refresh(force=false){
+ if(busy)return;busy=true;ok();live("loading","در حال به‌روزرسانی");$("refreshBtn").disabled=true;
+ try{if(force||!stores.length)await loadStores();const r=await loadBatches();await loadProducts(r);batches=r;fillFilters();render();$("lastUpdate").textContent="آخرین دریافت: "+dt(new Date().toISOString());live("ok","داده‌ها به‌روز هستند");clearTimeout(timer);timer=setTimeout(()=>refresh(),REFRESH_MS)}
+ catch(e){err(e.message||e)}finally{busy=false;$("refreshBtn").disabled=false}
+}
+function fillFilters(){
+ const rf=$("regionFilter"),gf=$("groupFilter"),rv=rf.value,gv=gf.value;
+ const rs=[...new Set(stores.map(s=>s.region).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fa"));
+ const gs=[...new Set(batches.map(b=>b.product_group).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fa"));
+ rf.innerHTML='<option value="">همه مناطق</option>'+rs.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+ gf.innerHTML='<option value="">همه گروه‌ها</option>'+gs.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+ if(rs.includes(rv))rf.value=rv;if(gs.includes(gv))gf.value=gv;fillStores();
+}
+function fillStores(){
+ const r=$("regionFilter").value,sf=$("storeFilter"),old=sf.value;
+ const arr=stores.filter(s=>!r||s.region===r).sort((a,b)=>(a.name||"").localeCompare(b.name||"","fa",{numeric:true}));
+ sf.innerHTML='<option value="">همه فروشگاه‌ها</option>'+arr.map(s=>`<option value="${s.id}">${esc(s.name)}${s.store_code?" · "+esc(s.store_code):""}</option>`).join("");
+ if(arr.some(s=>String(s.id)===old))sf.value=old;
+}
+function enriched(){return batches.map(b=>{const s=storeMap.get(String(b.store_id))||{},p=productMap.get(String(b.product_id))||{};return{...b,store:s,product:p,region:s.region||"نامشخص",pname:b.product_name||p.name||"نامشخص",pgroup:b.product_group||p.product_group||"نامشخص",article:p.article||"",barcode:p.barcode||"",rial:val(b),rk:risk(b)}})}
+function rows(){
+ const r=$("regionFilter").value,s=$("storeFilter").value,g=$("groupFilter").value,d=$("daysFilter").value,t=$("search").value.trim().toLocaleLowerCase("fa"),a=$("activeOnly").checked;
+ return enriched().filter(x=>{if(a&&!active(x))return false;if(r&&x.region!==r)return false;if(s&&String(x.store_id)!==s)return false;if(g&&x.pgroup!==g)return false;if(d&&x.rk.key!==d)return false;if(t){const h=[x.pname,x.pgroup,x.article,x.barcode,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa");if(!h.includes(t))return false}return true});
+}
+function render(){const r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت از "+fa(batches.length,0)+" رکورد";renderStats(r);renderRegions(r);renderLatest(r);renderSummary(r)}
+function renderStats(r){
+ const a=r.filter(active),regions=new Set(a.map(x=>x.region)),storesSet=new Set(a.map(x=>String(x.store_id))),products=new Set(a.map(x=>x.product_id||x.pname));
+ const qty=a.reduce((s,x)=>s+(Number(x.quantity)||0),0),value=a.reduce((s,x)=>s+x.rial,0),exp=a.filter(x=>x.rk.key==="expired").reduce((s,x)=>s+x.rial,0),urg=a.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0);
+ $("stats").innerHTML=`
+ <div class="stat green"><div class="stat-l">مناطق دارای ثبت فعال</div><div class="stat-v">${fa(regions.size,0)}</div><div class="stat-s">منطقه درگیر</div></div>
+ <div class="stat"><div class="stat-l">فروشگاه‌های دارای موجودی</div><div class="stat-v">${fa(storesSet.size,0)}</div><div class="stat-s">فروشگاه فعال</div></div>
+ <div class="stat blue"><div class="stat-l">محصولات یکتا</div><div class="stat-v">${fa(products.size,0)}</div><div class="stat-s">${fa(qty)} واحد</div></div>
+ <div class="stat"><div class="stat-l">ارزش موجودی فعال</div><div class="stat-v">${nhFormatRial(value)}</div><div class="stat-s">بر مبنای قیمت زمان ثبت</div></div>
+ <div class="stat red"><div class="stat-l">ریال ضایعات‌شده</div><div class="stat-v">${nhFormatRial(exp)}</div><div class="stat-s">منقضی و فروش‌نرفته</div></div>
+ <div class="stat amber"><div class="stat-l">ریال در معرض ضایعات</div><div class="stat-v">${nhFormatRial(urg)}</div><div class="stat-s">۰ تا ۳ روز</div></div>`;
+}
+function renderRegions(r){
+ const m=new Map();r.filter(active).forEach(x=>{if(!m.has(x.region))m.set(x.region,{stores:new Set(),products:new Set(),value:0,risk:0,last:null,lastMs:0});const o=m.get(x.region);o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.value+=x.rial;if(["expired","0-3"].includes(x.rk.key))o.risk+=x.rial;const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at}});
+ const arr=[...m.entries()].sort((a,b)=>b[1].risk-a[1].risk);
+ $("regionOverview").innerHTML=arr.length?arr.map(([n,o])=>`<div class="region-row"><div><div class="region-title">${esc(n)}</div><small>آخرین ثبت: ${dt(o.last)}</small></div><div><strong>${fa(o.stores.size,0)}</strong><small>فروشگاه</small></div><div><strong>${fa(o.products.size,0)}</strong><small>محصول</small></div><div><strong>${nhFormatRial(o.value)}</strong><small>ارزش فعال</small></div><div><strong>${nhFormatRial(o.risk)}</strong><small>ریسک فوری</small></div></div>`).join(""):'<div class="empty">داده‌ای برای نمایش وجود ندارد.</div>';
+}
+function renderLatest(r){
+ const arr=[...r].sort((a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)).slice(0,12);
+ $("latestWrap").innerHTML=arr.length?`<div class="table-shell"><table class="admin-table" style="min-width:760px"><thead><tr><th>محصول</th><th>فروشگاه / منطقه</th><th>تعداد</th><th>انقضا</th><th>زمان ثبت</th></tr></thead><tbody>${arr.map(x=>`<tr><td><div class="title">${esc(x.pname)}</div><div class="sub">${esc(x.pgroup)}</div></td><td><div class="title">${esc(x.store.name||"نامشخص")}</div><div class="sub">${esc(x.region)}</div></td><td class="num">${fa(x.quantity)}</td><td><span class="chip ${x.rk.cls}">${esc(x.rk.label)}</span><div class="sub">${nhIsoToJalaliStr(x.expiry_date)}</div></td><td class="num">${dt(x.created_at)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">هنوز ثبت جدیدی وجود ندارد.</div>';
+}
+function summary(r){
+ const m=new Map();r.forEach(x=>{const k=x.region+"::"+(x.product_id||x.pname);if(!m.has(k))m.set(k,{key:k,region:x.region,name:x.pname,group:x.pgroup,article:x.article,barcode:x.barcode,stores:new Map(),qty:0,value:0,near:null,nearD:null,last:null,lastMs:0});const o=m.get(k),sk=String(x.store_id);if(!o.stores.has(sk))o.stores.set(sk,{name:x.store.name||"نامشخص",code:x.store.store_code||"",qty:0,value:0});const z=o.stores.get(sk);z.qty+=Number(x.quantity)||0;z.value+=x.rial;o.qty+=Number(x.quantity)||0;o.value+=x.rial;const dl=daysLeft(x.expiry_date);if(dl!==null&&(o.nearD===null||dl<o.nearD)){o.nearD=dl;o.near=x.expiry_date}const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at}});
+ return[...m.values()].sort((a,b)=>b.lastMs-a.lastMs);
+}
+function renderSummary(r){
+ const arr=summary(r).slice(0,300);
+ if(!arr.length){$("summaryWrap").innerHTML='<div class="empty">داده‌ای برای نمایش وجود ندارد.</div>';return}
+ $("summaryWrap").innerHTML=`<div class="table-shell"><table class="admin-table"><thead><tr><th>منطقه</th><th>محصول</th><th>آرتیکل / بارکد</th><th>فروشگاه‌ها</th><th>تعداد</th><th>ارزش ریالی</th><th>نزدیک‌ترین انقضا</th><th>آخرین ثبت</th></tr></thead><tbody>${arr.map(o=>{const rr=risk({status:"approved",expiry_date:o.near});return`<tr class="expand" data-k="${esc(o.key)}"><td>${esc(o.region)}</td><td><div class="title">${esc(o.name)}</div><div class="sub">${esc(o.group)}</div></td><td><div class="title">${esc(o.article||"—")}</div><div class="sub">${esc(o.barcode||"—")}</div></td><td class="num">${fa(o.stores.size,0)}</td><td class="num">${fa(o.qty)}</td><td class="num">${nhFormatRial(o.value)}</td><td><span class="chip ${rr.cls}">${esc(rr.label)}</span><div class="sub">${o.near?nhIsoToJalaliStr(o.near):"—"}</div></td><td class="num">${dt(o.last)}</td></tr>${expanded===o.key?`<tr class="detail"><td colspan="8"><div class="detail-box">${[...o.stores.values()].sort((a,b)=>b.value-a.value).map(s=>`<span class="store-pill"><strong>${esc(s.name)}</strong>${s.code?" ("+esc(s.code)+")":""} · ${fa(s.qty)} · ${nhFormatRial(s.value)}</span>`).join("")}</div></td></tr>`:""}`}).join("")}</tbody></table></div>`;
+ $("summaryWrap").querySelectorAll(".expand").forEach(tr=>tr.onclick=()=>{expanded=expanded===tr.dataset.k?null:tr.dataset.k;renderSummary(rows())});
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&!busy)refresh()});
+refresh(true);
+</script>
+</body>
+</html>
