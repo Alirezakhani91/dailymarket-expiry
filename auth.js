@@ -8,14 +8,16 @@ const ROLE_HOME = {
   store_operator: "operator.html",
   region_manager: "manager.html",
   executive_manager: "executive.html",
-  system_admin: "admin.html"
+  system_admin: "platform-monitor.html",
+  platform_admin: "platform-monitor.html"
 };
 
 const ROLE_LABEL = {
   store_operator: "اپراتور فروشگاه",
   region_manager: "مدیر منطقه",
   executive_manager: "مدیر ارشد",
-  system_admin: "مدیر سیستم"
+  system_admin: "مدیر پلتفرم",
+  platform_admin: "مدیر پلتفرم"
 };
 
 const STATUS_LABEL = {
