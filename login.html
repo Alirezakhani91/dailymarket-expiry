@@ -25,58 +25,178 @@
         <label for="email">ایمیل کاری</label>
         <input type="email" id="email" required autocomplete="username">
       </div>
+
       <div class="field">
         <label for="password">رمز عبور</label>
         <input type="password" id="password" required autocomplete="current-password">
       </div>
-      <button type="submit" id="submitBtn" class="btn btn-primary btn-block">ورود</button>
+
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+        ورود
+      </button>
     </form>
   </div>
 </div>
 
 <script src="auth.js"></script>
+
 <script>
   const form = document.getElementById("loginForm");
   const alertEl = document.getElementById("alert");
   const submitBtn = document.getElementById("submitBtn");
 
-  const existing = nhSession();
-  if (existing) {
-    window.location.href = ROLE_HOME[existing.role] || "login.html";
+  const APP_ROLE_PRIORITY = [
+    "system_admin",
+    "platform_admin",
+    "executive_manager",
+    "region_manager",
+    "store_operator"
+  ];
+
+  function showLoginError(message) {
+    alertEl.textContent = nhFriendlyAuthError(message);
+    alertEl.classList.add("show");
   }
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  function clearLoginError() {
+    alertEl.textContent = "";
     alertEl.classList.remove("show");
-    submitBtn.disabled = true;
-    submitBtn.textContent = "در حال ورود...";
+  }
+
+  function setLoading(isLoading) {
+    submitBtn.disabled = isLoading;
+    submitBtn.textContent = isLoading ? "در حال ورود..." : "ورود";
+  }
+
+  function isKnownAppRole(role) {
+    return Boolean(role && ROLE_HOME[role]);
+  }
+
+  function redirectByRole(role) {
+    const destination = ROLE_HOME[role];
+
+    if (!destination) {
+      throw new Error("برای این حساب، نقش معتبر سامانه تعریف نشده است.");
+    }
+
+    window.location.replace(destination);
+  }
+
+  async function getUserAppRole(userId, token, nhostDefaultRole) {
+    const query = `
+      query LoginUserRoles($userId: uuid!) {
+        user_roles(
+          where: { user_id: { _eq: $userId } }
+        ) {
+          role
+        }
+      }
+    `;
 
     try {
-      const res = await fetch(AUTH_URL, {
+      const data = await nhGql(
+        query,
+        { userId },
+        token
+      );
+
+      const roles = (data.user_roles || [])
+        .map(item => item.role)
+        .filter(Boolean);
+
+      for (const role of APP_ROLE_PRIORITY) {
+        if (roles.includes(role)) {
+          return role;
+        }
+      }
+    } catch (error) {
+      console.error("خطا در دریافت نقش کاربر:", error);
+    }
+
+    if (isKnownAppRole(nhostDefaultRole)) {
+      return nhostDefaultRole;
+    }
+
+    throw new Error(
+      "ورود انجام شد، اما نقش این حساب در جدول user_roles پیدا نشد."
+    );
+  }
+
+  function clearInvalidSession() {
+    sessionStorage.removeItem("nhost_access_token");
+    sessionStorage.removeItem("nhost_user_id");
+    sessionStorage.removeItem("nhost_default_role");
+  }
+
+  const existingSession = nhSession();
+
+  if (existingSession) {
+    if (isKnownAppRole(existingSession.role)) {
+      redirectByRole(existingSession.role);
+    } else {
+      clearInvalidSession();
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    clearLoginError();
+    setLoading(true);
+
+    try {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const response = await fetch(AUTH_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-          email: document.getElementById("email").value.trim(),
-          password: document.getElementById("password").value
+          email,
+          password
         })
       });
-      const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "ورود ناموفق بود");
+      let data;
+
+      try {
+        data = await response.json();
+      } catch (error) {
+        throw new Error(
+          "پاسخ نامعتبر از سرور دریافت شد. اتصال اینترنت را بررسی کنید."
+        );
       }
 
-      sessionStorage.setItem("nhost_access_token", data.session.accessToken);
-      sessionStorage.setItem("nhost_user_id", data.session.user.id);
-      sessionStorage.setItem("nhost_default_role", data.session.user.defaultRole);
+      if (!response.ok || !data.session || !data.session.user) {
+        throw new Error(
+          data.message ||
+          data.error ||
+          "ورود ناموفق بود."
+        );
+      }
 
-      window.location.href = ROLE_HOME[data.session.user.defaultRole] || "index.html";
+      const token = data.session.accessToken;
+      const userId = data.session.user.id;
+      const nhostDefaultRole = data.session.user.defaultRole;
 
-    } catch (err) {
-      alertEl.textContent = nhFriendlyAuthError(err.message);
-      alertEl.classList.add("show");
-      submitBtn.disabled = false;
-      submitBtn.textContent = "ورود";
+      const appRole = await getUserAppRole(
+        userId,
+        token,
+        nhostDefaultRole
+      );
+
+      sessionStorage.setItem("nhost_access_token", token);
+      sessionStorage.setItem("nhost_user_id", userId);
+      sessionStorage.setItem("nhost_default_role", appRole);
+
+      redirectByRole(appRole);
+
+    } catch (error) {
+      clearInvalidSession();
+      showLoginError(error.message || "ورود ناموفق بود.");
+      setLoading(false);
     }
   });
 </script>
