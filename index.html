@@ -2,8 +2,12 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>پلتفرم پشتیبانی فنی فروشگاه‌ها</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>پلتفرم پشتیبانی فنی فروشگاه‌ها - v3.2</title>
+<!-- Mobile quantity controls build: 3.2 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -95,22 +99,23 @@
   .chip{border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;cursor:pointer;background:#fff;}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
 
-  .part-row{display:grid;grid-template-columns:minmax(0,1fr) 132px auto;gap:8px;align-items:center;margin-bottom:8px;}
-  .part-row input{margin-bottom:0;}
-  .qty-control{display:grid;grid-template-columns:38px minmax(44px,1fr) 38px;align-items:stretch;height:42px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;direction:ltr;}
+  .part-row{display:grid;grid-template-columns:minmax(0,1fr) 164px 44px;gap:8px;align-items:center;margin-bottom:8px;}
+  .part-row>input{margin-bottom:0;}
+  .qty-control{display:grid!important;grid-template-columns:48px minmax(52px,1fr) 48px!important;align-items:stretch;height:46px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;direction:ltr;min-width:164px;}
   .qty-control:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,94,.08);}
-  .qty-control input{width:100%;min-width:0;height:100%;margin:0!important;padding:0 4px;border:0;border-right:1px solid var(--line);border-left:1px solid var(--line);border-radius:0;background:#fff;text-align:center;font-weight:800;font-size:14px;direction:ltr;-moz-appearance:textfield;}
-  .qty-control input:focus{outline:none;border-color:var(--line);box-shadow:none;}
-  .qty-control input::-webkit-outer-spin-button,.qty-control input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-  .qty-btn{width:100%;height:100%;border:0;background:#f7f8f6;color:var(--ink);font-family:inherit;font-size:21px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-  .qty-btn:active{background:var(--accent-soft);color:var(--accent);}
-  .qty-btn:disabled{opacity:.35;cursor:not-allowed;}
-  .rm-btn{border:none;background:var(--red-soft);color:var(--red);border-radius:8px;width:34px;height:34px;font-size:14px;cursor:pointer;}
+  .qty-control input{display:block!important;width:100%!important;min-width:0!important;height:100%!important;margin:0!important;padding:0 4px!important;border:0!important;border-right:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:0!important;background:#fff!important;text-align:center!important;font-weight:800!important;font-size:16px!important;direction:ltr!important;-moz-appearance:textfield!important;-webkit-appearance:none!important;appearance:none!important;}
+  .qty-control input:focus{outline:none!important;box-shadow:none!important;}
+  .qty-control input::-webkit-outer-spin-button,.qty-control input::-webkit-inner-spin-button{-webkit-appearance:none!important;margin:0!important;}
+  .qty-btn{display:flex!important;align-items:center!important;justify-content:center!important;width:48px!important;min-width:48px!important;height:100%!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:#eef3f1!important;color:var(--accent)!important;font-family:Arial,sans-serif!important;font-size:28px!important;font-weight:800!important;line-height:1!important;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .qty-btn:active{background:var(--accent)!important;color:#fff!important;}
+  .qty-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .rm-btn{border:none;background:var(--red-soft);color:var(--red);border-radius:10px;width:44px;height:46px;font-size:16px;cursor:pointer;}
   @media(max-width:520px){
-    .part-row{grid-template-columns:minmax(0,1fr) 128px 36px;gap:6px;}
-    .qty-control{grid-template-columns:40px minmax(40px,1fr) 40px;height:44px;}
-    .qty-btn{font-size:23px;}
-    .rm-btn{width:36px;height:44px;}
+    .part-row{grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:stretch;}
+    .part-row>input{grid-column:1 / -1;height:48px;}
+    .qty-control{grid-column:1;grid-row:2;width:100%;min-width:0;grid-template-columns:56px minmax(60px,1fr) 56px!important;height:50px;}
+    .qty-btn{width:56px!important;min-width:56px!important;font-size:30px!important;}
+    .rm-btn{grid-column:2;grid-row:2;width:44px;height:50px;}
   }
   .add-part{border:1px dashed var(--line);background:transparent;color:var(--ink-soft);border-radius:9px;padding:8px;width:100%;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:14px;}
 
@@ -414,10 +419,10 @@ function Toast({msg}){ return React.createElement('div',{className:'toast'+(msg?
 function QuantityControl({value,onChange}){
   const qty=Math.max(1,Number(value)||1);
   const setQty=(next)=>onChange(Math.max(1,Math.floor(Number(next)||1)));
-  return React.createElement('div',{className:'qty-control'},
-    React.createElement('button',{type:'button',className:'qty-btn',disabled:qty<=1,onClick:()=>setQty(qty-1),'aria-label':'کاهش تعداد'},'−'),
-    React.createElement('input',{type:'number',inputMode:'numeric',pattern:'[0-9]*',min:1,value:qty,onChange:e=>setQty(e.target.value),'aria-label':'تعداد'}),
-    React.createElement('button',{type:'button',className:'qty-btn',onClick:()=>setQty(qty+1),'aria-label':'افزایش تعداد'},'+')
+  return React.createElement('div',{className:'qty-control','data-mobile-qty':'v3.2'},
+    React.createElement('button',{type:'button',className:'qty-btn qty-minus',disabled:qty<=1,onClick:()=>setQty(qty-1),'aria-label':'کاهش تعداد'},'−'),
+    React.createElement('input',{type:'text',inputMode:'numeric',pattern:'[0-9]*',value:qty,onChange:e=>setQty(String(e.target.value).replace(/[^0-9۰-۹٠-٩]/g,'')),'aria-label':'تعداد'}),
+    React.createElement('button',{type:'button',className:'qty-btn qty-plus',onClick:()=>setQty(qty+1),'aria-label':'افزایش تعداد'},'+')
   );
 }
 
@@ -1169,7 +1174,7 @@ function App(){
 
   return React.createElement('div',{className:'wrap'},
     React.createElement('div',{className:'top'},
-      React.createElement('div',{className:'brand'},React.createElement('span',{className:'dot'}),React.createElement('div',null,React.createElement('h1',null,'پشتیبانی فنی فروشگاه‌ها'),React.createElement('span',null,role==='tech'?'محیط نیروی فنی':'مرکز کنترل مدیریت فنی'))),
+      React.createElement('div',{className:'brand'},React.createElement('span',{className:'dot'}),React.createElement('div',null,React.createElement('h1',null,'پشتیبانی فنی فروشگاه‌ها'),React.createElement('span',null,(role==='tech'?'محیط نیروی فنی':'مرکز کنترل مدیریت فنی')+' • نسخه 3.2'))),
       React.createElement('div',{className:'user-bar'},React.createElement('div',{className:'user-info'},React.createElement('b',null,currentUser.name),React.createElement('span',null,role==='manager'?'مدیر فنی':'کد پرسنلی: '+currentUser.username)),React.createElement('button',{className:'logout-btn',onClick:logout},'خروج'))
     ),
     !loaded?React.createElement('div',{className:'empty'},'در حال بارگذاری اطلاعات...'):(role==='tech'?React.createElement(TechView,{tasks,saveTasks,showToast,currentUser,refreshTasks:loadTasks}):React.createElement(ManagerView,{tasks,updateTask:updateManagerTask,showToast,refreshTasks:loadTasks,managerLoading,lastUpdated})),
