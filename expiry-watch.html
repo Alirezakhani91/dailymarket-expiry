@@ -391,7 +391,7 @@
         <span class="promo-export-eyebrow">خروجی رسمی تیم بازرگانی</span>
         <h2 class="promo-export-title">فرم قیمت پروموشن کالاهای تاریخ نزدیک</h2>
         <p class="promo-export-description">
-          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۷ روز را انتخاب کنید و فایل آماده ارسال را دریافت کنید.
+          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۷ روز را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
         </p>
       </div>
       <span class="promo-excel-badge">EXCEL</span>
@@ -1461,18 +1461,9 @@
     document.getElementById("promoDayLabel").textContent =
       `${Number(promoMinDay.value).toLocaleString("fa-IR")} تا ${Number(promoMaxDay.value).toLocaleString("fa-IR")} روز`;
 
-    const missingRows = currentPromotionRows.filter(row =>
-      !row.article ||
-      !row.barcode ||
-      row.price === null ||
-      !row.regionCode ||
-      !row.sapStoreCode
-    );
-
     promoExportBtn.disabled =
       !promotionReferenceReady ||
-      currentPromotionRows.length === 0 ||
-      missingRows.length > 0;
+      currentPromotionRows.length === 0;
 
     if (!promotionReferenceReady) {
       promotionPreview.innerHTML =
@@ -1487,14 +1478,7 @@
       return;
     }
 
-    if (missingRows.length) {
-      setPromotionMessage(
-        "warning",
-        `${missingRows.length.toLocaleString("fa-IR")} ردیف اطلاعات ناقص دارد؛ آرتیکل، بارکد، قیمت، کد منطقه یا کد SAP فروشگاه را تکمیل کنید. تا زمان رفع موارد ناقص، خروجی غیرفعال است.`
-      );
-    } else {
-      clearPromotionMessage();
-    }
+    clearPromotionMessage();
 
     const previewRows = currentPromotionRows.slice(0, 8);
 
@@ -1563,7 +1547,7 @@
   }
 
   async function exportPromotionWorkbook() {
-    if (!currentPromotionRows.length || promoExportBtn.disabled) return;
+    if (!currentPromotionRows.length) return;
 
     if (!window.ExcelJS) {
       setPromotionMessage(
@@ -1661,13 +1645,15 @@
 
       currentPromotionRows.forEach((item, index) => {
         const row = worksheet.addRow([
-          String(item.article),
-          String(item.barcode),
-          item.description,
-          Number(item.price),
-          item.expiryJalali,
-          String(item.regionCode),
-          String(item.sapStoreCode),
+          item.article || "",
+          item.barcode || "",
+          item.description || "",
+          item.price === null || item.price === undefined || item.price === ""
+            ? ""
+            : Number(item.price),
+          item.expiryJalali || "",
+          item.regionCode || "",
+          item.sapStoreCode || "",
           "",
           "",
           "",
@@ -1702,6 +1688,28 @@
               fgColor: { argb: "FFF8F8F8" }
             };
           }
+        });
+
+        const missingRequiredColumns = [];
+        if (!item.article) missingRequiredColumns.push(1);
+        if (!item.barcode) missingRequiredColumns.push(2);
+        if (item.price === null || item.price === undefined || item.price === "") {
+          missingRequiredColumns.push(4);
+        }
+        if (!item.regionCode) missingRequiredColumns.push(6);
+        if (!item.sapStoreCode) missingRequiredColumns.push(7);
+
+        missingRequiredColumns.forEach(columnNumber => {
+          const cell = row.getCell(columnNumber);
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFFF2CC" }
+          };
+          cell.font = {
+            ...cell.font,
+            color: { argb: "FF7A4A00" }
+          };
         });
 
         row.getCell(1).numFmt = "@";
