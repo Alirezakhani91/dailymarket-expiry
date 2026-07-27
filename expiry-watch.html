@@ -370,7 +370,7 @@
 <div class="container">
   <div class="page-head">
     <h1>پایش انقضا</h1>
-    <p>چند روز تا انقضای هر کالا مانده، و کجا باید همین حالا تصمیم بگیرید.</p>
+    <p>نمای زنده کالاهایی که امروز یا در روزهای آینده منقضی می‌شوند؛ تاریخ‌گذشته‌ها خودکار وارد آرشیو می‌شوند.</p>
   </div>
 
   <div id="alert" class="alert alert-error"></div>
@@ -466,7 +466,7 @@
   </div>
 
   <div class="card">
-    <h2 style="font-size:15px; margin:0 0 14px;">تفکیک روزشمار</h2>
+    <h2 style="font-size:15px; margin:0 0 14px;">تفکیک روزشمار کالاهای فعال</h2>
     <p style="font-size:12.5px; color:var(--muted); margin:-8px 0 14px;" id="hintText"></p>
     <div class="filter-bar">
       <select id="groupByMode">
@@ -474,10 +474,22 @@
         <option value="group">بر اساس گروه کالایی</option>
       </select>
       <input type="text" id="search" placeholder="جست‌وجو در نام کالا/گروه...">
-      <label class="checkbox-inline"><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال (غیر از فروخته‌شده)</label>
+      <span class="filter-count">تاریخ‌گذشته‌ها در محاسبات جاری نیستند.</span>
       <span class="filter-count" id="rowCount"></span>
     </div>
     <div id="matrixWrap"><div class="empty">در حال بارگذاری...</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 8px;">آرشیو خودکار کالاهای منقضی‌شده</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 14px;">
+      این اطلاعات حذف نمی‌شوند، اما در هیچ‌یک از کارت‌ها، نمودارها و اعداد جاری محاسبه نمی‌شوند.
+    </p>
+    <div class="filter-bar">
+      <input type="text" id="archiveSearch" placeholder="جست‌وجو در کالا، گروه یا فروشگاه...">
+      <span class="filter-count" id="archiveCount"></span>
+    </div>
+    <div id="archiveWrap"><div class="empty">در حال آماده‌سازی آرشیو...</div></div>
   </div>
 </div>
 
@@ -500,16 +512,17 @@
   document.getElementById("backLink").href = ROLE_HOME[session.role];
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
-  const canSell = session.role === "region_manager";
-  document.getElementById("hintText").textContent = canSell
-    ? "روی هر عدد کلیک کنید تا همان مقدار به‌عنوان فروخته‌شده ثبت شود. روی «مجموع» کلیک کنید تا کل آن کالا فروخته‌شده ثبت شود."
-    : "";
+  const canExportPromotion = session.role === "region_manager";
+  const canRecordSale = false;
+  document.getElementById("hintText").textContent =
+    "این جدول فقط کالاهای فعالِ امروز و آینده را نمایش می‌دهد.";
 
   const alertEl = document.getElementById("alert");
   const heroWrap = document.getElementById("heroWrap");
   const lossBanner = document.getElementById("lossBanner");
   const chartWrap = document.getElementById("chartWrap");
   const matrixWrap = document.getElementById("matrixWrap");
+  const archiveWrap = document.getElementById("archiveWrap");
   const promotionExportCard = document.getElementById("promotionExportCard");
   const promotionMessage = document.getElementById("promotionMessage");
   const promotionPreview = document.getElementById("promotionPreview");
@@ -522,7 +535,6 @@
   const promoResetBtn = document.getElementById("promoResetBtn");
 
   const BUCKETS = [
-    { key: "expired", label: "منقضی‌شده" },
     { key: "d0", label: "امروز" },
     { key: "d1", label: "۱ روز" },
     { key: "d2", label: "۲ روز" },
@@ -533,7 +545,7 @@
     { key: "d7", label: "۷ روز" },
     { key: "more", label: "بیشتر از ۷ روز" }
   ];
-  const URGENT_KEYS = ["expired", "d0", "d1", "d2", "d3"];
+  const URGENT_KEYS = ["d0", "d1", "d2", "d3"];
   const WARN_KEYS = ["d4", "d5", "d6", "d7"];
 
   function showError(message) {
@@ -555,11 +567,24 @@
 
   function dayBucket(isoDate) {
     const [gy, gm, gd] = isoDate.split("-").map(Number);
-    const target = Date.UTC(gy, gm - 1, gd);
-    const now = new Date();
-    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-    const diff = Math.round((target - today) / 86400000);
-    if (diff < 0) return "expired";
+    const targetDay = Math.floor(Date.UTC(gy, gm - 1, gd) / 86400000);
+
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    const todayDay = Math.floor(Date.UTC(
+      Number(values.year),
+      Number(values.month) - 1,
+      Number(values.day)
+    ) / 86400000);
+
+    const diff = targetDay - todayDay;
+    if (diff < 0) return "archive";
     if (diff === 0) return "d0";
     if (diff >= 1 && diff <= 7) return "d" + diff;
     return "more";
@@ -605,7 +630,7 @@
 
     render();
 
-    if (canSell) {
+    if (canExportPromotion) {
       promotionExportCard.hidden = false;
       await loadPromotionReferenceData();
       renderPromotionExport();
@@ -641,6 +666,12 @@
           expiry_date
           status
           created_at
+          store {
+            id
+            name
+            store_code
+            region
+          }
         }
       }
     `;
@@ -675,8 +706,14 @@
   }
 
   function activeRows() {
-    const onlyActive = document.getElementById("activeOnly").checked;
-    return onlyActive ? allBatches.filter(b => b.status !== "sold") : allBatches;
+    return allBatches.filter(batch =>
+      batch.bucket !== "archive" &&
+      !["sold", "cancelled", "rejected"].includes(batch.status)
+    );
+  }
+
+  function archiveRows() {
+    return allBatches.filter(batch => batch.bucket === "archive");
   }
 
   function render() {
@@ -684,24 +721,24 @@
     renderHero();
     renderChart();
     renderMatrix();
+    renderArchive();
   }
 
-  // ---------- dramatic loss banner ----------
+  // ---------- immediate action banner ----------
   function renderLossBanner() {
     const rows = activeRows();
     const totalAllRial = sumRial(rows);
-    const expiredRows = rows.filter(b => b.bucket === "expired");
-    const imminentRows = rows.filter(b => ["d0", "d1", "d2", "d3"].includes(b.bucket));
-    const atRiskRial = sumRial(expiredRows) + sumRial(imminentRows);
-    const pct = totalAllRial > 0 ? Math.round((atRiskRial / totalAllRial) * 100) : 0;
+    const urgentRows = rows.filter(b => ["d0", "d1", "d2", "d3"].includes(b.bucket));
+    const urgentRial = sumRial(urgentRows);
+    const pct = totalAllRial > 0 ? Math.round((urgentRial / totalAllRial) * 100) : 0;
 
-    if (atRiskRial <= 0) {
+    if (urgentRial <= 0) {
       lossBanner.innerHTML = `
         <div class="loss-banner loss-banner-ok">
           <svg class="loss-banner-icon" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <div class="loss-banner-text">
             <div class="loss-banner-figure">وضعیت مطلوب</div>
-            <div class="loss-banner-sub">در حال حاضر هیچ ارزش قابل‌توجهی در معرض خطر فوری نیست.</div>
+            <div class="loss-banner-sub">در حال حاضر کالایی با زمان انقضای صفر تا سه روز وجود ندارد.</div>
           </div>
         </div>
       `;
@@ -712,9 +749,9 @@
       <div class="loss-banner">
         <svg class="loss-banner-icon" viewBox="0 0 24 24" fill="none"><path d="M12 2L1 21h22L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.15" fill="currentColor"/></svg>
         <div class="loss-banner-text">
-          <div class="loss-banner-figure">${nhFormatRial(atRiskRial)}</div>
-          <div class="loss-banner-sub">از دست رفته یا در آستانه‌ی از دست رفتن است (منقضی‌شده تا ۳ روز آینده)</div>
-          ${totalAllRial > 0 ? `<div class="loss-banner-pct">معادل ${pct}٪ از کل ارزش موجودی فعال شما</div>` : ""}
+          <div class="loss-banner-figure">${nhFormatRial(urgentRial)}</div>
+          <div class="loss-banner-sub">ارزش کالاهای فعال با صفر تا سه روز فرصت تا انقضا</div>
+          ${totalAllRial > 0 ? `<div class="loss-banner-pct">معادل ${pct}٪ از ارزش کل کالاهای فعال در حال انقضا</div>` : ""}
         </div>
       </div>
     `;
@@ -723,34 +760,34 @@
   // ---------- hero zone summary ----------
   function renderHero() {
     const rows = activeRows();
-    const expiredRows = rows.filter(b => b.bucket === "expired");
-    const imminentRows = rows.filter(b => ["d0", "d1", "d2", "d3"].includes(b.bucket));
+    const todayRows = rows.filter(b => b.bucket === "d0");
+    const imminentRows = rows.filter(b => ["d1", "d2", "d3"].includes(b.bucket));
     const warnRows = rows.filter(b => WARN_KEYS.includes(b.bucket));
     const safeRows = rows.filter(b => b.bucket === "more");
 
-    const qExpired = sumQty(expiredRows), rExpired = sumRial(expiredRows);
+    const qToday = sumQty(todayRows), rToday = sumRial(todayRows);
     const qImminent = sumQty(imminentRows), rImminent = sumRial(imminentRows);
     const qWarn = sumQty(warnRows), rWarn = sumRial(warnRows);
     const qSafe = sumQty(safeRows), rSafe = sumRial(safeRows);
 
     const byProduct = {};
-    [...expiredRows, ...imminentRows].forEach(b => {
-      byProduct[b.product_name] = (byProduct[b.product_name] || 0) + (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
+    [...todayRows, ...imminentRows].forEach(b => {
+      byProduct[b.product_name] = (byProduct[b.product_name] || 0) + itemRial(b);
     });
     const top = Object.entries(byProduct).sort((a, b) => b[1] - a[1])[0];
 
     heroWrap.innerHTML = `
       <div class="hero-grid hero-grid-4">
         <div class="hero-card hero-lost">
-          <div class="hero-value-primary">${qExpired}</div>
-          <div class="hero-lbl">ضرر قطعی</div>
-          <div class="hero-sub">منقضی‌شده، دیگر قابل فروش نیست</div>
-          <div class="hero-num-secondary">${nhFormatRial(rExpired)}</div>
+          <div class="hero-value-primary">${qToday}</div>
+          <div class="hero-lbl">منقضی‌شونده امروز</div>
+          <div class="hero-sub">تا پایان امروز در نمای فعال باقی می‌ماند</div>
+          <div class="hero-num-secondary">${nhFormatRial(rToday)}</div>
         </div>
         <div class="hero-card hero-urgent">
           <div class="hero-value-primary">${qImminent}</div>
-          <div class="hero-lbl">هنوز وقت هست، تصمیم فوری بگیر</div>
-          <div class="hero-sub">۰ تا ۳ روز تا انقضا</div>
+          <div class="hero-lbl">نیازمند پیگیری فوری</div>
+          <div class="hero-sub">۱ تا ۳ روز تا انقضا</div>
           <div class="hero-num-secondary">${nhFormatRial(rImminent)}</div>
         </div>
         <div class="hero-card hero-warn">
@@ -761,12 +798,12 @@
         </div>
         <div class="hero-card hero-safe">
           <div class="hero-value-primary">${qSafe}</div>
-          <div class="hero-lbl">وضعیت پایدار</div>
-          <div class="hero-sub">بیشتر از ۷ روز فرصت</div>
+          <div class="hero-lbl">فرصت بیشتر</div>
+          <div class="hero-sub">بیشتر از ۷ روز تا انقضا</div>
           <div class="hero-num-secondary">${nhFormatRial(rSafe)}</div>
         </div>
       </div>
-      ${top ? `<div class="insight-banner">بیشترین ریسک مالی همین حالا: <strong>${top[0]}</strong> با ${nhFormatRial(top[1])} در معرض ضایعات یا از‌دست‌رفته.</div>` : ""}
+      ${top ? `<div class="insight-banner">بیشترین ارزش نیازمند پیگیری فوری: <strong>${top[0]}</strong> با ${nhFormatRial(top[1])} تا سه روز آینده.</div>` : ""}
     `;
   }
 
@@ -917,10 +954,10 @@
             <tr>
               <td>${name}</td>
               ${BUCKETS.map(b => `
-                <td class="num ${canSell && v[b.key + "_qty"] > 0 ? "cell-clickable" : ""}"
-                    ${canSell && v[b.key + "_qty"] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${heatCell(v[b.key + "_qty"], v[b.key + "_rial"], rowMax)}</td>
+                <td class="num ${canRecordSale && v[b.key + "_qty"] > 0 ? "cell-clickable" : ""}"
+                    ${canRecordSale && v[b.key + "_qty"] > 0 ? `data-idx="${idx}" data-bucket="${b.key}"` : ""}>${heatCell(v[b.key + "_qty"], v[b.key + "_rial"], rowMax)}</td>
               `).join("")}
-              <td class="num ${canSell && v.totalQty > 0 ? "cell-clickable" : ""}" ${canSell && v.totalQty > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${heatCell(v.totalQty, v.totalRial, v.totalQty)}</td>
+              <td class="num ${canRecordSale && v.totalQty > 0 ? "cell-clickable" : ""}" ${canRecordSale && v.totalQty > 0 ? `data-idx="${idx}" data-bucket="all"` : ""}>${heatCell(v.totalQty, v.totalRial, v.totalQty)}</td>
             </tr>
           `}).join("")}
         </tbody>
@@ -928,7 +965,7 @@
       </div>
     `;
 
-    if (canSell) {
+    if (canRecordSale) {
       matrixWrap.querySelectorAll("td.cell-clickable").forEach(td => {
         td.addEventListener("click", () => {
           const idx = parseInt(td.dataset.idx);
@@ -1059,6 +1096,61 @@
     }
   }
 
+
+  function renderArchive() {
+    const term = document.getElementById("archiveSearch").value.trim();
+    let rows = archiveRows();
+
+    if (term) {
+      rows = rows.filter(batch => [
+        batch.product_name,
+        batch.product_group,
+        batch.store?.name,
+        batch.store?.store_code,
+        batch.store?.region
+      ].join(" ").includes(term));
+    }
+
+    rows.sort((a, b) =>
+      String(b.expiry_date).localeCompare(String(a.expiry_date)) ||
+      String(b.created_at || "").localeCompare(String(a.created_at || ""))
+    );
+
+    document.getElementById("archiveCount").textContent =
+      `${rows.length.toLocaleString("fa-IR")} رکورد آرشیوی`;
+
+    if (!rows.length) {
+      archiveWrap.innerHTML = '<div class="empty">رکوردی در آرشیو یافت نشد.</div>';
+      return;
+    }
+
+    const visibleRows = rows.slice(0, 300);
+    archiveWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>فروشگاه</th><th>کالا</th><th>گروه</th><th>تعداد</th><th>ارزش ریالی</th><th>تاریخ انقضا</th><th>وضعیت ثبت</th></tr>
+        </thead>
+        <tbody>
+          ${visibleRows.map(batch => `
+            <tr>
+              <td>${batch.store?.name || "نامشخص"}${batch.store?.store_code ? ` · ${batch.store.store_code}` : ""}</td>
+              <td>${batch.product_name}</td>
+              <td>${batch.product_group || "—"}</td>
+              <td class="num">${batch.quantity}</td>
+              <td class="num">${batch.unit_price ? nhFormatRial(itemRial(batch)) : "—"}</td>
+              <td class="num">${nhIsoToJalaliStr(batch.expiry_date)}</td>
+              <td><span class="${nhStampClass(batch.status)}">${STATUS_LABEL[batch.status] || batch.status}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      </div>
+      ${rows.length > visibleRows.length ? `<div class="empty">۳۰۰ رکورد جدیدتر نمایش داده شده است. برای محدودکردن نتایج جست‌وجو کنید.</div>` : ""}
+    `;
+  }
+
+  document.getElementById("archiveSearch").addEventListener("input", renderArchive);
 
   // ---------- promotion Excel export ----------
   function normalizePromotionText(value) {
@@ -1337,7 +1429,7 @@
   }
 
   function renderPromotionExport() {
-    if (!canSell) return;
+    if (!canExportPromotion) return;
 
     const minDay = Number(promoMinDay.value || 0);
     const maxDay = Number(promoMaxDay.value || 7);
@@ -1676,7 +1768,7 @@
     }
   }
 
-  if (canSell) {
+  if (canExportPromotion) {
     [
       promoStoreFilter,
       promoGroupFilter,
@@ -1698,7 +1790,6 @@
 
   document.getElementById("groupByMode").addEventListener("change", renderMatrix);
   document.getElementById("search").addEventListener("input", renderMatrix);
-  document.getElementById("activeOnly").addEventListener("change", render);
 
   loadMyManager().catch(err => showError(err.message));
 </script>
