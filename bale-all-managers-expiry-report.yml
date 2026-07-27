@@ -1,0 +1,499 @@
+name: Bale All Managers Expiry Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 09:30 and 15:30 Tehran time (UTC+03:30)
+    - cron: "0 6,12 * * *"
+
+concurrency:
+  group: bale-all-managers-expiry-report
+  cancel-in-progress: false
+
+jobs:
+  send-reports:
+    runs-on: ubuntu-latest
+
+    env:
+      NHOST_NOTIFICATION_EMAIL: ${{ secrets.NHOST_NOTIFICATION_EMAIL }}
+      NHOST_NOTIFICATION_PASSWORD: ${{ secrets.NHOST_NOTIFICATION_PASSWORD }}
+      BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+
+    steps:
+      - name: Send each manager their own expiry report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import time
+          import urllib.error
+          import urllib.request
+          from collections import defaultdict
+          from datetime import date, datetime, timedelta
+          from decimal import Decimal, InvalidOperation
+          from zoneinfo import ZoneInfo
+
+          AUTH_URL = (
+              "https://wijabqjyryslediitcrc.auth."
+              "eu-central-1.nhost.run/v1/signin/email-password"
+          )
+          GRAPHQL_URL = (
+              "https://wijabqjyryslediitcrc.graphql."
+              "eu-central-1.nhost.run/v1"
+          )
+          TEHRAN_TZ = ZoneInfo("Asia/Tehran")
+
+          email = os.environ.get("NHOST_NOTIFICATION_EMAIL", "").strip()
+          password = os.environ.get("NHOST_NOTIFICATION_PASSWORD", "")
+          bale_token = os.environ.get("BALE_BOT_TOKEN", "").strip()
+
+          for key, value in {
+              "NHOST_NOTIFICATION_EMAIL": email,
+              "NHOST_NOTIFICATION_PASSWORD": password,
+              "BALE_BOT_TOKEN": bale_token,
+          }.items():
+              if not value:
+                  raise SystemExit(f"{key} is missing.")
+
+          def post_json(url, payload, headers=None):
+              request_headers = {
+                  "Content-Type": "application/json; charset=utf-8"
+              }
+              if headers:
+                  request_headers.update(headers)
+
+              request = urllib.request.Request(
+                  url,
+                  data=json.dumps(
+                      payload,
+                      ensure_ascii=False
+                  ).encode("utf-8"),
+                  headers=request_headers,
+                  method="POST",
+              )
+
+              try:
+                  with urllib.request.urlopen(
+                      request,
+                      timeout=60
+                  ) as response:
+                      return json.loads(
+                          response.read().decode("utf-8")
+                      )
+              except urllib.error.HTTPError as error:
+                  body = error.read().decode(
+                      "utf-8",
+                      errors="replace"
+                  )
+                  raise RuntimeError(
+                      f"HTTP {error.code}: {body}"
+                  )
+
+          def send_bale_message(chat_id, text):
+              result = post_json(
+                  f"https://tapi.bale.ai/bot{bale_token}/sendMessage",
+                  {
+                      "chat_id": str(chat_id),
+                      "text": text,
+                  },
+              )
+
+              if not result.get("ok"):
+                  raise RuntimeError(
+                      "Bale API error: " +
+                      str(
+                          result.get(
+                              "description",
+                              "Unknown error"
+                          )
+                      )
+                  )
+
+          def normalize_text(value):
+              text = str(value or "").strip()
+              text = text.replace("ي", "ی").replace("ك", "ک")
+              text = text.replace("\u200c", " ").replace("\u200f", " ")
+              text = re.sub(r"\s+", " ", text)
+              return text.casefold()
+
+          def safe_decimal(value):
+              if value in (None, ""):
+                  return Decimal("0")
+
+              try:
+                  cleaned = str(value).replace(",", "").strip()
+                  return Decimal(cleaned)
+              except (InvalidOperation, ValueError):
+                  return Decimal("0")
+
+          def safe_int(value):
+              try:
+                  return int(safe_decimal(value))
+              except (ValueError, OverflowError):
+                  return 0
+
+          def parse_expiry(value):
+              raw = str(value or "").strip()
+              if not raw:
+                  return None
+
+              try:
+                  return date.fromisoformat(raw[:10])
+              except ValueError:
+                  return None
+
+          def rial(value):
+              amount = int(safe_decimal(value))
+              return f"{amount:,}"
+
+          def compact_name(value, limit=30):
+              text = str(value or "بدون نام").strip()
+              if len(text) <= limit:
+                  return text
+              return text[:limit - 1] + "…"
+
+          now_tehran = datetime.now(TEHRAN_TZ)
+          today = now_tehran.date()
+          end_date = today + timedelta(days=7)
+
+          auth_data = post_json(
+              AUTH_URL,
+              {
+                  "email": email,
+                  "password": password,
+              },
+          )
+
+          access_token = (
+              (auth_data.get("session") or {})
+              .get("accessToken")
+          )
+
+          if not access_token:
+              raise SystemExit(
+                  "Nhost login failed: accessToken was not returned."
+              )
+
+          gql_headers = {
+              "Authorization": f"Bearer {access_token}",
+              "x-hasura-role": "notification_service",
+          }
+
+          query = """
+          query BaleExpiryReports($today: date!, $end_date: date!) {
+            user_roles(
+              where: {
+                bale_notifications_enabled: {_eq: true}
+                bale_chat_id: {_is_null: false}
+              }
+            ) {
+              manager_name
+              bale_chat_id
+              bale_notifications_enabled
+            }
+
+            stores {
+              id
+              name
+              store_code
+              region
+              region_manager_name
+            }
+
+            expiry_batches(
+              where: {
+                expiry_date: {
+                  _gte: $today
+                  _lte: $end_date
+                }
+              }
+              order_by: {
+                expiry_date: asc
+              }
+            ) {
+              id
+              store_id
+              product_name
+              quantity
+              unit_price
+              expiry_date
+              status
+              created_at
+            }
+          }
+          """
+
+          data = post_json(
+              GRAPHQL_URL,
+              {
+                  "query": query,
+                  "variables": {
+                      "today": today.isoformat(),
+                      "end_date": end_date.isoformat(),
+                  },
+              },
+              gql_headers,
+          )
+
+          if data.get("errors"):
+              raise SystemExit(
+                  "GraphQL query error: " +
+                  json.dumps(
+                      data["errors"],
+                      ensure_ascii=False
+                  )
+              )
+
+          payload = data.get("data") or {}
+          managers = payload.get("user_roles") or []
+          stores = payload.get("stores") or []
+          batches = payload.get("expiry_batches") or []
+
+          stores_by_id = {
+              str(store.get("id")): store
+              for store in stores
+              if store.get("id") is not None
+          }
+
+          stores_by_manager = defaultdict(list)
+          for store in stores:
+              key = normalize_text(store.get("region_manager_name"))
+              if key:
+                  stores_by_manager[key].append(store)
+
+          batches_by_store = defaultdict(list)
+          for batch in batches:
+              store_id = str(batch.get("store_id") or "")
+              if store_id:
+                  batches_by_store[store_id].append(batch)
+
+          sent_count = 0
+          failed_count = 0
+          skipped_count = 0
+          seen_chats = set()
+
+          for manager in managers:
+              chat_id = str(manager.get("bale_chat_id") or "").strip()
+              manager_name = str(
+                  manager.get("manager_name") or "مدیر منطقه"
+              ).strip()
+
+              if not chat_id or chat_id in seen_chats:
+                  skipped_count += 1
+                  continue
+
+              seen_chats.add(chat_id)
+              manager_key = normalize_text(manager_name)
+              manager_stores = stores_by_manager.get(manager_key, [])
+              manager_store_ids = {
+                  str(store.get("id"))
+                  for store in manager_stores
+                  if store.get("id") is not None
+              }
+
+              manager_batches = []
+              for store_id in manager_store_ids:
+                  manager_batches.extend(
+                      batches_by_store.get(store_id, [])
+                  )
+
+              total_quantity = 0
+              total_value = Decimal("0")
+              urgent_quantity = 0
+              urgent_value = Decimal("0")
+              later_quantity = 0
+              later_value = Decimal("0")
+              affected_store_ids = set()
+              store_stats = defaultdict(
+                  lambda: {
+                      "quantity": 0,
+                      "value": Decimal("0"),
+                      "rows": 0,
+                  }
+              )
+
+              valid_batches = []
+
+              for batch in manager_batches:
+                  expiry = parse_expiry(batch.get("expiry_date"))
+                  if expiry is None:
+                      continue
+
+                  days_left = (expiry - today).days
+                  if days_left < 0 or days_left > 7:
+                      continue
+
+                  quantity = max(safe_int(batch.get("quantity")), 0)
+                  unit_price = max(
+                      safe_decimal(batch.get("unit_price")),
+                      Decimal("0")
+                  )
+                  risk_value = Decimal(quantity) * unit_price
+                  store_id = str(batch.get("store_id") or "")
+
+                  total_quantity += quantity
+                  total_value += risk_value
+                  affected_store_ids.add(store_id)
+
+                  store_stats[store_id]["quantity"] += quantity
+                  store_stats[store_id]["value"] += risk_value
+                  store_stats[store_id]["rows"] += 1
+
+                  if days_left <= 3:
+                      urgent_quantity += quantity
+                      urgent_value += risk_value
+                  else:
+                      later_quantity += quantity
+                      later_value += risk_value
+
+                  valid_batches.append(
+                      {
+                          **batch,
+                          "_expiry": expiry,
+                          "_days_left": days_left,
+                          "_quantity": quantity,
+                          "_risk_value": risk_value,
+                      }
+                  )
+
+              report_time = now_tehran.strftime("%H:%M")
+              report_date = now_tehran.strftime("%Y/%m/%d")
+              store_count = len(manager_stores)
+
+              if not valid_batches:
+                  message = (
+                      "✅ گزارش پایش انقضا\n\n"
+                      f"مدیر منطقه: {manager_name}\n"
+                      f"زمان گزارش: {report_date} - {report_time}\n\n"
+                      "در بازه امروز تا ۷ روز آینده، "
+                      "کالای فعال تاریخ‌نزدیکی برای فروشگاه‌های "
+                      "تحت مدیریت شما ثبت نشده است.\n\n"
+                      f"تعداد فروشگاه‌های تحت پوشش: {store_count}"
+                  )
+              else:
+                  top_stores = sorted(
+                      store_stats.items(),
+                      key=lambda item: (
+                          item[1]["value"],
+                          item[1]["quantity"]
+                      ),
+                      reverse=True,
+                  )[:5]
+
+                  urgent_items = sorted(
+                      valid_batches,
+                      key=lambda item: (
+                          item["_days_left"],
+                          -int(item["_risk_value"]),
+                          -item["_quantity"],
+                      ),
+                  )[:5]
+
+                  store_lines = []
+                  for index, (store_id, stats) in enumerate(
+                      top_stores,
+                      start=1
+                  ):
+                      store = stores_by_id.get(store_id, {})
+                      store_title = (
+                          store.get("name")
+                          or store.get("store_code")
+                          or "فروشگاه نامشخص"
+                      )
+                      store_code = str(
+                          store.get("store_code") or ""
+                      ).strip()
+                      code_text = (
+                          f" ({store_code})"
+                          if store_code
+                          and store_code not in str(store_title)
+                          else ""
+                      )
+                      store_lines.append(
+                          f"{index}. {compact_name(store_title, 24)}"
+                          f"{code_text} | "
+                          f"{stats['quantity']:,} عدد | "
+                          f"{rial(stats['value'])} ریال"
+                      )
+
+                  item_lines = []
+                  for index, item in enumerate(
+                      urgent_items,
+                      start=1
+                  ):
+                      store = stores_by_id.get(
+                          str(item.get("store_id") or ""),
+                          {}
+                      )
+                      store_code = (
+                          store.get("store_code")
+                          or store.get("name")
+                          or "نامشخص"
+                      )
+                      days_left = item["_days_left"]
+                      if days_left == 0:
+                          deadline_text = "امروز"
+                      elif days_left == 1:
+                          deadline_text = "فردا"
+                      else:
+                          deadline_text = f"{days_left} روز دیگر"
+
+                      item_lines.append(
+                          f"{index}. {compact_name(item.get('product_name'), 27)}"
+                          f" | فروشگاه {compact_name(store_code, 15)}"
+                          f" | {item['_quantity']:,} عدد"
+                          f" | {deadline_text}"
+                      )
+
+                  message = (
+                      "⚠️ گزارش پایش انقضا\n\n"
+                      f"مدیر منطقه: {manager_name}\n"
+                      f"زمان گزارش: {report_date} - {report_time}\n\n"
+                      f"فروشگاه‌های درگیر: "
+                      f"{len(affected_store_ids)} از {store_count}\n"
+                      f"ردیف کالای فعال: {len(valid_batches):,}\n"
+                      f"تعداد کالا: {total_quantity:,}\n"
+                      f"ارزش در معرض ریسک: {rial(total_value)} ریال\n\n"
+                      "🔴 اولویت فوری؛ امروز تا ۳ روز آینده\n"
+                      f"{urgent_quantity:,} عدد | "
+                      f"{rial(urgent_value)} ریال\n\n"
+                      "🟠 بازه ۴ تا ۷ روز آینده\n"
+                      f"{later_quantity:,} عدد | "
+                      f"{rial(later_value)} ریال\n\n"
+                      "فروشگاه‌های با بیشترین ریسک:\n"
+                      + "\n".join(store_lines)
+                      + "\n\nفوری‌ترین کالاها:\n"
+                      + "\n".join(item_lines)
+                  )
+
+              try:
+                  send_bale_message(chat_id, message)
+                  sent_count += 1
+                  print(
+                      f"Sent report to manager: {manager_name}"
+                  )
+              except Exception as error:
+                  failed_count += 1
+                  print(
+                      f"Failed for manager {manager_name}: {error}"
+                  )
+
+              time.sleep(0.15)
+
+          print(
+              "All-manager report completed. "
+              f"Managers: {len(managers)}, "
+              f"sent: {sent_count}, "
+              f"failed: {failed_count}, "
+              f"skipped: {skipped_count}, "
+              f"stores: {len(stores)}, "
+              f"batches: {len(batches)}"
+          )
+
+          if failed_count:
+              raise SystemExit(
+                  f"{failed_count} Bale message(s) failed."
+              )
+          PY
