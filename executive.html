@@ -25,7 +25,7 @@
 <div class="container">
   <div class="page-head">
     <h1>گزارش کلی حوزه‌ی نظارتی</h1>
-    <p>وضعیت کالاها در تمام مناطق و فروشگاه‌های زیر نظر شما، به تفکیک مدیر منطقه.</p>
+    <p>وضعیت کالاهای فعال در حال انقضا در تمام مناطق و فروشگاه‌های زیر نظر شما، به تفکیک مدیر منطقه.</p>
   </div>
 
   <div id="alert" class="alert alert-error"></div>
@@ -38,7 +38,7 @@
   </div>
 
   <div class="card">
-    <h2 style="font-size:15px; margin:0 0 14px;">گزارش فروشگاه‌ها</h2>
+    <h2 style="font-size:15px; margin:0 0 14px;">گزارش فعال فروشگاه‌ها</h2>
     <p style="font-size:12.5px; color:var(--muted); margin:-8px 0 14px;">برای دیدن کالاهای هر فروشگاه، روی ردیفش کلیک کنید.</p>
     <div class="filter-bar">
       <input type="text" id="reportSearch" placeholder="جست‌وجو با نام یا کد فروشگاه...">
@@ -50,7 +50,7 @@
   </div>
 
   <div class="card">
-    <h2 style="font-size:15px; margin:0 0 14px;">گزارش تجمیعی کالاها</h2>
+    <h2 style="font-size:15px; margin:0 0 14px;">گزارش تجمیعی کالاهای فعال</h2>
     <div class="filter-bar">
       <select id="groupByMode">
         <option value="product">بر اساس کالا</option>
@@ -61,6 +61,18 @@
     </div>
     <div id="productReportWrap"><div class="empty">در حال بارگذاری...</div></div>
   </div>
+
+  <div class="card">
+    <h2 style="font-size:15px; margin:0 0 8px;">آرشیو خودکار کالاهای منقضی‌شده</h2>
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 14px;">
+      این رکوردها از محاسبات جاری خارج شده‌اند و فقط برای سابقه نگهداری می‌شوند.
+    </p>
+    <div class="filter-bar">
+      <input type="text" id="archiveSearch" placeholder="جست‌وجو در کالا، فروشگاه یا مدیر منطقه...">
+      <span class="filter-count" id="archiveCount"></span>
+    </div>
+    <div id="archiveWrap"><div class="empty">در حال آماده‌سازی آرشیو...</div></div>
+  </div>
 </div>
 
 <script src="auth.js"></script>
@@ -69,6 +81,8 @@
   let myManagerName = null;
   let myStores = [];
   let allBatches = [];
+  let activeBatches = [];
+  let archivedBatches = [];
   let expandedStoreId = null;
   // مرتب‌سازی پیش‌فرض: جدیدترین ثبت واقعی در ابتدای جدول و فروشگاه‌های بدون ثبت در انتها.
   let sortState = { key: "lastCreated", dir: "desc" };
@@ -86,6 +100,7 @@
   const rollupWrap = document.getElementById("rollupWrap");
   const reportWrap = document.getElementById("reportWrap");
   const productReportWrap = document.getElementById("productReportWrap");
+  const archiveWrap = document.getElementById("archiveWrap");
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
@@ -126,6 +141,7 @@
     const storesData = await nhGql(storesQuery, { mgr: myManagerName }, session.token);
     myStores = storesData.stores || [];
     allBatches = await loadAllBatches();
+    classifyBatches();
     rebuildStoreIndex();
 
     renderStats();
@@ -133,6 +149,7 @@
     populateMgrFilter();
     renderReport();
     renderProductReport();
+    renderArchive();
   }
 
   async function loadAllBatches() {
@@ -170,6 +187,29 @@
     throw new Error("تعداد رکوردهای گزارش از سقف ایمن عبور کرده است. گزارش باید به‌صورت سمت‌سرور صفحه‌بندی شود.");
   }
 
+  function todayIsoTehran() {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date());
+  }
+
+  function classifyBatches() {
+    const today = todayIsoTehran();
+    const inactiveStatuses = new Set(["sold", "cancelled", "rejected"]);
+
+    activeBatches = allBatches.filter(batch =>
+      batch.expiry_date >= today &&
+      !inactiveStatuses.has(batch.status)
+    );
+
+    archivedBatches = allBatches.filter(batch =>
+      batch.expiry_date < today
+    );
+  }
+
   function createEmptyStoreStats() {
     return {
       approved: 0,
@@ -202,13 +242,7 @@
       if (!storeId || !storeStatsMap.has(storeId)) return;
 
       const stats = storeStatsMap.get(storeId);
-      const quantity = Number(batch.quantity) || 0;
-      const unitPrice = Number(batch.unit_price) || 0;
       const createdAtMs = parseIsoTimestamp(batch.created_at);
-
-      if (stats[batch.status] !== undefined) stats[batch.status] += 1;
-      stats.total += 1;
-      stats.rial += quantity * unitPrice;
 
       if (
         createdAtMs !== null &&
@@ -217,12 +251,25 @@
         stats.lastCreated = batch.created_at;
         stats.lastCreatedMs = createdAtMs;
       }
+    });
 
+    activeBatches.forEach(batch => {
+      const storeId = batch.store?.id ? String(batch.store.id) : null;
+      if (!storeId || !storeStatsMap.has(storeId)) return;
+
+      const stats = storeStatsMap.get(storeId);
+      const quantity = Number(batch.quantity) || 0;
+      const unitPrice = Number(batch.unit_price) || 0;
+
+      if (stats[batch.status] !== undefined) stats[batch.status] += 1;
+      stats.total += 1;
+      stats.rial += quantity * unitPrice;
       storeBatchesMap.get(storeId).push(batch);
     });
 
     storeBatchesMap.forEach(items => {
       items.sort((a, b) =>
+        String(a.expiry_date).localeCompare(String(b.expiry_date)) ||
         (parseIsoTimestamp(b.created_at) ?? -Infinity) -
         (parseIsoTimestamp(a.created_at) ?? -Infinity)
       );
@@ -292,16 +339,16 @@
   function renderStats() {
     const sums = { approved: 0, sold: 0 };
     let totalRial = 0;
-    allBatches.forEach(b => {
+    activeBatches.forEach(b => {
       if (sums[b.status] !== undefined) sums[b.status]++;
       totalRial += (Number(b.quantity) || 0) * (Number(b.unit_price) || 0);
     });
     statGrid.innerHTML = `
       <div class="stat-card"><span class="num">${myStores.length}</span><span class="lbl">فروشگاه تحت نظارت</span></div>
-      <div class="stat-card"><span class="num">${allBatches.length}</span><span class="lbl">مجموع کالای ثبت‌شده</span></div>
-      <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">${STATUS_LABEL.approved}</span></div>
-      <div class="stat-card"><span class="num">${sums.sold}</span><span class="lbl">${STATUS_LABEL.sold}</span></div>
-      <div class="stat-card"><span class="num" style="font-size:18px;">${nhFormatRial(totalRial)}</span><span class="lbl">ارزش ریالی کل</span></div>
+      <div class="stat-card"><span class="num">${activeBatches.length}</span><span class="lbl">کالای فعال در حال انقضا</span></div>
+      <div class="stat-card"><span class="num">${sums.approved}</span><span class="lbl">ثبت فعال</span></div>
+      <div class="stat-card"><span class="num">${archivedBatches.length}</span><span class="lbl">رکورد آرشیوی</span></div>
+      <div class="stat-card"><span class="num" style="font-size:18px;">${nhFormatRial(totalRial)}</span><span class="lbl">ارزش کالاهای فعال</span></div>
     `;
   }
 
@@ -331,7 +378,7 @@
         <thead>
           <tr>
             <th>مدیر منطقه</th><th>تعداد فروشگاه</th>
-            <th>${STATUS_LABEL.approved}</th><th>${STATUS_LABEL.sold}</th><th>مجموع</th><th>ارزش ریالی</th>
+            <th>ثبت فعال</th><th>مجموع فعال</th><th>ارزش فعال</th>
           </tr>
         </thead>
         <tbody>
@@ -340,7 +387,6 @@
               <td>${name}</td>
               <td class="num">${v.stores}</td>
               <td class="num">${v.approved}</td>
-              <td class="num">${v.sold}</td>
               <td class="num">${v.total}</td>
               <td class="num">${nhFormatRial(v.rial)}</td>
             </tr>
@@ -387,7 +433,7 @@
         <thead>
           <tr>
             ${th("کد", "code")}${th("فروشگاه", "name")}${th("منطقه", "region")}${th("مدیر منطقه", "regionManager")}${th("آخرین ثبت", "lastCreated")}
-            ${th(STATUS_LABEL.approved, "approved")}${th(STATUS_LABEL.sold, "sold")}${th("مجموع", "total")}${th("ارزش ریالی", "rial")}
+            ${th("ثبت فعال", "approved")}${th("مجموع فعال", "total")}${th("ارزش فعال", "rial")}
           </tr>
         </thead>
         <tbody>
@@ -399,7 +445,6 @@
               <td>${s.region_manager_name || "—"}</td>
               <td>${lastRegisteredCell(s.lastCreated)}</td>
               <td class="num">${s.approved}</td>
-              <td class="num">${s.sold}</td>
               <td class="num">${s.total}</td>
               <td class="num">${nhFormatRial(s.rial)}</td>
             </tr>
@@ -497,10 +542,10 @@
   function renderStoreDetail(storeId) {
     const items = storeBatchesMap.get(String(storeId)) || [];
     if (!items.length) {
-      return `<tr class="detail-row"><td colspan="9"><div class="detail-empty">هنوز کالایی برای این فروشگاه ثبت نشده است.</div></td></tr>`;
+      return `<tr class="detail-row"><td colspan="8"><div class="detail-empty">در حال حاضر کالای فعال در حال انقضایی برای این فروشگاه وجود ندارد.</div></td></tr>`;
     }
     return `
-      <tr class="detail-row"><td colspan="9">
+      <tr class="detail-row"><td colspan="8">
         <table>
           <thead><tr><th>کالا</th><th>گروه</th><th>تعداد</th><th>ارزش ریالی</th><th>تاریخ ثبت</th><th>انقضا</th><th>وضعیت</th></tr></thead>
           <tbody>
@@ -531,7 +576,7 @@
     const key = mode === "group" ? "product_group" : "product_name";
 
     const grouped = {};
-    allBatches.forEach(b => {
+    activeBatches.forEach(b => {
       const k = b[key] || "نامشخص";
       if (!grouped[k]) grouped[k] = { count: 0, qty: 0 };
       grouped[k].count += 1;
@@ -566,6 +611,67 @@
       </div>
     `;
   }
+
+  function renderArchive() {
+    const term = document.getElementById("archiveSearch").value.trim();
+    const storeById = new Map(myStores.map(store => [String(store.id), store]));
+
+    let rows = archivedBatches.filter(batch => {
+      if (!term) return true;
+      const store = storeById.get(String(batch.store?.id)) || {};
+      return [
+        batch.product_name,
+        batch.product_group,
+        store.name,
+        store.store_code,
+        store.region_manager_name
+      ].join(" ").includes(term);
+    });
+
+    rows.sort((a, b) =>
+      String(b.expiry_date).localeCompare(String(a.expiry_date)) ||
+      (parseIsoTimestamp(b.created_at) ?? -Infinity) -
+      (parseIsoTimestamp(a.created_at) ?? -Infinity)
+    );
+
+    document.getElementById("archiveCount").textContent =
+      `${rows.length.toLocaleString("fa-IR")} رکورد آرشیوی`;
+
+    if (!rows.length) {
+      archiveWrap.innerHTML = '<div class="empty">رکوردی در آرشیو یافت نشد.</div>';
+      return;
+    }
+
+    const visibleRows = rows.slice(0, 300);
+    archiveWrap.innerHTML = `
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>مدیر منطقه</th><th>فروشگاه</th><th>کالا</th><th>تعداد</th><th>ارزش ریالی</th><th>تاریخ انقضا</th><th>وضعیت ثبت</th></tr>
+        </thead>
+        <tbody>
+          ${visibleRows.map(batch => {
+            const store = storeById.get(String(batch.store?.id)) || {};
+            return `
+              <tr>
+                <td>${store.region_manager_name || "نامشخص"}</td>
+                <td>${store.name || "نامشخص"}${store.store_code ? ` · ${store.store_code}` : ""}</td>
+                <td>${batch.product_name}</td>
+                <td class="num">${batch.quantity}</td>
+                <td class="num">${batch.unit_price ? nhFormatRial(Number(batch.unit_price) * Number(batch.quantity)) : "—"}</td>
+                <td class="num">${nhIsoToJalaliStr(batch.expiry_date)}</td>
+                <td><span class="${nhStampClass(batch.status)}">${STATUS_LABEL[batch.status] || batch.status}</span></td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+      </div>
+      ${rows.length > visibleRows.length ? `<div class="empty">۳۰۰ رکورد جدیدتر نمایش داده شده است. برای محدودکردن نتایج جست‌وجو کنید.</div>` : ""}
+    `;
+  }
+
+  document.getElementById("archiveSearch").addEventListener("input", renderArchive);
 
   document.getElementById("groupByMode").addEventListener("change", renderProductReport);
   document.getElementById("productSearch").addEventListener("input", renderProductReport);
