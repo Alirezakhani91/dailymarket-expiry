@@ -26,133 +26,66 @@ jobs:
           import json
           import os
           import re
+          import urllib.error
           import urllib.parse
           import urllib.request
-          import urllib.error
           from datetime import datetime, timezone
 
-          AUTH_URL = (
-              "https://wijabqjyryslediitcrc.auth."
-              "eu-central-1.nhost.run/v1/signin/email-password"
-          )
-          GRAPHQL_URL = (
-              "https://wijabqjyryslediitcrc.graphql."
-              "eu-central-1.nhost.run/v1"
-          )
+          AUTH_URL = "https://wijabqjyryslediitcrc.auth.eu-central-1.nhost.run/v1/signin/email-password"
+          GRAPHQL_URL = "https://wijabqjyryslediitcrc.graphql.eu-central-1.nhost.run/v1"
 
-          email = os.environ.get("NHOST_NOTIFICATION_EMAIL", "").strip()
-          password = os.environ.get("NHOST_NOTIFICATION_PASSWORD", "")
-          bale_token = os.environ.get("BALE_BOT_TOKEN", "").strip()
-
-          for key, value in {
-              "NHOST_NOTIFICATION_EMAIL": email,
-              "NHOST_NOTIFICATION_PASSWORD": password,
-              "BALE_BOT_TOKEN": bale_token,
-          }.items():
-              if not value:
-                  raise SystemExit(f"{key} is missing.")
+          email = os.environ["NHOST_NOTIFICATION_EMAIL"].strip()
+          password = os.environ["NHOST_NOTIFICATION_PASSWORD"]
+          bale_token = os.environ["BALE_BOT_TOKEN"].strip()
 
           def post_json(url, payload, headers=None):
-              request_headers = {
-                  "Content-Type": "application/json; charset=utf-8"
-              }
+              request_headers = {"Content-Type": "application/json; charset=utf-8"}
               if headers:
                   request_headers.update(headers)
 
               request = urllib.request.Request(
                   url,
-                  data=json.dumps(
-                      payload,
-                      ensure_ascii=False
-                  ).encode("utf-8"),
+                  data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
                   headers=request_headers,
                   method="POST",
               )
 
               try:
-                  with urllib.request.urlopen(
-                      request,
-                      timeout=40
-                  ) as response:
-                      return json.loads(
-                          response.read().decode("utf-8")
-                      )
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      return json.loads(response.read().decode("utf-8"))
               except urllib.error.HTTPError as error:
-                  body = error.read().decode(
-                      "utf-8",
-                      errors="replace"
-                  )
-                  raise RuntimeError(
-                      f"HTTP {error.code}: {body}"
-                  )
+                  body = error.read().decode("utf-8", errors="replace")
+                  raise RuntimeError(f"HTTP {error.code}: {body}")
 
           def get_json(url):
               try:
-                  with urllib.request.urlopen(
-                      url,
-                      timeout=40
-                  ) as response:
-                      return json.loads(
-                          response.read().decode("utf-8")
-                      )
+                  with urllib.request.urlopen(url, timeout=60) as response:
+                      return json.loads(response.read().decode("utf-8"))
               except urllib.error.HTTPError as error:
-                  body = error.read().decode(
-                      "utf-8",
-                      errors="replace"
-                  )
-                  raise RuntimeError(
-                      f"HTTP {error.code}: {body}"
-                  )
+                  body = error.read().decode("utf-8", errors="replace")
+                  raise RuntimeError(f"HTTP {error.code}: {body}")
 
-          def send_bale_message(chat_id, text):
-              url = (
-                  f"https://tapi.bale.ai/bot{bale_token}/sendMessage"
-              )
+          def send_message(chat_id, text):
               result = post_json(
-                  url,
-                  {
-                      "chat_id": str(chat_id),
-                      "text": text,
-                  },
+                  f"https://tapi.bale.ai/bot{bale_token}/sendMessage",
+                  {"chat_id": str(chat_id), "text": text},
               )
               if not result.get("ok"):
-                  raise RuntimeError(
-                      "Bale API error: " +
-                      str(
-                          result.get(
-                              "description",
-                              "Unknown error"
-                          )
-                      )
-                  )
+                  raise RuntimeError(str(result.get("description", "Bale API error")))
 
           def normalize_code(text):
               value = str(text or "").strip().upper()
-
               if value.startswith("/START"):
                   parts = value.split(maxsplit=1)
-                  value = parts[1] if len(parts) > 1 else ""
+                  if len(parts) == 1:
+                      return ""
+                  value = parts[1]
+              return re.sub(r"[^A-Z0-9]", "", value)
 
-              value = re.sub(r"[^A-Z0-9]", "", value)
-              return value
-
-          auth_data = post_json(
-              AUTH_URL,
-              {
-                  "email": email,
-                  "password": password,
-              },
-          )
-
-          access_token = (
-              (auth_data.get("session") or {})
-              .get("accessToken")
-          )
-
+          auth_data = post_json(AUTH_URL, {"email": email, "password": password})
+          access_token = (auth_data.get("session") or {}).get("accessToken")
           if not access_token:
-              raise SystemExit(
-                  "Nhost login failed: accessToken was not returned."
-              )
+              raise SystemExit("Nhost login failed.")
 
           gql_headers = {
               "Authorization": f"Bearer {access_token}",
@@ -160,92 +93,63 @@ jobs:
           }
 
           managers_query = """
-          query UnlinkedRegionManagers {
-            user_roles(
-              where: {
-                bale_chat_id: {_is_null: true}
-                bale_notifications_enabled: {_eq: false}
-                bale_link_code: {_is_null: false}
-              }
-            ) {
+          query RegionManagersForBale {
+            user_roles(where: {bale_link_code: {_is_null: false}}) {
+              id
               manager_name
               bale_link_code
             }
           }
           """
 
-          managers_data = post_json(
+          manager_response = post_json(
               GRAPHQL_URL,
-              {
-                  "query": managers_query,
-                  "variables": {},
-              },
+              {"query": managers_query, "variables": {}},
               gql_headers,
           )
 
-          if managers_data.get("errors"):
+          if manager_response.get("errors"):
               raise SystemExit(
-                  "GraphQL query error: " +
-                  json.dumps(
-                      managers_data["errors"],
-                      ensure_ascii=False
-                  )
+                  "Manager query failed: "
+                  + json.dumps(manager_response["errors"], ensure_ascii=False)
               )
 
-          managers = (
-              managers_data.get("data", {})
-              .get("user_roles", [])
-          )
-
+          managers = manager_response.get("data", {}).get("user_roles", []) or []
           code_map = {
               normalize_code(item.get("bale_link_code")): item
               for item in managers
               if normalize_code(item.get("bale_link_code"))
           }
 
-          updates_url = (
-              f"https://tapi.bale.ai/bot{bale_token}/getUpdates"
-              "?limit=100&timeout=0"
+          updates_response = get_json(
+              f"https://tapi.bale.ai/bot{bale_token}/getUpdates?limit=100&timeout=0"
           )
-          updates_data = get_json(updates_url)
+          if not updates_response.get("ok"):
+              raise SystemExit(str(updates_response.get("description", "getUpdates failed")))
 
-          if not updates_data.get("ok"):
-              raise SystemExit(
-                  "Bale getUpdates error: " +
-                  str(
-                      updates_data.get(
-                          "description",
-                          "Unknown error"
-                      )
-                  )
-              )
-
-          updates = updates_data.get("result") or []
+          updates = updates_response.get("result") or []
           max_update_id = None
           connected_count = 0
 
-          connect_mutation = """
-          mutation ConnectRegionManager(
-            $code: String!
+          insert_mutation = """
+          mutation ConnectBaleChat(
+            $user_role_id: uuid!
             $chat_id: String!
             $connected_at: timestamptz!
           ) {
-            update_user_roles(
-              where: {
-                bale_link_code: {_eq: $code}
-                bale_chat_id: {_is_null: true}
-                bale_notifications_enabled: {_eq: false}
-              }
-              _set: {
+            insert_bale_manager_chats_one(
+              object: {
+                user_role_id: $user_role_id
                 bale_chat_id: $chat_id
-                bale_notifications_enabled: true
-                bale_connected_at: $connected_at
+                notifications_enabled: true
+                connected_at: $connected_at
+              }
+              on_conflict: {
+                constraint: bale_manager_chats_manager_chat_unique
+                update_columns: [notifications_enabled, connected_at]
               }
             ) {
-              affected_rows
-              returning {
-                manager_name
-              }
+              id
             }
           }
           """
@@ -253,97 +157,74 @@ jobs:
           for update in updates:
               update_id = update.get("update_id")
               if isinstance(update_id, int):
-                  max_update_id = (
-                      update_id
-                      if max_update_id is None
-                      else max(max_update_id, update_id)
-                  )
+                  max_update_id = update_id if max_update_id is None else max(max_update_id, update_id)
 
               message = update.get("message") or {}
-              text = message.get("text")
               chat = message.get("chat") or {}
               chat_id = chat.get("id")
               chat_type = chat.get("type")
+              text = str(message.get("text") or "").strip()
 
-              if not text or chat_id is None:
+              if chat_id is None or not text:
                   continue
-
               if chat_type and chat_type != "private":
                   continue
 
               code = normalize_code(text)
-              manager = code_map.get(code)
 
-              if not manager:
-                  send_bale_message(
+              if text.upper().startswith("/START") and not code:
+                  send_message(
                       chat_id,
-                      "کد اتصال معتبر نیست.\n\n"
-                      "لطفاً کد اختصاصی اعلام‌شده از طرف "
-                      "مدیریت پلتفرم را دقیقاً برای بازو ارسال کنید."
+                      "سلام 👋\n\nبرای فعال‌سازی گزارش پایش انقضا، کد اختصاصی مدیر منطقه را ارسال کنید."
                   )
                   continue
 
-              connected_at = datetime.now(timezone.utc).isoformat()
+              manager = code_map.get(code)
+              if not manager:
+                  send_message(
+                      chat_id,
+                      "کد اتصال معتبر نیست.\n\nلطفاً کد اختصاصی مدیر منطقه را دقیقاً ارسال کنید."
+                  )
+                  continue
 
-              mutation_data = post_json(
+              mutation_response = post_json(
                   GRAPHQL_URL,
                   {
-                      "query": connect_mutation,
+                      "query": insert_mutation,
                       "variables": {
-                          "code": manager["bale_link_code"],
+                          "user_role_id": manager["id"],
                           "chat_id": str(chat_id),
-                          "connected_at": connected_at,
+                          "connected_at": datetime.now(timezone.utc).isoformat(),
                       },
                   },
                   gql_headers,
               )
 
-              if mutation_data.get("errors"):
-                  send_bale_message(
+              if mutation_response.get("errors"):
+                  print(json.dumps(mutation_response["errors"], ensure_ascii=False))
+                  send_message(
                       chat_id,
-                      "اتصال حساب بله با خطا مواجه شد. "
-                      "لطفاً با مدیر پلتفرم تماس بگیرید."
+                      "اتصال حساب بله با خطا مواجه شد. لطفاً با مدیر پلتفرم تماس بگیرید."
                   )
                   continue
 
-              result = (
-                  mutation_data.get("data", {})
-                  .get("update_user_roles", {})
+              connected_count += 1
+              send_message(
+                  chat_id,
+                  "✅ اتصال اعلان پایش انقضا با موفقیت انجام شد.\n\n"
+                  f"مدیر منطقه: {manager.get('manager_name') or 'نامشخص'}\n\n"
+                  "از این پس گزارش اختصاصی کالاهای تاریخ‌نزدیک در دو نوبت روزانه برای این حساب ارسال می‌شود."
               )
-              affected = int(result.get("affected_rows") or 0)
-
-              if affected == 1:
-                  connected_count += 1
-                  send_bale_message(
-                      chat_id,
-                      "✅ اتصال اعلان پایش انقضا با موفقیت انجام شد.\n\n"
-                      f"مدیر منطقه: {manager.get('manager_name') or 'نامشخص'}\n\n"
-                      "از این پس گزارش اختصاصی کالاهای تاریخ‌نزدیک "
-                      "در دو نوبت روزانه برای شما ارسال می‌شود."
-                  )
-                  code_map.pop(code, None)
-              else:
-                  send_bale_message(
-                      chat_id,
-                      "این کد قبلاً استفاده شده یا دیگر فعال نیست."
-                  )
 
           if max_update_id is not None:
-              confirm_offset = max_update_id + 1
               confirm_url = (
                   f"https://tapi.bale.ai/bot{bale_token}/getUpdates?"
-                  + urllib.parse.urlencode(
-                      {
-                          "offset": confirm_offset,
-                          "limit": 1,
-                          "timeout": 0,
-                      }
-                  )
+                  + urllib.parse.urlencode({"offset": max_update_id + 1, "limit": 1, "timeout": 0})
               )
               get_json(confirm_url)
 
           print(
-              "Bale manager link service completed. "
-              f"Updates: {len(updates)}, connected: {connected_count}"
+              "Multi-chat Bale link completed. "
+              f"Managers: {len(managers)}, updates: {len(updates)}, connected: {connected_count}"
           )
           PY
