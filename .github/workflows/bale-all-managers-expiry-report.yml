@@ -3,7 +3,7 @@ name: Bale All Managers Expiry Report
 on:
   workflow_dispatch:
   schedule:
-    # 09:30 and 15:30 Tehran time (UTC+03:30)
+    # 09:30 and 15:30 Tehran time
     - cron: "0 6,12 * * *"
 
 concurrency:
@@ -20,7 +20,7 @@ jobs:
       BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
 
     steps:
-      - name: Send each manager their own expiry report
+      - name: Send report to every connected Bale account
         shell: bash
         run: |
           python - <<'PY'
@@ -91,8 +91,8 @@ jobs:
                       f"HTTP {error.code}: {body}"
                   )
 
-          def send_bale_message(chat_id, text):
-              result = post_json(
+          def send_message(chat_id, text):
+              response = post_json(
                   f"https://tapi.bale.ai/bot{bale_token}/sendMessage",
                   {
                       "chat_id": str(chat_id),
@@ -100,11 +100,11 @@ jobs:
                   },
               )
 
-              if not result.get("ok"):
+              if not response.get("ok"):
                   raise RuntimeError(
-                      "Bale API error: " +
-                      str(
-                          result.get(
+                      "Bale sendMessage failed: "
+                      + str(
+                          response.get(
                               "description",
                               "Unknown error"
                           )
@@ -115,40 +115,37 @@ jobs:
               text = str(value or "").strip()
               text = text.replace("ي", "ی").replace("ك", "ک")
               text = text.replace("\u200c", " ").replace("\u200f", " ")
-              text = re.sub(r"\s+", " ", text)
-              return text.casefold()
+              return re.sub(r"\s+", " ", text).casefold()
 
           def safe_decimal(value):
               if value in (None, ""):
                   return Decimal("0")
 
               try:
-                  cleaned = str(value).replace(",", "").strip()
-                  return Decimal(cleaned)
+                  return Decimal(
+                      str(value).replace(",", "").strip()
+                  )
               except (InvalidOperation, ValueError):
                   return Decimal("0")
 
           def safe_int(value):
               try:
-                  return int(safe_decimal(value))
+                  return max(int(safe_decimal(value)), 0)
               except (ValueError, OverflowError):
                   return 0
 
           def parse_expiry(value):
-              raw = str(value or "").strip()
-              if not raw:
-                  return None
-
               try:
-                  return date.fromisoformat(raw[:10])
+                  return date.fromisoformat(
+                      str(value or "")[:10]
+                  )
               except ValueError:
                   return None
 
           def rial(value):
-              amount = int(safe_decimal(value))
-              return f"{amount:,}"
+              return f"{int(safe_decimal(value)):,}"
 
-          def compact_name(value, limit=30):
+          def short_text(value, limit):
               text = str(value or "بدون نام").strip()
               if len(text) <= limit:
                   return text
@@ -158,7 +155,7 @@ jobs:
           today = now_tehran.date()
           end_date = today + timedelta(days=7)
 
-          auth_data = post_json(
+          auth_response = post_json(
               AUTH_URL,
               {
                   "email": email,
@@ -167,7 +164,7 @@ jobs:
           )
 
           access_token = (
-              (auth_data.get("session") or {})
+              (auth_response.get("session") or {})
               .get("accessToken")
           )
 
@@ -176,22 +173,28 @@ jobs:
                   "Nhost login failed: accessToken was not returned."
               )
 
-          gql_headers = {
+          graphql_headers = {
               "Authorization": f"Bearer {access_token}",
               "x-hasura-role": "notification_service",
           }
 
           query = """
-          query BaleExpiryReports($today: date!, $end_date: date!) {
-            user_roles(
+          query MultiAccountExpiryReport(
+            $today: date!
+            $end_date: date!
+          ) {
+            user_roles {
+              id
+              manager_name
+            }
+
+            bale_manager_chats(
               where: {
-                bale_notifications_enabled: {_eq: true}
-                bale_chat_id: {_is_null: false}
+                notifications_enabled: {_eq: true}
               }
             ) {
-              manager_name
+              user_role_id
               bale_chat_id
-              bale_notifications_enabled
             }
 
             stores {
@@ -225,7 +228,7 @@ jobs:
           }
           """
 
-          data = post_json(
+          response = post_json(
               GRAPHQL_URL,
               {
                   "query": query,
@@ -234,22 +237,30 @@ jobs:
                       "end_date": end_date.isoformat(),
                   },
               },
-              gql_headers,
+              graphql_headers,
           )
 
-          if data.get("errors"):
+          if response.get("errors"):
               raise SystemExit(
-                  "GraphQL query error: " +
-                  json.dumps(
-                      data["errors"],
+                  "GraphQL query failed: "
+                  + json.dumps(
+                      response["errors"],
                       ensure_ascii=False
                   )
               )
 
-          payload = data.get("data") or {}
-          managers = payload.get("user_roles") or []
-          stores = payload.get("stores") or []
-          batches = payload.get("expiry_batches") or []
+          data = response.get("data") or {}
+          roles = data.get("user_roles") or []
+          connections = data.get("bale_manager_chats") or []
+          stores = data.get("stores") or []
+          batches = data.get("expiry_batches") or []
+
+          manager_name_by_role_id = {
+              str(role.get("id")): str(
+                  role.get("manager_name") or "مدیر منطقه"
+              ).strip()
+              for role in roles
+          }
 
           stores_by_id = {
               str(store.get("id")): store
@@ -259,9 +270,11 @@ jobs:
 
           stores_by_manager = defaultdict(list)
           for store in stores:
-              key = normalize_text(store.get("region_manager_name"))
-              if key:
-                  stores_by_manager[key].append(store)
+              manager_key = normalize_text(
+                  store.get("region_manager_name")
+              )
+              if manager_key:
+                  stores_by_manager[manager_key].append(store)
 
           batches_by_store = defaultdict(list)
           for batch in batches:
@@ -272,21 +285,29 @@ jobs:
           sent_count = 0
           failed_count = 0
           skipped_count = 0
-          seen_chats = set()
 
-          for manager in managers:
-              chat_id = str(manager.get("bale_chat_id") or "").strip()
-              manager_name = str(
-                  manager.get("manager_name") or "مدیر منطقه"
+          for connection in connections:
+              user_role_id = str(
+                  connection.get("user_role_id") or ""
+              )
+              chat_id = str(
+                  connection.get("bale_chat_id") or ""
               ).strip()
 
-              if not chat_id or chat_id in seen_chats:
+              if not user_role_id or not chat_id:
                   skipped_count += 1
                   continue
 
-              seen_chats.add(chat_id)
-              manager_key = normalize_text(manager_name)
-              manager_stores = stores_by_manager.get(manager_key, [])
+              manager_name = manager_name_by_role_id.get(
+                  user_role_id,
+                  "مدیر منطقه"
+              )
+
+              manager_stores = stores_by_manager.get(
+                  normalize_text(manager_name),
+                  []
+              )
+
               manager_store_ids = {
                   str(store.get("id"))
                   for store in manager_stores
@@ -310,28 +331,32 @@ jobs:
                   lambda: {
                       "quantity": 0,
                       "value": Decimal("0"),
-                      "rows": 0,
                   }
               )
-
               valid_batches = []
 
               for batch in manager_batches:
-                  expiry = parse_expiry(batch.get("expiry_date"))
+                  expiry = parse_expiry(
+                      batch.get("expiry_date")
+                  )
+
                   if expiry is None:
                       continue
 
                   days_left = (expiry - today).days
+
                   if days_left < 0 or days_left > 7:
                       continue
 
-                  quantity = max(safe_int(batch.get("quantity")), 0)
+                  quantity = safe_int(batch.get("quantity"))
                   unit_price = max(
                       safe_decimal(batch.get("unit_price")),
                       Decimal("0")
                   )
                   risk_value = Decimal(quantity) * unit_price
-                  store_id = str(batch.get("store_id") or "")
+                  store_id = str(
+                      batch.get("store_id") or ""
+                  )
 
                   total_quantity += quantity
                   total_value += risk_value
@@ -339,7 +364,6 @@ jobs:
 
                   store_stats[store_id]["quantity"] += quantity
                   store_stats[store_id]["value"] += risk_value
-                  store_stats[store_id]["rows"] += 1
 
                   if days_left <= 3:
                       urgent_quantity += quantity
@@ -351,26 +375,26 @@ jobs:
                   valid_batches.append(
                       {
                           **batch,
-                          "_expiry": expiry,
                           "_days_left": days_left,
                           "_quantity": quantity,
                           "_risk_value": risk_value,
                       }
                   )
 
-              report_time = now_tehran.strftime("%H:%M")
               report_date = now_tehran.strftime("%Y/%m/%d")
-              store_count = len(manager_stores)
+              report_time = now_tehran.strftime("%H:%M")
 
               if not valid_batches:
                   message = (
                       "✅ گزارش پایش انقضا\n\n"
                       f"مدیر منطقه: {manager_name}\n"
-                      f"زمان گزارش: {report_date} - {report_time}\n\n"
+                      f"زمان گزارش: "
+                      f"{report_date} - {report_time}\n\n"
                       "در بازه امروز تا ۷ روز آینده، "
                       "کالای فعال تاریخ‌نزدیکی برای فروشگاه‌های "
                       "تحت مدیریت شما ثبت نشده است.\n\n"
-                      f"تعداد فروشگاه‌های تحت پوشش: {store_count}"
+                      f"تعداد فروشگاه‌های تحت پوشش: "
+                      f"{len(manager_stores)}"
                   )
               else:
                   top_stores = sorted(
@@ -397,7 +421,7 @@ jobs:
                       start=1
                   ):
                       store = stores_by_id.get(store_id, {})
-                      store_title = (
+                      store_name = (
                           store.get("name")
                           or store.get("store_code")
                           or "فروشگاه نامشخص"
@@ -405,15 +429,18 @@ jobs:
                       store_code = str(
                           store.get("store_code") or ""
                       ).strip()
-                      code_text = (
+
+                      code_suffix = (
                           f" ({store_code})"
                           if store_code
-                          and store_code not in str(store_title)
+                          and store_code not in str(store_name)
                           else ""
                       )
+
                       store_lines.append(
-                          f"{index}. {compact_name(store_title, 24)}"
-                          f"{code_text} | "
+                          f"{index}. "
+                          f"{short_text(store_name, 24)}"
+                          f"{code_suffix} | "
                           f"{stats['quantity']:,} عدد | "
                           f"{rial(stats['value'])} ریال"
                       )
@@ -427,35 +454,43 @@ jobs:
                           str(item.get("store_id") or ""),
                           {}
                       )
-                      store_code = (
+                      store_title = (
                           store.get("store_code")
                           or store.get("name")
                           or "نامشخص"
                       )
+
                       days_left = item["_days_left"]
+
                       if days_left == 0:
-                          deadline_text = "امروز"
+                          deadline = "امروز"
                       elif days_left == 1:
-                          deadline_text = "فردا"
+                          deadline = "فردا"
                       else:
-                          deadline_text = f"{days_left} روز دیگر"
+                          deadline = f"{days_left} روز دیگر"
 
                       item_lines.append(
-                          f"{index}. {compact_name(item.get('product_name'), 27)}"
-                          f" | فروشگاه {compact_name(store_code, 15)}"
+                          f"{index}. "
+                          f"{short_text(item.get('product_name'), 27)}"
+                          f" | فروشگاه "
+                          f"{short_text(store_title, 15)}"
                           f" | {item['_quantity']:,} عدد"
-                          f" | {deadline_text}"
+                          f" | {deadline}"
                       )
 
                   message = (
                       "⚠️ گزارش پایش انقضا\n\n"
                       f"مدیر منطقه: {manager_name}\n"
-                      f"زمان گزارش: {report_date} - {report_time}\n\n"
+                      f"زمان گزارش: "
+                      f"{report_date} - {report_time}\n\n"
                       f"فروشگاه‌های درگیر: "
-                      f"{len(affected_store_ids)} از {store_count}\n"
-                      f"ردیف کالای فعال: {len(valid_batches):,}\n"
+                      f"{len(affected_store_ids)} از "
+                      f"{len(manager_stores)}\n"
+                      f"ردیف کالای فعال: "
+                      f"{len(valid_batches):,}\n"
                       f"تعداد کالا: {total_quantity:,}\n"
-                      f"ارزش در معرض ریسک: {rial(total_value)} ریال\n\n"
+                      f"ارزش در معرض ریسک: "
+                      f"{rial(total_value)} ریال\n\n"
                       "🔴 اولویت فوری؛ امروز تا ۳ روز آینده\n"
                       f"{urgent_quantity:,} عدد | "
                       f"{rial(urgent_value)} ریال\n\n"
@@ -469,22 +504,23 @@ jobs:
                   )
 
               try:
-                  send_bale_message(chat_id, message)
+                  send_message(chat_id, message)
                   sent_count += 1
                   print(
-                      f"Sent report to manager: {manager_name}"
+                      f"Sent to {manager_name} / chat {chat_id}"
                   )
               except Exception as error:
                   failed_count += 1
                   print(
-                      f"Failed for manager {manager_name}: {error}"
+                      f"Failed for {manager_name} / "
+                      f"chat {chat_id}: {error}"
                   )
 
               time.sleep(0.15)
 
           print(
-              "All-manager report completed. "
-              f"Managers: {len(managers)}, "
+              "Multi-account report completed. "
+              f"connections: {len(connections)}, "
               f"sent: {sent_count}, "
               f"failed: {failed_count}, "
               f"skipped: {skipped_count}, "
