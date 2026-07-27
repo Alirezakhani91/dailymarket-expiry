@@ -1513,7 +1513,12 @@
               <th>شرح کالا</th>
               <th>قیمت</th>
               <th>انقضا</th>
-              <th>روز باقی‌مانده</th>
+              <th>کد منطقه</th>
+              <th>کد فروشگاه SAP</th>
+              <th>قیمت پروموشن</th>
+              <th>تاریخ شروع پروموشن</th>
+              <th>تاریخ پایان پروموشن</th>
+              <th>تعداد</th>
             </tr>
           </thead>
           <tbody>
@@ -1525,7 +1530,12 @@
                 <td>${escapePromotionHtml(row.description)}</td>
                 <td class="num">${row.price === null ? "—" : nhFormatRial(row.price)}</td>
                 <td class="num">${escapePromotionHtml(row.expiryJalali)}</td>
-                <td class="num">${row.days.toLocaleString("fa-IR")}</td>
+                <td class="num">${escapePromotionHtml(row.regionCode || "—")}</td>
+                <td class="num">${escapePromotionHtml(row.sapStoreCode || "—")}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="num">${row.quantity.toLocaleString("fa-IR")}</td>
               </tr>
             `).join("")}
           </tbody>
@@ -1585,7 +1595,7 @@
         }
       );
 
-      worksheet.mergeCells("A1:G1");
+      worksheet.mergeCells("A1:K1");
       const titleCell = worksheet.getCell("A1");
       titleCell.value = "فرم قیمت پروموشن (تاریخ نزدیک)";
       titleCell.font = {
@@ -1613,7 +1623,11 @@
         "قیمت مصرف کننده روی کالا",
         "تاریخ انقضا کالا",
         "کد منطقه",
-        "کد فروشگاه (SAP)"
+        "کد فروشگاه (SAP)",
+        "قیمت پروموشن",
+        "تاریخ شروع پروموشن",
+        "تاریخ پایان پروموشن",
+        "تعداد"
       ];
 
       worksheet.getRow(2).values = headers;
@@ -1653,7 +1667,11 @@
           Number(item.price),
           item.expiryJalali,
           String(item.regionCode),
-          String(item.sapStoreCode)
+          String(item.sapStoreCode),
+          "",
+          "",
+          "",
+          Number(item.quantity) || 0
         ]);
 
         row.height = 25;
@@ -1692,6 +1710,10 @@
         row.getCell(5).numFmt = "@";
         row.getCell(6).numFmt = "@";
         row.getCell(7).numFmt = "@";
+        row.getCell(8).numFmt = "#,##0";
+        row.getCell(9).numFmt = "@";
+        row.getCell(10).numFmt = "@";
+        row.getCell(11).numFmt = "#,##0.###";
       });
 
       worksheet.columns = [
@@ -1701,12 +1723,16 @@
         { key: "price", width: 22 },
         { key: "expiry", width: 18 },
         { key: "region", width: 14 },
-        { key: "store", width: 18 }
+        { key: "store", width: 18 },
+        { key: "promotionPrice", width: 20 },
+        { key: "promotionStart", width: 22 },
+        { key: "promotionEnd", width: 22 },
+        { key: "quantity", width: 14 }
       ];
 
       worksheet.autoFilter = {
         from: "A2",
-        to: "G2"
+        to: "K2"
       };
 
       worksheet.pageSetup = {
