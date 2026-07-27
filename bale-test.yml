@@ -1,0 +1,54 @@
+name: Bale Bot Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  send-test-message:
+    runs-on: ubuntu-latest
+
+    env:
+      BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+      BALE_CHAT_ID: ${{ secrets.BALE_CHAT_ID }}
+
+    steps:
+      - name: Send test message to Bale
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          token = os.environ.get("BALE_BOT_TOKEN", "").strip()
+          chat_id = os.environ.get("BALE_CHAT_ID", "").strip()
+
+          if not token:
+              raise SystemExit("BALE_BOT_TOKEN is missing.")
+          if not chat_id:
+              raise SystemExit("BALE_CHAT_ID is missing.")
+
+          url = f"https://tapi.bale.ai/bot{token}/sendMessage"
+          payload = {
+              "chat_id": chat_id,
+              "text": "✅ اتصال GitHub Actions به بازوی پایش انقضا با موفقیت انجام شد."
+          }
+
+          request = urllib.request.Request(
+              url,
+              data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+              headers={"Content-Type": "application/json; charset=utf-8"},
+              method="POST"
+          )
+
+          with urllib.request.urlopen(request, timeout=30) as response:
+              result = json.loads(response.read().decode("utf-8"))
+
+          if not result.get("ok"):
+              raise SystemExit(
+                  "Bale API error: " +
+                  str(result.get("description", "Unknown error"))
+              )
+
+          print("Test message sent successfully.")
+          PY
