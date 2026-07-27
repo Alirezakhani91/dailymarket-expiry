@@ -526,13 +526,19 @@
 
   function showError(message) {
     if (message === "SESSION_EXPIRED") {
+      alertEl.className = "alert alert-error show";
       alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
-      alertEl.classList.add("show");
       setTimeout(nhLogout, 1500);
       return;
     }
+    alertEl.className = "alert alert-error show";
     alertEl.textContent = "خطا: " + message;
-    alertEl.classList.add("show");
+  }
+
+  function showNotice(message) {
+    alertEl.className = "alert alert-success show";
+    alertEl.textContent = message;
+    alertEl.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
 
@@ -817,8 +823,34 @@
       return;
     }
 
+    const enteredQuantity = parseInt(document.getElementById("quantity").value);
+
     submitBtn.disabled = true;
-    submitBtn.textContent = "در حال ثبت...";
+    submitBtn.textContent = "در حال بررسی...";
+
+    const duplicateQuery = `
+      query FindExistingActiveBatch(
+        $store_id: uuid!,
+        $product_id: uuid!,
+        $expiry_date: date!
+      ) {
+        expiry_batches(
+          where: {
+            store_id: { _eq: $store_id }
+            product_id: { _eq: $product_id }
+            expiry_date: { _eq: $expiry_date }
+            status: { _nin: ["sold", "cancelled", "rejected"] }
+          }
+          order_by: { created_at: desc }
+          limit: 1
+        ) {
+          id
+          product_name
+          quantity
+          expiry_date
+        }
+      }
+    `;
 
     const mutation = `
       mutation InsertBatch(
@@ -834,13 +866,32 @@
     `;
 
     try {
+      const duplicateData = await nhGql(duplicateQuery, {
+        store_id: myStoreId,
+        product_id: selectedProductId,
+        expiry_date: expiryIso
+      }, session.token);
+
+      const existingBatch = (duplicateData.expiry_batches || [])[0];
+
+      if (existingBatch) {
+        showNotice(
+          `«${existingBatch.product_name || selectedProductName}» با همین تاریخ انقضا قبلاً با تعداد ` +
+          `${faNumber(existingBatch.quantity)} ثبت شده است؛ برای جلوگیری از دوبرابر شدن موجودی، ثبت تکراری انجام نشد.`
+        );
+        await loadOperatorDashboard();
+        return;
+      }
+
+      submitBtn.textContent = "در حال ثبت...";
+
       await nhGql(mutation, {
         store_id: myStoreId,
         product_id: selectedProductId,
         product_name: selectedProductName,
         product_group: selectedProductGroup,
         unit_price: selectedProductPrice,
-        quantity: parseInt(document.getElementById("quantity").value),
+        quantity: enteredQuantity,
         expiry_date: expiryIso,
         created_by: session.userId
       }, session.token);
@@ -851,7 +902,16 @@
       await loadOperatorDashboard();
 
     } catch (err) {
-      showError(err.message);
+      const message = String(err?.message || err || "");
+
+      if (message.includes("DUPLICATE_ACTIVE_EXPIRY_BATCH")) {
+        showNotice(
+          "این کالا با همین تاریخ انقضا قبلاً برای این فروشگاه ثبت شده است؛ ثبت تکراری انجام نشد."
+        );
+        await loadOperatorDashboard();
+      } else {
+        showError(message);
+      }
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "ثبت کالا";
