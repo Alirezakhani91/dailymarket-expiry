@@ -1,0 +1,171 @@
+name: Nhost Read Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-nhost-access:
+    runs-on: ubuntu-latest
+
+    env:
+      NHOST_NOTIFICATION_EMAIL: ${{ secrets.NHOST_NOTIFICATION_EMAIL }}
+      NHOST_NOTIFICATION_PASSWORD: ${{ secrets.NHOST_NOTIFICATION_PASSWORD }}
+      BALE_BOT_TOKEN: ${{ secrets.BALE_BOT_TOKEN }}
+      BALE_CHAT_ID: ${{ secrets.BALE_CHAT_ID }}
+
+    steps:
+      - name: Login to Nhost and test data access
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+
+          AUTH_URL = (
+              "https://wijabqjyryslediitcrc.auth."
+              "eu-central-1.nhost.run/v1/signin/email-password"
+          )
+          GRAPHQL_URL = (
+              "https://wijabqjyryslediitcrc.graphql."
+              "eu-central-1.nhost.run/v1"
+          )
+
+          email = os.environ.get("NHOST_NOTIFICATION_EMAIL", "").strip()
+          password = os.environ.get("NHOST_NOTIFICATION_PASSWORD", "")
+          bale_token = os.environ.get("BALE_BOT_TOKEN", "").strip()
+          bale_chat_id = os.environ.get("BALE_CHAT_ID", "").strip()
+
+          if not email:
+              raise SystemExit("NHOST_NOTIFICATION_EMAIL is missing.")
+          if not password:
+              raise SystemExit("NHOST_NOTIFICATION_PASSWORD is missing.")
+          if not bale_token:
+              raise SystemExit("BALE_BOT_TOKEN is missing.")
+          if not bale_chat_id:
+              raise SystemExit("BALE_CHAT_ID is missing.")
+
+          def post_json(url, payload, headers=None):
+              request_headers = {
+                  "Content-Type": "application/json; charset=utf-8"
+              }
+              if headers:
+                  request_headers.update(headers)
+
+              request = urllib.request.Request(
+                  url,
+                  data=json.dumps(
+                      payload,
+                      ensure_ascii=False
+                  ).encode("utf-8"),
+                  headers=request_headers,
+                  method="POST",
+              )
+
+              try:
+                  with urllib.request.urlopen(
+                      request,
+                      timeout=30
+                  ) as response:
+                      return json.loads(
+                          response.read().decode("utf-8")
+                      )
+              except urllib.error.HTTPError as error:
+                  body = error.read().decode("utf-8", errors="replace")
+                  raise SystemExit(
+                      f"HTTP {error.code}: {body}"
+                  )
+
+          auth_data = post_json(
+              AUTH_URL,
+              {
+                  "email": email,
+                  "password": password,
+              },
+          )
+
+          session = auth_data.get("session") or {}
+          access_token = session.get("accessToken")
+
+          if not access_token:
+              raise SystemExit(
+                  "Nhost login failed: accessToken was not returned."
+              )
+
+          query = """
+          query NotificationReadTest {
+            expiry_batches(
+              where: {
+                status: {
+                  _nin: ["sold", "cancelled", "rejected"]
+                }
+              }
+              order_by: {created_at: desc}
+              limit: 3
+            ) {
+              id
+              product_name
+              quantity
+              expiry_date
+              status
+            }
+          }
+          """
+
+          gql_data = post_json(
+              GRAPHQL_URL,
+              {
+                  "query": query,
+                  "variables": {},
+              },
+              {
+                  "Authorization": f"Bearer {access_token}"
+              },
+          )
+
+          if gql_data.get("errors"):
+              raise SystemExit(
+                  "GraphQL error: " +
+                  json.dumps(
+                      gql_data["errors"],
+                      ensure_ascii=False
+                  )
+              )
+
+          rows = (
+              gql_data.get("data", {})
+              .get("expiry_batches", [])
+          )
+
+          message = (
+              "✅ اتصال حساب اعلان به Nhost برقرار شد.\n\n"
+              f"تعداد رکورد آزمایشی قابل خواندن: {len(rows)}\n"
+              "مرحله بعد: ساخت پیام واقعی مدیر منطقه."
+          )
+
+          bale_url = (
+              f"https://tapi.bale.ai/bot{bale_token}/sendMessage"
+          )
+
+          bale_result = post_json(
+              bale_url,
+              {
+                  "chat_id": bale_chat_id,
+                  "text": message,
+              },
+          )
+
+          if not bale_result.get("ok"):
+              raise SystemExit(
+                  "Bale API error: " +
+                  str(
+                      bale_result.get(
+                          "description",
+                          "Unknown error"
+                      )
+                  )
+              )
+
+          print("Nhost login and GraphQL read test succeeded.")
+          PY
