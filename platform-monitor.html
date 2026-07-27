@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name=ش"viewport" content="width=device-width,initial-scale=1">
 <title>رصد سراسری | dailymarket-expiry</title>
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +39,7 @@
 
 <main class="admin-wrap">
   <div class="admin-head">
-    <div><h1>رصد زنده ثبت کالا در تمام مناطق</h1><p>مشاهده محصول، فروشگاه، منطقه، ارزش ریالی و زمان باقی‌مانده تا انقضا.</p></div>
+    <div><h1>رصد زنده کالاهای فعال در تمام مناطق</h1><p>مشاهده کالاهای فعال در حال انقضا در تمام مناطق؛ تاریخ‌گذشته‌ها خودکار وارد آرشیو می‌شوند.</p></div>
     <div class="live-box"><span class="live-dot loading" id="liveDot"></span><div><div class="live-main" id="liveText">در حال دریافت اطلاعات</div><div class="live-sub" id="lastUpdate">هنوز به‌روزرسانی نشده</div></div><button class="refresh" id="refreshBtn" title="به‌روزرسانی">↻</button></div>
   </div>
 
@@ -52,11 +52,11 @@
       <div class="field"><label>منطقه</label><select id="regionFilter"><option value="">همه مناطق</option></select></div>
       <div class="field"><label>فروشگاه</label><select id="storeFilter"><option value="">همه فروشگاه‌ها</option></select></div>
       <div class="field"><label>گروه کالایی</label><select id="groupFilter"><option value="">همه گروه‌ها</option></select></div>
-      <div class="field"><label>زمان باقی‌مانده</label><select id="daysFilter"><option value="">همه بازه‌ها</option><option value="expired">منقضی‌شده</option><option value="0-3">۰ تا ۳ روز</option><option value="4-7">۴ تا ۷ روز</option><option value="8+">بیشتر از ۷ روز</option></select></div>
+      <div class="field"><label>زمان باقی‌مانده</label><select id="daysFilter"><option value="">همه بازه‌ها</option><option value="0-3">۰ تا ۳ روز</option><option value="4-7">۴ تا ۷ روز</option><option value="8+">بیشتر از ۷ روز</option></select></div>
       <div class="field search-wide"><label>جست‌وجوی محصول، بارکد، آرتیکل یا فروشگاه</label><input id="search" type="search" placeholder="نام محصول، بارکد، آرتیکل یا فروشگاه..."></div>
       <button class="clear" id="clearBtn">پاک‌کردن</button>
     </div>
-    <div class="filter-foot"><label><input type="checkbox" id="activeOnly" checked> فقط کالاهای فعال و فروش‌نرفته</label><span id="resultCount">در حال محاسبه...</span></div>
+    <div class="filter-foot"><span>فقط کالاهای فعالِ امروز و آینده نمایش داده می‌شوند؛ تاریخ‌گذشته‌ها در آرشیو پایین صفحه هستند.</span><span id="resultCount">در حال محاسبه...</span></div>
   </section>
 
   <div class="grid2">
@@ -64,7 +64,17 @@
     <section class="card-admin"><h2>آخرین ثبت‌های شبکه</h2><p class="desc">جدیدترین ثبت‌ها در همه مناطق.</p><div id="latestWrap"></div></section>
   </div>
 
-  <section class="card-admin"><h2>محصولات ثبت‌شده به تفکیک منطقه</h2><p class="desc">برای دیدن فروشگاه‌های هر محصول، روی ردیف آن کلیک کنید.</p><div id="summaryWrap"></div></section>
+  <section class="card-admin"><h2>محصولات فعال به تفکیک منطقه</h2><p class="desc">برای دیدن فروشگاه‌های هر محصول، روی ردیف آن کلیک کنید.</p><div id="summaryWrap"></div></section>
+
+  <section class="card-admin">
+    <h2>آرشیو خودکار کالاهای منقضی‌شده</h2>
+    <p class="desc">این رکوردها از همه کارت‌ها و محاسبات جاری خارج شده‌اند و فقط برای سابقه نگهداری می‌شوند.</p>
+    <div class="filters" style="grid-template-columns:1.4fr auto;">
+      <div class="field search-wide"><label>جست‌وجو در کالا، فروشگاه یا منطقه</label><input id="archiveSearch" type="search" placeholder="نام محصول، فروشگاه یا منطقه..."></div>
+      <div class="field"><label>تعداد آرشیو</label><div id="archiveCount" style="height:43px;display:flex;align-items:center;font-size:12px;font-weight:900;"></div></div>
+    </div>
+    <div id="archiveWrap" style="margin-top:12px;"></div>
+  </section>
 </main>
 
 <script src="auth.js"></script>
@@ -75,17 +85,18 @@ let stores=[],batches=[],storeMap=new Map(),productMap=new Map(),expanded=null,b
 const $=id=>document.getElementById(id);
 $("logoutBtn").onclick=e=>{e.preventDefault();nhLogout()};
 $("refreshBtn").onclick=()=>refresh(true);
-["regionFilter","storeFilter","groupFilter","daysFilter","activeOnly"].forEach(id=>$(id).onchange=()=>{if(id==="regionFilter")fillStores();render()});
+["regionFilter","storeFilter","groupFilter","daysFilter"].forEach(id=>$(id).onchange=()=>{if(id==="regionFilter")fillStores();render()});
 let st=null;$("search").oninput=()=>{clearTimeout(st);st=setTimeout(render,180)};
-$("clearBtn").onclick=()=>{["regionFilter","storeFilter","groupFilter","daysFilter","search"].forEach(id=>$(id).value="");$("activeOnly").checked=true;fillStores();render()};
+$("clearBtn").onclick=()=>{["regionFilter","storeFilter","groupFilter","daysFilter","search"].forEach(id=>$(id).value="");fillStores();render()};
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function fa(v,d=3){return new Intl.NumberFormat("fa-IR",{maximumFractionDigits:d}).format(Number(v)||0)}
 function dt(v){if(!v)return"—";const d=new Date(v);if(isNaN(d))return"—";return new Intl.DateTimeFormat("fa-IR-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
 function dayNo(v){const d=v instanceof Date?v:new Date(v);if(isNaN(d))return null;const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);const o=Object.fromEntries(p.map(x=>[x.type,x.value]));return Math.floor(Date.UTC(+o.year,+o.month-1,+o.day)/86400000)}
-function daysLeft(v){if(!v)return null;const a=dayNo(v+"T12:00:00"),b=dayNo(new Date());return a===null||b===null?null:a-b}
-function risk(b){if(b.status==="sold")return{key:"sold",label:"فروخته‌شده",cls:"sold"};const d=daysLeft(b.expiry_date);if(d===null)return{key:"unknown",label:"نامشخص",cls:"sold"};if(d<0)return{key:"expired",label:"منقضی‌شده",cls:"expired"};if(d<=3)return{key:"0-3",label:d===0?"امروز":fa(d,0)+" روز",cls:"urgent"};if(d<=7)return{key:"4-7",label:fa(d,0)+" روز",cls:"warn"};return{key:"8+",label:fa(d,0)+" روز",cls:"safe"}}
-function active(b){return!["sold","cancelled","rejected"].includes(b.status)}
+function daysLeft(v){if(!v)return null;const parts=String(v).split("-").map(Number);if(parts.length!==3||parts.some(x=>!Number.isFinite(x)))return null;const a=Math.floor(Date.UTC(parts[0],parts[1]-1,parts[2])/86400000),b=dayNo(new Date());return b===null?null:a-b}
+function risk(b){const d=daysLeft(b.expiry_date);if(d===null)return{key:"unknown",label:"نامشخص",cls:"sold"};if(d<0)return{key:"archive",label:"آرشیو",cls:"expired"};if(["sold","cancelled","rejected"].includes(b.status))return{key:"sold",label:STATUS_LABEL[b.status]||b.status,cls:"sold"};if(d<=3)return{key:"0-3",label:d===0?"امروز":fa(d,0)+" روز",cls:"urgent"};if(d<=7)return{key:"4-7",label:fa(d,0)+" روز",cls:"warn"};return{key:"8+",label:fa(d,0)+" روز",cls:"safe"}}
+function active(b){const d=daysLeft(b.expiry_date);return d!==null&&d>=0&&!["sold","cancelled","rejected"].includes(b.status)}
+function archived(b){const d=daysLeft(b.expiry_date);return d!==null&&d<0}
 function val(b){return(Number(b.quantity)||0)*(Number(b.unit_price)||0)}
 function live(state,text){$("liveDot").className="live-dot"+(state==="loading"?" loading":state==="error"?" error":"");$("liveText").textContent=text}
 function err(m){$("alert").textContent="خطا: "+m;$("alert").classList.add("show");live("error","اتصال با خطا مواجه شد")}
@@ -130,25 +141,25 @@ function fillStores(){
 }
 function enriched(){return batches.map(b=>{const s=storeMap.get(String(b.store_id))||{},p=productMap.get(String(b.product_id))||{};return{...b,store:s,product:p,region:s.region||"نامشخص",pname:b.product_name||p.name||"نامشخص",pgroup:b.product_group||p.product_group||"نامشخص",article:p.article||"",barcode:p.barcode||"",rial:val(b),rk:risk(b)}})}
 function rows(){
- const r=$("regionFilter").value,s=$("storeFilter").value,g=$("groupFilter").value,d=$("daysFilter").value,t=$("search").value.trim().toLocaleLowerCase("fa"),a=$("activeOnly").checked;
- return enriched().filter(x=>{if(a&&!active(x))return false;if(r&&x.region!==r)return false;if(s&&String(x.store_id)!==s)return false;if(g&&x.pgroup!==g)return false;if(d&&x.rk.key!==d)return false;if(t){const h=[x.pname,x.pgroup,x.article,x.barcode,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa");if(!h.includes(t))return false}return true});
+ const r=$("regionFilter").value,s=$("storeFilter").value,g=$("groupFilter").value,d=$("daysFilter").value,t=$("search").value.trim().toLocaleLowerCase("fa");
+ return enriched().filter(x=>{if(!active(x))return false;if(r&&x.region!==r)return false;if(s&&String(x.store_id)!==s)return false;if(g&&x.pgroup!==g)return false;if(d&&x.rk.key!==d)return false;if(t){const h=[x.pname,x.pgroup,x.article,x.barcode,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa");if(!h.includes(t))return false}return true});
 }
-function render(){const r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت از "+fa(batches.length,0)+" رکورد";renderStats(r);renderRegions(r);renderLatest(r);renderSummary(r)}
+function render(){const r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت فعال";renderStats(r);renderRegions(r);renderLatest(r);renderSummary(r);renderArchive()}
 function renderStats(r){
- const a=r.filter(active),regions=new Set(a.map(x=>x.region)),storesSet=new Set(a.map(x=>String(x.store_id))),products=new Set(a.map(x=>x.product_id||x.pname));
- const qty=a.reduce((s,x)=>s+(Number(x.quantity)||0),0),value=a.reduce((s,x)=>s+x.rial,0),exp=a.filter(x=>x.rk.key==="expired").reduce((s,x)=>s+x.rial,0),urg=a.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0);
+ const a=r,regions=new Set(a.map(x=>x.region)),storesSet=new Set(a.map(x=>String(x.store_id))),products=new Set(a.map(x=>x.product_id||x.pname));
+ const qty=a.reduce((s,x)=>s+(Number(x.quantity)||0),0),value=a.reduce((s,x)=>s+x.rial,0),todayValue=a.filter(x=>daysLeft(x.expiry_date)===0).reduce((s,x)=>s+x.rial,0),urg=a.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0);
  $("stats").innerHTML=`
  <div class="stat green"><div class="stat-l">مناطق دارای ثبت فعال</div><div class="stat-v">${fa(regions.size,0)}</div><div class="stat-s">منطقه درگیر</div></div>
  <div class="stat"><div class="stat-l">فروشگاه‌های دارای موجودی</div><div class="stat-v">${fa(storesSet.size,0)}</div><div class="stat-s">فروشگاه فعال</div></div>
  <div class="stat blue"><div class="stat-l">محصولات یکتا</div><div class="stat-v">${fa(products.size,0)}</div><div class="stat-s">${fa(qty)} واحد</div></div>
- <div class="stat"><div class="stat-l">ارزش موجودی فعال</div><div class="stat-v">${nhFormatRial(value)}</div><div class="stat-s">بر مبنای قیمت زمان ثبت</div></div>
- <div class="stat red"><div class="stat-l">ریال ضایعات‌شده</div><div class="stat-v">${nhFormatRial(exp)}</div><div class="stat-s">منقضی و فروش‌نرفته</div></div>
- <div class="stat amber"><div class="stat-l">ریال در معرض ضایعات</div><div class="stat-v">${nhFormatRial(urg)}</div><div class="stat-s">۰ تا ۳ روز</div></div>`;
+ <div class="stat"><div class="stat-l">ارزش کالاهای فعال</div><div class="stat-v">${nhFormatRial(value)}</div><div class="stat-s">امروز و روزهای آینده</div></div>
+ <div class="stat red"><div class="stat-l">ارزش منقضی‌شونده امروز</div><div class="stat-v">${nhFormatRial(todayValue)}</div><div class="stat-s">تا پایان امروز فعال</div></div>
+ <div class="stat amber"><div class="stat-l">ارزش ۰ تا ۳ روز آینده</div><div class="stat-v">${nhFormatRial(urg)}</div><div class="stat-s">نیازمند پیگیری فوری</div></div>`;
 }
 function renderRegions(r){
- const m=new Map();r.filter(active).forEach(x=>{if(!m.has(x.region))m.set(x.region,{stores:new Set(),products:new Set(),value:0,risk:0,last:null,lastMs:0});const o=m.get(x.region);o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.value+=x.rial;if(["expired","0-3"].includes(x.rk.key))o.risk+=x.rial;const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at}});
+ const m=new Map();r.filter(active).forEach(x=>{if(!m.has(x.region))m.set(x.region,{stores:new Set(),products:new Set(),value:0,risk:0,last:null,lastMs:0});const o=m.get(x.region);o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.value+=x.rial;if(x.rk.key==="0-3")o.risk+=x.rial;const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at}});
  const arr=[...m.entries()].sort((a,b)=>b[1].risk-a[1].risk);
- $("regionOverview").innerHTML=arr.length?arr.map(([n,o])=>`<div class="region-row"><div><div class="region-title">${esc(n)}</div><small>آخرین ثبت: ${dt(o.last)}</small></div><div><strong>${fa(o.stores.size,0)}</strong><small>فروشگاه</small></div><div><strong>${fa(o.products.size,0)}</strong><small>محصول</small></div><div><strong>${nhFormatRial(o.value)}</strong><small>ارزش فعال</small></div><div><strong>${nhFormatRial(o.risk)}</strong><small>ریسک فوری</small></div></div>`).join(""):'<div class="empty">داده‌ای برای نمایش وجود ندارد.</div>';
+ $("regionOverview").innerHTML=arr.length?arr.map(([n,o])=>`<div class="region-row"><div><div class="region-title">${esc(n)}</div><small>آخرین ثبت: ${dt(o.last)}</small></div><div><strong>${fa(o.stores.size,0)}</strong><small>فروشگاه</small></div><div><strong>${fa(o.products.size,0)}</strong><small>محصول</small></div><div><strong>${nhFormatRial(o.value)}</strong><small>ارزش فعال</small></div><div><strong>${nhFormatRial(o.risk)}</strong><small>ارزش ۰ تا ۳ روز</small></div></div>`).join(""):'<div class="empty">داده‌ای برای نمایش وجود ندارد.</div>';
 }
 function renderLatest(r){
  const arr=[...r].sort((a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)).slice(0,12);
@@ -164,6 +175,17 @@ function renderSummary(r){
  $("summaryWrap").innerHTML=`<div class="table-shell"><table class="admin-table"><thead><tr><th>منطقه</th><th>محصول</th><th>آرتیکل / بارکد</th><th>فروشگاه‌ها</th><th>تعداد</th><th>ارزش ریالی</th><th>نزدیک‌ترین انقضا</th><th>آخرین ثبت</th></tr></thead><tbody>${arr.map(o=>{const rr=risk({status:"approved",expiry_date:o.near});return`<tr class="expand" data-k="${esc(o.key)}"><td>${esc(o.region)}</td><td><div class="title">${esc(o.name)}</div><div class="sub">${esc(o.group)}</div></td><td><div class="title">${esc(o.article||"—")}</div><div class="sub">${esc(o.barcode||"—")}</div></td><td class="num">${fa(o.stores.size,0)}</td><td class="num">${fa(o.qty)}</td><td class="num">${nhFormatRial(o.value)}</td><td><span class="chip ${rr.cls}">${esc(rr.label)}</span><div class="sub">${o.near?nhIsoToJalaliStr(o.near):"—"}</div></td><td class="num">${dt(o.last)}</td></tr>${expanded===o.key?`<tr class="detail"><td colspan="8"><div class="detail-box">${[...o.stores.values()].sort((a,b)=>b.value-a.value).map(s=>`<span class="store-pill"><strong>${esc(s.name)}</strong>${s.code?" ("+esc(s.code)+")":""} · ${fa(s.qty)} · ${nhFormatRial(s.value)}</span>`).join("")}</div></td></tr>`:""}`}).join("")}</tbody></table></div>`;
  $("summaryWrap").querySelectorAll(".expand").forEach(tr=>tr.onclick=()=>{expanded=expanded===tr.dataset.k?null:tr.dataset.k;renderSummary(rows())});
 }
+function renderArchive(){
+ const t=$("archiveSearch").value.trim().toLocaleLowerCase("fa");
+ let arr=enriched().filter(archived);
+ if(t){arr=arr.filter(x=>[x.pname,x.pgroup,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa").includes(t))}
+ arr.sort((a,b)=>String(b.expiry_date).localeCompare(String(a.expiry_date))||(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0));
+ $("archiveCount").textContent=fa(arr.length,0)+" رکورد";
+ if(!arr.length){$("archiveWrap").innerHTML='<div class="empty">رکوردی در آرشیو یافت نشد.</div>';return}
+ const visible=arr.slice(0,300);
+ $("archiveWrap").innerHTML=`<div class="table-shell"><table class="admin-table"><thead><tr><th>منطقه</th><th>فروشگاه</th><th>محصول</th><th>تعداد</th><th>ارزش ریالی</th><th>تاریخ انقضا</th><th>وضعیت ثبت</th></tr></thead><tbody>${visible.map(x=>`<tr><td>${esc(x.region)}</td><td><div class="title">${esc(x.store.name||"نامشخص")}</div><div class="sub">${esc(x.store.store_code||"")}</div></td><td><div class="title">${esc(x.pname)}</div><div class="sub">${esc(x.pgroup)}</div></td><td class="num">${fa(x.quantity)}</td><td class="num">${nhFormatRial(x.rial)}</td><td class="num">${nhIsoToJalaliStr(x.expiry_date)}</td><td><span class="chip sold">${esc(STATUS_LABEL[x.status]||x.status)}</span></td></tr>`).join("")}</tbody></table></div>${arr.length>visible.length?'<div class="empty">۳۰۰ رکورد جدیدتر نمایش داده شده است. برای محدودکردن نتایج جست‌وجو کنید.</div>':""}`;
+}
+let archiveTimer=null;$("archiveSearch").oninput=()=>{clearTimeout(archiveTimer);archiveTimer=setTimeout(renderArchive,180)};
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&!busy)refresh()});
 refresh(true);
 </script>
