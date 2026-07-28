@@ -3,8 +3,11 @@ name: Bale All Managers Expiry Report
 on:
   workflow_dispatch:
   schedule:
-    # 09:30 and 15:30 Tehran time
-    - cron: "0 6,12 * * *"
+    # Enter the GitHub queue 10 minutes early, then wait until the exact Tehran time.
+    - cron: "20 10 * * *"
+      timezone: "Asia/Tehran"
+    - cron: "50 13 * * *"
+      timezone: "Asia/Tehran"
 
 concurrency:
   group: bale-all-managers-expiry-report
@@ -23,6 +26,48 @@ jobs:
       - name: Send report to every connected Bale account
         shell: bash
         run: |
+          # Scheduled runs enter the queue early and wait until exactly
+          # 10:30 or 14:00 Tehran time. Manual runs start immediately.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python - <<'WAIT_PY'
+          import time
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          tehran = ZoneInfo("Asia/Tehran")
+          now = datetime.now(tehran)
+
+          if now.hour < 12:
+              target = now.replace(
+                  hour=10,
+                  minute=30,
+                  second=0,
+                  microsecond=0
+              )
+          else:
+              target = now.replace(
+                  hour=14,
+                  minute=0,
+                  second=0,
+                  microsecond=0
+              )
+
+          wait_seconds = (target - now).total_seconds()
+
+          if 0 < wait_seconds <= 20 * 60:
+              print(
+                  f"Waiting {int(wait_seconds)} seconds "
+                  f"until {target.strftime('%H:%M')} Tehran time."
+              )
+              time.sleep(wait_seconds)
+          else:
+              print(
+                  "Target time has already arrived or the workflow "
+                  "started outside the expected window; sending now."
+              )
+          WAIT_PY
+          fi
+
           python - <<'PY'
           import json
           import os
@@ -285,6 +330,26 @@ jobs:
           sent_count = 0
           failed_count = 0
           skipped_count = 0
+          disabled_count = 0
+
+          disable_connection_mutation = """
+          mutation DisableBlockedBaleConnection(
+            $user_role_id: uuid!
+            $chat_id: String!
+          ) {
+            update_bale_manager_chats(
+              where: {
+                user_role_id: {_eq: $user_role_id}
+                bale_chat_id: {_eq: $chat_id}
+              }
+              _set: {
+                notifications_enabled: false
+              }
+            ) {
+              affected_rows
+            }
+          }
+          """
 
           for connection in connections:
               user_role_id = str(
@@ -510,11 +575,46 @@ jobs:
                       f"Sent to {manager_name} / chat {chat_id}"
                   )
               except Exception as error:
-                  failed_count += 1
-                  print(
-                      f"Failed for {manager_name} / "
-                      f"chat {chat_id}: {error}"
-                  )
+                  error_text = str(error)
+
+                  if (
+                      "HTTP 403" in error_text
+                      and "bot was blocked by the user" in error_text
+                  ):
+                      disable_response = post_json(
+                          GRAPHQL_URL,
+                          {
+                              "query": disable_connection_mutation,
+                              "variables": {
+                                  "user_role_id": user_role_id,
+                                  "chat_id": chat_id,
+                              },
+                          },
+                          graphql_headers,
+                      )
+
+                      if disable_response.get("errors"):
+                          failed_count += 1
+                          print(
+                              f"Could not disable blocked chat "
+                              f"{chat_id}: "
+                              + json.dumps(
+                                  disable_response["errors"],
+                                  ensure_ascii=False
+                              )
+                          )
+                      else:
+                          disabled_count += 1
+                          print(
+                              f"Blocked Bale account disabled: "
+                              f"{manager_name} / chat {chat_id}"
+                          )
+                  else:
+                      failed_count += 1
+                      print(
+                          f"Failed for {manager_name} / "
+                          f"chat {chat_id}: {error}"
+                      )
 
               time.sleep(0.15)
 
@@ -523,6 +623,7 @@ jobs:
               f"connections: {len(connections)}, "
               f"sent: {sent_count}, "
               f"failed: {failed_count}, "
+              f"disabled: {disabled_count}, "
               f"skipped: {skipped_count}, "
               f"stores: {len(stores)}, "
               f"batches: {len(batches)}"
