@@ -1200,7 +1200,7 @@
     }
 
     const confirmed = window.confirm(
-      `آیا از حذف «${batch.product_name}» مطمئن هستید؟\n\nاین ثبت از فهرست‌های عملیاتی و گزارش‌های فعال حذف می‌شود.`
+      `آیا از حذف «${batch.product_name}» مطمئن هستید؟\n\nاین ثبت به‌طور کامل از دیتابیس حذف می‌شود و قابل بازیابی نیست.`
     );
 
     if (!confirmed) return;
@@ -1211,18 +1211,15 @@
     button.textContent = "در حال حذف...";
 
     const mutation = `
-      mutation RemoveOperatorBatch(
+      mutation DeleteOperatorBatchPermanently(
         $id: uuid!
         $store_id: uuid!
       ) {
-        update_expiry_batches(
+        delete_expiry_batches(
           where: {
             id: { _eq: $id }
             store_id: { _eq: $store_id }
             status: { _eq: "approved" }
-          }
-          _set: {
-            status: "cancelled"
           }
         ) {
           affected_rows
@@ -1236,12 +1233,12 @@
         store_id: myStoreId
       }, session.token);
 
-      if (!data.update_expiry_batches.affected_rows) {
-        throw new Error("این ثبت پیدا نشد یا دیگر اجازه حذف آن را ندارید.");
+      if (!data.delete_expiry_batches.affected_rows) {
+        throw new Error("این ثبت پیدا نشد یا مجوز حذف کامل آن وجود ندارد.");
       }
 
       await loadOperatorDashboard();
-      showSuccess("ثبت کالا با موفقیت حذف شد.");
+      showSuccess("ثبت کالا به‌طور کامل و دائمی حذف شد.");
     } catch (error) {
       showError(error.message);
       button.disabled = false;
