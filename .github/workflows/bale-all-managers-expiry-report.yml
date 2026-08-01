@@ -256,6 +256,9 @@ jobs:
                   _gte: $today
                   _lte: $end_date
                 }
+                status: {
+                  _nin: ["cancelled", "sold", "rejected"]
+                }
               }
               order_by: {
                 expiry_date: asc
