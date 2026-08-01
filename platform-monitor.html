@@ -12,7 +12,7 @@
 
 :root{
   --bg:#050708;--bg2:#0a0e11;--panel:#0d1216;--panel2:#11171c;--line:#273039;
-  --text:#f7f8fa;--muted:#8d99a3;--muted2:#66727c;--red:#ff3f52;--red2:#a51024;
+  --text:#f7f8fa;--muted:#8d99a3;--muted2:#66727c;--burgundy:#7b1026;--burgundy2:#3b0612;--red:#ff3f52;--red2:#a51024;
   --amber:#ff9d1c;--amber2:#a85b00;--green:#64d36f;--green2:#1d7430;--blue:#41a8ff;
   --gray:#56616a;--shadow:0 20px 60px rgba(0,0,0,.36);--radius:22px;
 }
@@ -37,8 +37,8 @@ a{color:inherit}
 .exec-head{display:grid;grid-template-columns:250px 1fr 260px;gap:16px;align-items:center;margin-bottom:14px;direction:ltr}.exec-head>*{direction:rtl}.exec-date,.exec-logo,.exec-title{min-height:78px;border:1px solid #2a333b;border-radius:19px;background:linear-gradient(145deg,rgba(18,24,29,.94),rgba(8,12,15,.94));box-shadow:inset 0 1px rgba(255,255,255,.025),0 12px 28px rgba(0,0,0,.24)}.exec-date{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px}.exec-date-icon{font-size:28px;color:var(--red);filter:drop-shadow(0 0 10px rgba(255,63,82,.45))}.exec-date small{display:block;color:var(--muted);font-size:10.5px}.exec-date strong{display:block;margin-top:5px;font-size:14px;direction:ltr;text-align:right}.exec-title{border-color:transparent;background:transparent;box-shadow:none;text-align:center;padding:5px 12px;display:flex;flex-direction:column;justify-content:center}.exec-title h2{margin:0;font-size:clamp(26px,2.65vw,40px);font-weight:900;letter-spacing:0;word-spacing:0;direction:rtl;unicode-bidi:plaintext;line-height:1.35;text-rendering:geometricPrecision}.exec-title p{margin:7px 0 0;color:#9aa6af;font-size:12px;line-height:1.8}.exec-logo{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px}.exec-logo-mark{font-size:30px;color:var(--red);filter:drop-shadow(0 0 14px rgba(255,63,82,.38))}.exec-logo strong{font-size:25px;color:var(--red);font-weight:900}.exec-logo small{display:block;font-size:8px;color:#ff8a98;margin-top:-2px}.exec-actions{display:flex;gap:8px;justify-content:center;margin-top:8px}.exec-action{border:1px solid #34404a;background:#10161b;color:#dce4e9;border-radius:10px;padding:7px 10px;font-size:9.5px;font-weight:800;cursor:pointer}.exec-action:hover{border-color:#687b88;color:#fff}.exec-action.primary{background:linear-gradient(145deg,#c4142b,#7f0717);border-color:#d52a40;color:#fff}
 .exec-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}.exec-kpi{min-height:117px;border:1px solid #2b353d;border-radius:18px;padding:13px 14px;background:linear-gradient(145deg,#11171c,#090d10);position:relative;overflow:hidden}.exec-kpi::after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;left:-28px;bottom:-45px;filter:blur(9px);opacity:.15}.exec-kpi.red::after{background:var(--red)}.exec-kpi.amber::after{background:var(--amber)}.exec-kpi.green::after{background:var(--green)}.exec-kpi.blue::after{background:var(--blue)}.exec-kpi.gray::after{background:#b4bec6}.exec-kpi .icon{position:absolute;left:13px;top:13px;font-size:27px;opacity:.9}.exec-kpi.red .icon,.exec-kpi.red .value{color:#ff5366;text-shadow:0 0 18px rgba(255,63,82,.22)}.exec-kpi.amber .icon,.exec-kpi.amber .value{color:#ffad35;text-shadow:0 0 18px rgba(255,157,28,.2)}.exec-kpi.green .icon,.exec-kpi.green .value{color:#75db7d;text-shadow:0 0 18px rgba(100,211,111,.2)}.exec-kpi.blue .icon,.exec-kpi.blue .value{color:#66baff}.exec-kpi .label{font-size:11.5px;color:#c2cbd1;font-weight:800;padding-left:38px}.exec-kpi .value{font-size:clamp(20px,1.85vw,28px);font-weight:900;margin-top:15px;line-height:1.3;direction:ltr;text-align:right}.exec-kpi .meta{font-size:10.2px;color:var(--muted);margin-top:6px}
 .exec-main{display:grid;grid-template-columns:310px minmax(0,1fr) 290px;gap:12px;direction:ltr;align-items:stretch}.exec-main>*{direction:rtl}.exec-panel,.map-panel{border:1px solid #2a333b;border-radius:20px;background:linear-gradient(145deg,#0e1418,#080c0f);overflow:hidden;min-height:618px}.exec-panel{padding:13px}.exec-panel h3,.map-title{font-size:14.5px;margin:0;font-weight:900}.panel-sub{font-size:10.2px;color:var(--muted);margin-top:4px}.critical-list{display:grid;gap:8px;margin-top:12px}.critical-row{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:center;border:1px solid #29323a;border-radius:14px;padding:9px;background:linear-gradient(145deg,#11171b,#0a0f12);min-height:78px}.critical-rank{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#d61d35,#8b0918);box-shadow:0 0 14px rgba(255,63,82,.22);font-size:12px;font-weight:900}.critical-name{font-size:12.5px;font-weight:900}.critical-value{font-size:12.5px;color:#ff697a;font-weight:900;margin-top:6px;direction:ltr;text-align:right}.critical-meta{font-size:9.5px;color:var(--muted);margin-top:3px}.critical-empty{color:var(--muted);font-size:10px;text-align:center;padding:30px 10px}.view-all-regions{display:flex;justify-content:space-between;align-items:center;margin-top:12px;border:1px solid #2c363e;border-radius:13px;padding:12px;background:#0d1216;color:#e6ecf0;font-size:10px;font-weight:900;cursor:pointer}.view-all-regions:hover{border-color:#5a6974}
-.map-panel{position:relative;background:radial-gradient(circle at 48% 50%,#0d1f2b,#061017 62%,#05090c);padding:0}.map-head{position:absolute;right:13px;left:13px;top:11px;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.map-head>*{pointer-events:auto}.map-title-wrap{padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(3,7,10,.72);backdrop-filter:blur(8px)}.map-title-wrap small{display:block;color:#7e8c96;font-size:9.5px;margin-top:2px}.map-legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;padding:7px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(3,7,10,.72);backdrop-filter:blur(8px)}.legend-item{display:inline-flex;align-items:center;gap:5px;padding:5px 7px;border-radius:999px;font-size:9.5px;color:#c6d0d7;white-space:nowrap}.legend-dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 10px currentColor}.legend-dot.red{background:var(--red);color:var(--red)}.legend-dot.amber{background:var(--amber);color:var(--amber)}.legend-dot.green{background:var(--green);color:var(--green)}.legend-dot.gray{background:#6a747d;color:#6a747d}#iranMap{width:100%;height:618px}.map-fallback{height:100%;display:grid;place-items:center;color:#9aa6ae;text-align:center;padding:30px;font-size:11px}
-.summary-stack{display:grid;gap:9px;margin-top:12px}.summary-hero,.summary-analysis,.summary-status{position:relative;border:1px solid #2b353d;border-radius:16px;background:linear-gradient(145deg,#11171b,#090d10);overflow:hidden}.summary-hero{min-height:108px;padding:13px 14px 12px}.summary-hero::after{content:"";position:absolute;width:110px;height:110px;left:-45px;bottom:-55px;border-radius:50%;filter:blur(12px);opacity:.18}.summary-hero.red::after{background:var(--red)}.summary-hero.amber::after{background:var(--amber)}.summary-hero.green::after{background:var(--green)}.summary-eyebrow{font-size:10.5px;color:var(--muted);font-weight:800}.summary-headline{font-size:21px;font-weight:900;margin-top:8px;line-height:1.35}.summary-hero.red .summary-headline{color:#ff596b;text-shadow:0 0 16px rgba(255,63,82,.27)}.summary-hero.amber .summary-headline{color:#ffae38}.summary-hero.green .summary-headline{color:#75db7d}.summary-sentence{font-size:10.3px;color:#98a4ac;line-height:1.75;margin-top:6px}.summary-analysis{padding:10px 12px;min-height:78px}.summary-analysis-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.summary-analysis-label{font-size:10.3px;color:#9ca7ae;font-weight:800}.summary-analysis-value{font-size:18px;font-weight:900;direction:ltr}.summary-analysis.red .summary-analysis-value{color:#ff596b}.summary-analysis.amber .summary-analysis-value{color:#ffae38}.summary-analysis.blue .summary-analysis-value{color:#55b2ff}.summary-analysis-meta{font-size:9.4px;color:#7f8b94;line-height:1.65;margin-top:5px}.summary-meter{height:6px;border-radius:999px;background:#1e262c;overflow:hidden;margin-top:9px}.summary-meter>span{display:block;height:100%;border-radius:999px;box-shadow:0 0 12px currentColor}.summary-analysis.red .summary-meter>span{background:var(--red);color:var(--red)}.summary-analysis.amber .summary-meter>span{background:var(--amber);color:var(--amber)}.summary-analysis.blue .summary-meter>span{background:var(--blue);color:var(--blue)}.summary-status{padding:10px 12px}.summary-status-title{font-size:10.3px;color:#9ca7ae;font-weight:800;margin-bottom:9px}.summary-status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.summary-status-item{padding:8px 5px;border-radius:11px;background:#0b1013;border:1px solid #242d34;text-align:center}.summary-status-item b{display:block;font-size:17px}.summary-status-item small{display:block;margin-top:2px;font-size:8.5px;color:#87939b}.summary-status-item.red b{color:var(--red)}.summary-status-item.amber b{color:var(--amber)}.summary-status-item.green b{color:var(--green)}
+.map-panel{position:relative;background:radial-gradient(circle at 48% 50%,#0d1f2b,#061017 62%,#05090c);padding:0}.map-head{position:absolute;right:13px;left:13px;top:11px;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.map-head>*{pointer-events:auto}.map-title-wrap{padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(3,7,10,.72);backdrop-filter:blur(8px)}.map-title-wrap small{display:block;color:#7e8c96;font-size:9.5px;margin-top:2px}.map-legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;padding:7px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(3,7,10,.72);backdrop-filter:blur(8px)}.legend-item{display:inline-flex;align-items:center;gap:5px;padding:5px 7px;border-radius:999px;font-size:9.5px;color:#c6d0d7;white-space:nowrap}.legend-dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 10px currentColor}.legend-dot.burgundy{background:var(--burgundy);color:#a71739}.legend-dot.red{background:var(--red);color:var(--red)}.legend-dot.amber{background:var(--amber);color:var(--amber)}.legend-dot.green{background:var(--green);color:var(--green)}.legend-dot.gray{background:#6a747d;color:#6a747d}#iranMap{width:100%;height:618px}.map-fallback{height:100%;display:grid;place-items:center;color:#9aa6ae;text-align:center;padding:30px;font-size:11px}
+.summary-stack{display:grid;gap:9px;margin-top:12px}.summary-hero,.summary-analysis,.summary-status{position:relative;border:1px solid #2b353d;border-radius:16px;background:linear-gradient(145deg,#11171b,#090d10);overflow:hidden}.summary-hero{min-height:108px;padding:13px 14px 12px}.summary-hero::after{content:"";position:absolute;width:110px;height:110px;left:-45px;bottom:-55px;border-radius:50%;filter:blur(12px);opacity:.18}.summary-hero.burgundy::after{background:var(--burgundy)}.summary-hero.red::after{background:var(--red)}.summary-hero.amber::after{background:var(--amber)}.summary-hero.green::after{background:var(--green)}.summary-eyebrow{font-size:10.5px;color:var(--muted);font-weight:800}.summary-headline{font-size:21px;font-weight:900;margin-top:8px;line-height:1.35}.summary-hero.burgundy .summary-headline{color:#c72e52;text-shadow:0 0 18px rgba(123,16,38,.55)}.summary-hero.red .summary-headline{color:#ff596b;text-shadow:0 0 16px rgba(255,63,82,.27)}.summary-hero.amber .summary-headline{color:#ffae38}.summary-hero.green .summary-headline{color:#75db7d}.summary-sentence{font-size:10.3px;color:#98a4ac;line-height:1.75;margin-top:6px}.summary-analysis{padding:10px 12px;min-height:78px}.summary-analysis-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.summary-analysis-label{font-size:10.3px;color:#9ca7ae;font-weight:800}.summary-analysis-value{font-size:18px;font-weight:900;direction:ltr}.summary-analysis.red .summary-analysis-value{color:#ff596b}.summary-analysis.amber .summary-analysis-value{color:#ffae38}.summary-analysis.blue .summary-analysis-value{color:#55b2ff}.summary-analysis-meta{font-size:9.4px;color:#7f8b94;line-height:1.65;margin-top:5px}.summary-meter{height:6px;border-radius:999px;background:#1e262c;overflow:hidden;margin-top:9px}.summary-meter>span{display:block;height:100%;border-radius:999px;box-shadow:0 0 12px currentColor}.summary-analysis.red .summary-meter>span{background:var(--red);color:var(--red)}.summary-analysis.amber .summary-meter>span{background:var(--amber);color:var(--amber)}.summary-analysis.blue .summary-meter>span{background:var(--blue);color:var(--blue)}.summary-status{padding:10px 12px}.summary-status-title{font-size:10.3px;color:#9ca7ae;font-weight:800;margin-bottom:9px}.summary-status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.summary-status-item{padding:8px 5px;border-radius:11px;background:#0b1013;border:1px solid #242d34;text-align:center}.summary-status-item b{display:block;font-size:17px}.summary-status-item small{display:block;margin-top:2px;font-size:8.5px;color:#87939b}.summary-status-item.burgundy b{color:#c72e52}.summary-status-item.red b{color:var(--red)}.summary-status-item.amber b{color:var(--amber)}.summary-status-item.green b{color:var(--green)}
 .exec-foot{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:#697680;font-size:8.5px}.exec-foot strong{color:#9aa6af}.map-source{direction:ltr}
 
 /* Existing dashboard sections */
@@ -98,7 +98,7 @@ a{color:inherit}
       <section class="map-panel">
         <div class="map-head">
           <div class="map-title-wrap"><div class="map-title">نقشه زنده وضعیت استان‌ها</div><small>نام و مرز هر استان واقعی است؛ رنگ استان بر اساس پرریسک‌ترین منطقه عملیاتی مرتبط تعیین می‌شود.</small></div>
-          <div class="map-legend"><span class="legend-item"><i class="legend-dot red"></i>بیش از ۵۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot amber"></i>۲۰ تا ۵۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot green"></i>ثبت فعال و کمتر از ۲۰ میلیون تومان فوری</span><span class="legend-item"><i class="legend-dot gray"></i>بدون ثبت</span></div>
+          <div class="map-legend"><span class="legend-item"><i class="legend-dot burgundy"></i>بیش از ۱۰۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot red"></i>۵۰ تا ۱۰۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot amber"></i>۲۰ تا ۵۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot green"></i>کمتر از ۲۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot gray"></i>بدون ثبت</span></div>
         </div>
         <div id="iranMap"><div class="map-fallback">در حال آماده‌سازی نقشه دقیق استان‌های ایران…</div></div>
       </section>
@@ -107,7 +107,7 @@ a{color:inherit}
         <div class="summary-stack" id="executiveSummary"></div>
       </aside>
     </div>
-    <div class="exec-foot"><span><strong>مبنای رنگ استان:</strong> مجموع ارزش کالاهای ۰ تا ۳ روز در پرریسک‌ترین منطقه مرتبط؛ قرمز بالای ۵۰ میلیون تومان، زرد ۲۰ تا ۵۰ میلیون تومان، سبز برای هر منطقه دارای ثبت فعال با کمتر از ۲۰ میلیون تومان ارزش فوری و خاکستری فقط برای بدون ثبت فعال</span><span class="map-source">Map geometry: Highcharts Map Collection / Natural Earth</span></div>
+    <div class="exec-foot"><span><strong>مبنای رنگ استان:</strong> مجموع ارزش کالاهای ۰ تا ۳ روز در پرریسک‌ترین منطقه مرتبط؛ جگری بیش از ۱۰۰ میلیون تومان، قرمز ۵۰ تا ۱۰۰ میلیون تومان، زرد ۲۰ تا ۵۰ میلیون تومان، سبز کمتر از ۲۰ میلیون تومان و خاکستری بدون ثبت فعال</span><span class="map-source">Map geometry: Highcharts Map Collection / Natural Earth</span></div>
   </section>
 
   <section class="card-admin" id="filtersCard">
@@ -160,7 +160,6 @@ a{color:inherit}
 <script src="auth.js"></script>
 <script>
 const session=nhRequireRole(["system_admin","platform_admin"]);
-const DASHBOARD_BUILD="2026-08-01-deleted-records-fix";
 const REFRESH_MS=60000,PAGE=1000,MAX=100000;
 let stores=[],batches=[],storeMap=new Map(),productMap=new Map(),expanded=null,busy=false,timer=null,iranChart=null,toastTimer=null;
 const $=id=>document.getElementById(id);
@@ -183,11 +182,9 @@ function fa(v,d=3){return new Intl.NumberFormat("fa-IR",{maximumFractionDigits:d
 function dt(v){if(!v)return"—";const d=new Date(v);if(isNaN(d))return"—";return new Intl.DateTimeFormat("fa-IR-u-ca-persian",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
 function dayNo(v){const d=v instanceof Date?v:new Date(v);if(isNaN(d))return null;const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tehran",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);const o=Object.fromEntries(p.map(x=>[x.type,x.value]));return Math.floor(Date.UTC(+o.year,+o.month-1,+o.day)/86400000)}
 function daysLeft(v){if(!v)return null;const parts=String(v).split("-").map(Number);if(parts.length!==3||parts.some(x=>!Number.isFinite(x)))return null;const a=Math.floor(Date.UTC(parts[0],parts[1]-1,parts[2])/86400000),b=dayNo(new Date());return b===null?null:a-b}
-function normalizedStatus(value){return String(value??"").trim().toLowerCase()}
-function isDeletedBatch(b){return normalizedStatus(b?.status)==="cancelled"}
-function risk(b){const status=normalizedStatus(b?.status),d=daysLeft(b.expiry_date);if(d===null)return{key:"unknown",label:"نامشخص",cls:"sold"};if(status==="cancelled")return{key:"deleted",label:"حذف‌شده",cls:"sold"};if(d<0)return{key:"archive",label:"آرشیو",cls:"expired"};if(["sold","rejected"].includes(status))return{key:"sold",label:STATUS_LABEL[status]||status,cls:"sold"};if(d<=3)return{key:"0-3",label:d===0?"امروز":fa(d,0)+" روز",cls:"urgent"};if(d<=7)return{key:"4-7",label:fa(d,0)+" روز",cls:"warn"};return{key:"8+",label:fa(d,0)+" روز",cls:"safe"}}
-function active(b){const status=normalizedStatus(b?.status),d=daysLeft(b.expiry_date);return d!==null&&d>=0&&!["sold","cancelled","rejected"].includes(status)}
-function archived(b){const d=daysLeft(b.expiry_date);return d!==null&&d<0&&!isDeletedBatch(b)}
+function risk(b){const d=daysLeft(b.expiry_date);if(d===null)return{key:"unknown",label:"نامشخص",cls:"sold"};if(d<0)return{key:"archive",label:"آرشیو",cls:"expired"};if(["sold","cancelled","rejected"].includes(b.status))return{key:"sold",label:STATUS_LABEL[b.status]||b.status,cls:"sold"};if(d<=3)return{key:"0-3",label:d===0?"امروز":fa(d,0)+" روز",cls:"urgent"};if(d<=7)return{key:"4-7",label:fa(d,0)+" روز",cls:"warn"};return{key:"8+",label:fa(d,0)+" روز",cls:"safe"}}
+function active(b){const d=daysLeft(b.expiry_date);return d!==null&&d>=0&&!["sold","cancelled","rejected"].includes(b.status)}
+function archived(b){const d=daysLeft(b.expiry_date);return d!==null&&d<0}
 function val(b){return(Number(b.quantity)||0)*(Number(b.unit_price)||0)}
 function live(state,text){$("liveDot").className="live-dot"+(state==="loading"?" loading":state==="error"?" error":"");$("liveText").textContent=text}
 function err(m){$("alert").textContent="خطا: "+m;$("alert").classList.add("show");live("error","اتصال با خطا مواجه شد")}
@@ -200,8 +197,8 @@ const OPERATIONAL_REGIONS=[
  "ری/سمنان","غرب تهران","اسلامشهر/ساوه","شرق تهران","شرق فارس","جنوب آذربایجان",
  "شرق خوزستان","غرب فارس","همدان","آذربایجان غربی","شرق گیلان","سیستان و بلوچستان"
 ];
-const STATUS_COLORS={red:"#ff3f52",amber:"#ff9d1c",green:"#64d36f",gray:"#4e5962"};
-const STATUS_LABELS={red:"بحرانی",amber:"نیازمند پیگیری",green:"پایدار",gray:"بدون ثبت"};
+const STATUS_COLORS={burgundy:"#7b1026",red:"#ff3f52",amber:"#ff9d1c",green:"#64d36f",gray:"#4e5962"};
+const STATUS_LABELS={burgundy:"فوق بحرانی",red:"بحرانی",amber:"نیازمند پیگیری",green:"پایدار",gray:"بدون ثبت"};
 function showToast(message){
  const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3000);
 }
@@ -210,13 +207,13 @@ function storeTotalsByRegion(){
  stores.forEach(s=>{const name=s.region||"نامشخص";map.set(name,(map.get(name)||0)+1);});
  return map;
 }
-function urgentStatus(urgentValue,activeValue=0){
- const urgent=Number(urgentValue)||0;
- const active=Number(activeValue)||0;
- if(active<=0)return "gray";            // فقط منطقه‌ای که هیچ ثبت فعال ندارد خاکستری است
- if(urgent>500000000)return "red";      // بیش از ۵۰ میلیون تومان در بازه ۰ تا ۳ روز
- if(urgent>=200000000)return "amber";   // ۲۰ تا ۵۰ میلیون تومان در بازه ۰ تا ۳ روز
- return "green";                        // ثبت فعال دارد و ارزش فوری آن کمتر از ۲۰ میلیون تومان است؛ حتی اگر فوری صفر باشد
+function urgentStatus(value){
+ const v=Number(value)||0;
+ if(v<=0)return "gray";
+ if(v>1000000000)return "burgundy";    // بیش از ۱۰۰ میلیون تومان
+ if(v>=500000000)return "red";         // ۵۰ تا ۱۰۰ میلیون تومان
+ if(v>=200000000)return "amber";       // ۲۰ تا ۵۰ میلیون تومان
+ return "green";                       // کمتر از ۲۰ میلیون تومان
 }
 function regionMetrics(activeRows){
  const totalStores=storeTotalsByRegion();
@@ -229,7 +226,7 @@ function regionMetrics(activeRows){
   if(dl!==null&&dl<=3)o.urgent+=x.rial;else if(dl!==null&&dl<=7)o.soon+=x.rial;else o.safe+=x.rial;
   const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at;}
  });
- map.forEach(o=>{o.storeCount=o.stores.size;o.productCount=o.products.size;o.participation=o.totalStores?o.storeCount/o.totalStores*100:0;o.status=urgentStatus(o.urgent,o.value);});
+ map.forEach(o=>{o.storeCount=o.stores.size;o.productCount=o.products.size;o.participation=o.totalStores?o.storeCount/o.totalStores*100:0;o.status=urgentStatus(o.urgent);});
  return map;
 }
 function latin(v){return String(v||"").toLowerCase().replace(/[^a-z]+/g," ").trim();}
@@ -273,7 +270,7 @@ function provincePlan(properties,metrics){
 }
 function provinceStatus(regions,metrics){
  if(!regions.length)return "gray";
- const order={gray:0,green:1,amber:2,red:3};
+ const order={gray:0,green:1,amber:2,red:3,burgundy:4};
  return regions.map(r=>metrics.get(r)?.status||"gray").sort((a,b)=>order[b]-order[a])[0]||"gray";
 }
 function combinedMetrics(regions,metrics){
@@ -345,7 +342,7 @@ async function downloadExecutiveReport(){
 function renderExecutiveReport(activeRows){
  const metrics=regionMetrics(activeRows),regions=[...metrics.values()];
  const totalValue=activeRows.reduce((s,x)=>s+x.rial,0),urgent=activeRows.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0),soon=activeRows.filter(x=>x.rk.key==="4-7").reduce((s,x)=>s+x.rial,0),qty=activeRows.reduce((s,x)=>s+(Number(x.quantity)||0),0),storesCount=new Set(activeRows.map(x=>String(x.store_id))).size;
- const red=regions.filter(x=>x.status==="red").length,amber=regions.filter(x=>x.status==="amber").length,green=regions.filter(x=>x.status==="green").length;
+ const burgundy=regions.filter(x=>x.status==="burgundy").length,red=regions.filter(x=>x.status==="red").length,amber=regions.filter(x=>x.status==="amber").length,green=regions.filter(x=>x.status==="green").length;
  const ranked=[...regions].filter(x=>x.value>0).sort((a,b)=>b.urgent-a.urgent||b.soon-a.soon||b.value-a.value),top=ranked[0]||null;
  const participationRank=[...regions].filter(x=>x.totalStores>0).sort((a,b)=>b.participation-a.participation||b.storeCount-a.storeCount);
  const bestParticipation=participationRank[0]||null,lowestParticipation=participationRank[participationRank.length-1]||null;
@@ -355,7 +352,7 @@ function renderExecutiveReport(activeRows){
  const topFive=ranked.slice(0,5);
  const provinceMap=(typeof Highcharts!=="undefined"&&Highcharts.maps&&Highcharts.maps["countries/ir/ir-all"])?Highcharts.geojson(Highcharts.maps["countries/ir/ir-all"]):[];
  const provinceStatuses=provinceMap.map(p=>{const plan=provincePlan(p.properties||{},metrics);return provinceStatus(plan.regions,metrics);});
- const provinceCounts={red:provinceStatuses.filter(x=>x==="red").length,amber:provinceStatuses.filter(x=>x==="amber").length,green:provinceStatuses.filter(x=>x==="green").length,gray:provinceStatuses.filter(x=>x==="gray").length};
+ const provinceCounts={burgundy:provinceStatuses.filter(x=>x==="burgundy").length,red:provinceStatuses.filter(x=>x==="red").length,amber:provinceStatuses.filter(x=>x==="amber").length,green:provinceStatuses.filter(x=>x==="green").length,gray:provinceStatuses.filter(x=>x==="gray").length};
  $("execUpdatedAt").textContent=dt(new Date().toISOString());
  $("execKpis").innerHTML=`
   <div class="exec-kpi blue"><div class="icon">▦</div><div class="label">فروشگاه‌های بالای ۵ میلیون تومان</div><div class="value">${fa(highRiskStores.length,0)} فروشگاه</div><div class="meta">ارزش ۰ تا ۳ روز هر فروشگاه ≥ ۵ میلیون تومان</div></div>
@@ -370,7 +367,7 @@ function renderExecutiveReport(activeRows){
   <div class="summary-participation"><div class="summary-analysis blue"><div class="summary-analysis-head"><span class="summary-analysis-label">بیشترین مشارکت</span><b class="summary-analysis-value">${bestParticipation?fa(bestParticipation.participation,1)+"٪":"—"}</b></div><div class="summary-analysis-meta">${bestParticipation?esc(bestParticipation.name)+" · "+fa(bestParticipation.storeCount,0)+" از "+fa(bestParticipation.totalStores,0)+" فروشگاه":"بدون داده"}</div><div class="summary-meter"><span style="width:${bestParticipation?.participation||0}%"></span></div></div><div class="summary-analysis amber"><div class="summary-analysis-head"><span class="summary-analysis-label">کمترین مشارکت</span><b class="summary-analysis-value">${lowestParticipation?fa(lowestParticipation.participation,1)+"٪":"—"}</b></div><div class="summary-analysis-meta">${lowestParticipation?esc(lowestParticipation.name)+" · "+fa(lowestParticipation.storeCount,0)+" از "+fa(lowestParticipation.totalStores,0)+" فروشگاه":"بدون داده"}</div><div class="summary-meter"><span style="width:${lowestParticipation?.participation||0}%"></span></div></div></div>
   <div class="summary-analysis blue"><div class="summary-analysis-head"><span class="summary-analysis-label">دامنه درگیری فروشگاه‌ها</span><b class="summary-analysis-value">${fa(urgentStores,0)} فروشگاه</b></div><div class="summary-analysis-meta">${fa(urgentStoreShare,1)}٪ از فروشگاه‌های دارای ثبت فعال، کالای ۰ تا ۳ روز دارند.</div><div class="summary-meter"><span style="width:${Math.min(100,urgentStoreShare)}%"></span></div></div>
   <div class="summary-analysis amber"><div class="summary-analysis-head"><span class="summary-analysis-label">فرصت اقدام ۴ تا ۷ روز</span><b class="summary-analysis-value">${nhFormatRial(soon)}</b></div><div class="summary-analysis-meta">ارزش کالاهایی که هنوز پیش از ورود به بازه فوری امکان پیگیری دارند.</div><div class="summary-meter"><span style="width:${totalValue?Math.min(100,soon/totalValue*100):0}%"></span></div></div>
-  <div class="summary-status"><div class="summary-status-title">ترکیب وضعیت استان‌های ایران</div><div class="summary-status-grid"><div class="summary-status-item red"><b>${fa(provinceCounts.red,0)}</b><small>بحرانی</small></div><div class="summary-status-item amber"><b>${fa(provinceCounts.amber,0)}</b><small>پیگیری</small></div><div class="summary-status-item green"><b>${fa(provinceCounts.green,0)}</b><small>پایدار</small></div></div></div>`;
+  <div class="summary-status"><div class="summary-status-title">ترکیب وضعیت استان‌های ایران</div><div class="summary-status-grid"><div class="summary-status-item burgundy"><b>${fa(provinceCounts.burgundy,0)}</b><small>فوق بحرانی</small></div><div class="summary-status-item red"><b>${fa(provinceCounts.red,0)}</b><small>بحرانی</small></div><div class="summary-status-item amber"><b>${fa(provinceCounts.amber,0)}</b><small>پیگیری</small></div><div class="summary-status-item green"><b>${fa(provinceCounts.green,0)}</b><small>پایدار</small></div></div></div>`;
  renderIranMap(metrics);
 }
 
@@ -379,7 +376,7 @@ async function loadStores(){
  const d=await nhGql(q,{},session.token);stores=d.stores||[];storeMap=new Map(stores.map(s=>[String(s.id),s]));
 }
 async function loadBatches(){
- const q=`query($limit:Int!,$offset:Int!){expiry_batches(where:{status:{_neq:"cancelled"}},order_by:[{created_at:desc},{id:desc}],limit:$limit,offset:$offset){id product_id store_id product_name product_group quantity unit unit_price expiry_date status created_at}}`;
+ const q=`query($limit:Int!,$offset:Int!){expiry_batches(order_by:[{created_at:desc},{id:desc}],limit:$limit,offset:$offset){id product_id store_id product_name product_group quantity unit unit_price expiry_date status created_at}}`;
  const m=new Map();let off=0;
  while(off<MAX){const d=await nhGql(q,{limit:PAGE,offset:off},session.token),p=d.expiry_batches||[];p.forEach(x=>m.set(String(x.id),x));if(p.length<PAGE)return[...m.values()];off+=p.length}
  throw new Error("تعداد رکوردها از سقف ایمن عبور کرده است.");
@@ -411,7 +408,7 @@ function fillStores(){
  sf.innerHTML='<option value="">همه فروشگاه‌ها</option>'+arr.map(s=>`<option value="${s.id}">${esc(s.name)}${s.store_code?" · "+esc(s.store_code):""}</option>`).join("");
  if(arr.some(s=>String(s.id)===old))sf.value=old;
 }
-function enriched(){return batches.filter(b=>!isDeletedBatch(b)).map(b=>{const s=storeMap.get(String(b.store_id))||{},p=productMap.get(String(b.product_id))||{};return{...b,status:normalizedStatus(b.status),store:s,product:p,region:s.region||"نامشخص",pname:b.product_name||p.name||"نامشخص",pgroup:b.product_group||p.product_group||"نامشخص",article:p.article||"",barcode:p.barcode||"",rial:val(b),rk:risk(b)}})}
+function enriched(){return batches.map(b=>{const s=storeMap.get(String(b.store_id))||{},p=productMap.get(String(b.product_id))||{};return{...b,store:s,product:p,region:s.region||"نامشخص",pname:b.product_name||p.name||"نامشخص",pgroup:b.product_group||p.product_group||"نامشخص",article:p.article||"",barcode:p.barcode||"",rial:val(b),rk:risk(b)}})}
 function rows(){
  const r=$("regionFilter").value,s=$("storeFilter").value,g=$("groupFilter").value,d=$("daysFilter").value,t=$("search").value.trim().toLocaleLowerCase("fa");
  return enriched().filter(x=>{if(!active(x))return false;if(r&&x.region!==r)return false;if(s&&String(x.store_id)!==s)return false;if(g&&x.pgroup!==g)return false;if(d&&x.rk.key!==d)return false;if(t){const h=[x.pname,x.pgroup,x.article,x.barcode,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa");if(!h.includes(t))return false}return true});
