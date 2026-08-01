@@ -43,6 +43,12 @@ a{color:inherit}
 
 /* Existing dashboard sections */
 .stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0 0 15px}.stat{min-height:118px;padding:14px;border-radius:18px;border:1px solid #273039;background:linear-gradient(145deg,#11171c,#090d10);box-shadow:0 12px 30px rgba(0,0,0,.23)}.stat.green{background:linear-gradient(145deg,rgba(30,116,48,.35),#0a0f0c);color:#8be093}.stat.red{background:linear-gradient(145deg,rgba(165,16,36,.38),#10080b);color:#ff7c8b}.stat.amber{background:linear-gradient(145deg,rgba(168,91,0,.35),#100c06);color:#ffbd55}.stat.blue{background:linear-gradient(145deg,rgba(24,93,145,.35),#071019);color:#75c2ff}.stat-l{font-size:10px;font-weight:800;opacity:.78}.stat-v{font-size:clamp(18px,1.9vw,26px);font-weight:900;margin-top:13px;line-height:1.25;overflow-wrap:anywhere}.stat-s{font-size:9px;opacity:.7;margin-top:6px}.card-admin{background:linear-gradient(145deg,#0f1519,#080c0f);border:1px solid #283139;border-radius:21px;padding:16px;margin-bottom:15px;box-shadow:0 14px 34px rgba(0,0,0,.25)}.card-admin h2{font-size:15px;margin:0;font-weight:900}.desc{font-size:10.5px;color:var(--muted);margin:5px 0 13px}.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr auto;gap:9px;align-items:end}.field label{display:block;font-size:9.5px;color:#8f9aa2;font-weight:800;margin-bottom:5px}.field input,.field select{width:100%;height:43px;border:1px solid #303a42;border-radius:12px;background:#0a0f12;color:#eef3f6;padding:0 11px;outline:none}.field select option{background:#0b1013;color:#fff}.field input:focus,.field select:focus{border-color:#60717e;box-shadow:0 0 0 3px rgba(91,116,133,.12)}.clear{height:43px;border:1px solid #303a42;border-radius:12px;background:#151c21;color:#cbd4da;padding:0 15px;font-weight:800;cursor:pointer}.filter-foot{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:9.5px;color:var(--muted)}.grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:15px}.region-list{display:grid;gap:8px}.region-row{display:grid;grid-template-columns:1.25fr repeat(4,.7fr);gap:8px;align-items:center;border:1px solid #283139;border-radius:14px;padding:11px;background:#0b1013}.region-row strong{display:block;font-size:11px}.region-row small{font-size:8.5px;color:var(--muted)}.region-title{font-weight:900;font-size:11px}.table-shell{overflow:auto;border:1px solid #283139;border-radius:16px;background:#090d10}.admin-table{width:100%;min-width:950px;border-collapse:collapse}.admin-table th{position:sticky;top:0;z-index:1;text-align:right;padding:11px 10px;background:#141a1f;color:#9ca7ae;font-size:9.5px;white-space:nowrap;border-bottom:1px solid #2c353c}.admin-table td{padding:11px 10px;font-size:10.5px;border-bottom:1px solid #20272c;vertical-align:middle}.admin-table tbody tr:hover{background:#10161a}.title{font-weight:800}.sub{font-size:8.5px;color:var(--muted);margin-top:2px}.num{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.chip{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:8.5px;font-weight:900;white-space:nowrap}.expired{background:rgba(255,63,82,.13);color:#ff7585}.urgent{background:rgba(255,63,82,.13);color:#ff7585}.warn{background:rgba(255,157,28,.13);color:#ffb94c}.safe{background:rgba(100,211,111,.12);color:#7cdd84}.sold{background:#20262b;color:#9ca6ad}.expand{cursor:pointer}.detail td{padding:0;background:#070a0c}.detail-box{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px}.store-pill{padding:6px 9px;border:1px solid #2b343b;border-radius:10px;background:#0d1216;font-size:9px}.empty{padding:34px 15px;text-align:center;color:var(--muted);font-size:11px}
+
+/* Province drill-down */
+.province-modal{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(9px)}
+.province-modal.show{display:flex}.province-modal-card{width:min(760px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid #34414a;border-radius:24px;background:linear-gradient(145deg,#12191e,#070b0e);box-shadow:0 36px 100px rgba(0,0,0,.7);padding:18px}.province-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.province-modal-head h3{margin:0;font-size:22px;font-weight:900}.province-modal-sub{margin-top:5px;color:#89959e;font-size:11px;line-height:1.7}.province-modal-close{width:40px;height:40px;border:1px solid #34414a;border-radius:13px;background:#11181d;color:#fff;font-size:22px;cursor:pointer}.province-status-banner{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:14px 0;padding:13px 14px;border:1px solid #2d3740;border-radius:16px;background:#0b1115}.province-status-banner strong{font-size:14px}.province-status-banner span{font-size:10px;color:#89959e}.province-region-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.province-region-card{border:1px solid #2c3740;border-radius:17px;background:linear-gradient(145deg,#11181d,#090d10);padding:13px;position:relative;overflow:hidden}.province-region-card::after{content:"";position:absolute;width:100px;height:100px;border-radius:50%;left:-45px;bottom:-55px;opacity:.12;filter:blur(10px)}.province-region-card.red::after{background:var(--red)}.province-region-card.amber::after{background:var(--amber)}.province-region-card.green::after{background:var(--green)}.province-region-card.gray::after{background:#8d99a3}.province-region-name{font-size:15px;font-weight:900}.province-region-status{display:inline-flex;margin-top:7px;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}.province-region-card.red .province-region-status{background:rgba(255,63,82,.12);color:#ff7080}.province-region-card.amber .province-region-status{background:rgba(255,157,28,.12);color:#ffb24b}.province-region-card.green .province-region-status{background:rgba(100,211,111,.12);color:#7bdd84}.province-region-card.gray .province-region-status{background:#20282e;color:#9ca7af}.province-region-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.province-region-metric{padding:9px;border-radius:11px;background:#0a0f12;border:1px solid #242e35}.province-region-metric small{display:block;color:#7f8b94;font-size:8.5px}.province-region-metric b{display:block;margin-top:4px;font-size:11px}.province-region-action{width:100%;margin-top:11px;height:38px;border:1px solid #3a4650;border-radius:11px;background:#141c21;color:#edf2f5;font-weight:900;font-size:10px;cursor:pointer}.province-region-action:hover{border-color:#6a7d89;background:#192229}.summary-participation{display:grid;grid-template-columns:1fr 1fr;gap:8px}.summary-participation .summary-analysis{min-height:96px}
+@media(max-width:700px){.province-region-grid{grid-template-columns:1fr}.province-modal-head h3{font-size:18px}}
+
 .toast{position:fixed;left:18px;bottom:18px;z-index:120;max-width:360px;padding:12px 14px;border:1px solid #35414a;border-radius:14px;background:#10161b;color:#edf2f5;box-shadow:0 20px 50px rgba(0,0,0,.45);font-size:10.5px;opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}
 .exec-report.report-exporting .exec-actions{visibility:hidden}.exec-report.report-exporting .highcharts-tooltip{display:none!important}.exec-report.report-exporting *{text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased}body.capture-mode{overflow:auto;background:#050708}body.capture-mode .topbar,body.capture-mode .admin-head,body.capture-mode .admin-wrap>*:not(#executiveReport){display:none!important}body.capture-mode .admin-wrap{width:100%;padding:0}body.capture-mode #executiveReport{border-radius:0;margin:0;min-height:100vh}body.capture-mode .exec-report{box-shadow:none}
 @media(max-width:1400px){.exec-main{grid-template-columns:280px minmax(0,1fr) 260px}.exec-kpis{grid-template-columns:repeat(5,minmax(170px,1fr));overflow-x:auto;padding-bottom:4px}}
@@ -91,8 +97,8 @@ a{color:inherit}
       </aside>
       <section class="map-panel">
         <div class="map-head">
-          <div class="map-title-wrap"><div class="map-title">نقشه زنده وضعیت مناطق</div><small>رنگ هر استان یا نیمه استان از وضعیت منطقه عملیاتی آن دریافت می‌شود.</small></div>
-          <div class="map-legend"><span class="legend-item"><i class="legend-dot red"></i>بحرانی</span><span class="legend-item"><i class="legend-dot amber"></i>نیازمند پیگیری</span><span class="legend-item"><i class="legend-dot green"></i>پایدار</span><span class="legend-item"><i class="legend-dot gray"></i>بدون ثبت</span></div>
+          <div class="map-title-wrap"><div class="map-title">نقشه زنده وضعیت استان‌ها</div><small>نام و مرز هر استان واقعی است؛ رنگ استان بر اساس پرریسک‌ترین منطقه عملیاتی مرتبط تعیین می‌شود.</small></div>
+          <div class="map-legend"><span class="legend-item"><i class="legend-dot red"></i>بیش از ۵۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot amber"></i>۲۰ تا ۵۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot green"></i>کمتر از ۲۰ میلیون تومان</span><span class="legend-item"><i class="legend-dot gray"></i>بدون ثبت</span></div>
         </div>
         <div id="iranMap"><div class="map-fallback">در حال آماده‌سازی نقشه دقیق استان‌های ایران…</div></div>
       </section>
@@ -101,7 +107,7 @@ a{color:inherit}
         <div class="summary-stack" id="executiveSummary"></div>
       </aside>
     </div>
-    <div class="exec-foot"><span><strong>مبنای وضعیت:</strong> قرمز = دارای کالای ۰ تا ۳ روز، نارنجی = فقط ۴ تا ۷ روز، سبز = فقط بیش از ۷ روز، خاکستری = بدون ثبت فعال</span><span class="map-source">Map geometry: Highcharts Map Collection / Natural Earth</span></div>
+    <div class="exec-foot"><span><strong>مبنای رنگ استان:</strong> مجموع ارزش کالاهای ۰ تا ۳ روز در پرریسک‌ترین منطقه مرتبط؛ قرمز بالای ۵۰ میلیون تومان، زرد ۲۰ تا ۵۰ میلیون تومان، سبز کمتر از ۲۰ میلیون تومان و خاکستری بدون ثبت فعال</span><span class="map-source">Map geometry: Highcharts Map Collection / Natural Earth</span></div>
   </section>
 
   <section class="card-admin" id="filtersCard">
@@ -137,6 +143,15 @@ a{color:inherit}
   </section>
 </main>
 <div class="toast" id="toast"></div>
+<div class="province-modal" id="provinceModal" aria-hidden="true">
+  <div class="province-modal-card" role="dialog" aria-modal="true" aria-labelledby="provinceModalTitle">
+    <div class="province-modal-head">
+      <div><h3 id="provinceModalTitle">جزئیات استان</h3><div class="province-modal-sub" id="provinceModalSub"></div></div>
+      <button class="province-modal-close" id="provinceModalClose" type="button" aria-label="بستن">×</button>
+    </div>
+    <div id="provinceModalBody"></div>
+  </div>
+</div>
 
 <script src="https://code.highcharts.com/maps/highmaps.js"></script>
 <script src="https://code.highcharts.com/mapdata/countries/ir/ir-all.js"></script>
@@ -187,169 +202,114 @@ const STATUS_LABELS={red:"بحرانی",amber:"نیازمند پیگیری",gree
 function showToast(message){
  const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3000);
 }
+function storeTotalsByRegion(){
+ const map=new Map(OPERATIONAL_REGIONS.map(name=>[name,0]));
+ stores.forEach(s=>{const name=s.region||"نامشخص";map.set(name,(map.get(name)||0)+1);});
+ return map;
+}
+function urgentStatus(value){
+ const v=Number(value)||0;
+ if(v<=0)return "gray";
+ if(v>500000000)return "red";          // بیش از ۵۰ میلیون تومان
+ if(v>=200000000)return "amber";       // ۲۰ تا ۵۰ میلیون تومان
+ return "green";                       // کمتر از ۲۰ میلیون تومان؛ بازه ۱۰ تا ۲۰ نیز برای جلوگیری از حالت بدون رنگ سبز است
+}
 function regionMetrics(activeRows){
- const map=new Map(OPERATIONAL_REGIONS.map(name=>[name,{name,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,safe:0,last:null,lastMs:0}]));
+ const totalStores=storeTotalsByRegion();
+ const map=new Map(OPERATIONAL_REGIONS.map(name=>[name,{name,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,safe:0,last:null,lastMs:0,totalStores:totalStores.get(name)||0}]));
  activeRows.forEach(x=>{
   const name=x.region||"نامشخص";
-  if(!map.has(name))map.set(name,{name,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,safe:0,last:null,lastMs:0});
+  if(!map.has(name))map.set(name,{name,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,safe:0,last:null,lastMs:0,totalStores:totalStores.get(name)||0});
   const o=map.get(name),q=Number(x.quantity)||0,dl=daysLeft(x.expiry_date);
   o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.qty+=q;o.value+=x.rial;
   if(dl!==null&&dl<=3)o.urgent+=x.rial;else if(dl!==null&&dl<=7)o.soon+=x.rial;else o.safe+=x.rial;
   const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at;}
  });
- map.forEach(o=>{o.storeCount=o.stores.size;o.productCount=o.products.size;o.status=o.urgent>0?"red":o.soon>0?"amber":o.value>0?"green":"gray";});
+ map.forEach(o=>{o.storeCount=o.stores.size;o.productCount=o.products.size;o.participation=o.totalStores?o.storeCount/o.totalStores*100:0;o.status=urgentStatus(o.urgent);});
  return map;
 }
 function latin(v){return String(v||"").toLowerCase().replace(/[^a-z]+/g," ").trim();}
 function hasAll(n,...words){return words.every(w=>n.includes(w));}
 function provincePlan(properties,metrics){
  const n=latin(Object.values(properties||{}).join(" "));
- const one=(region,label=region)=>({regions:[region],label,colors:[STATUS_COLORS[metrics.get(region)?.status||"gray"]],direction:"x"});
- const split=(a,b,label,direction="x",ratio=.5)=>({regions:[a,b],label,colors:[STATUS_COLORS[metrics.get(a)?.status||"gray"],STATUS_COLORS[metrics.get(b)?.status||"gray"]],direction,ratio});
- if(n.includes("kermanshah"))return one("کرمانشاه");
- if(n.includes("kurdistan"))return one("کرمانشاه","کرمانشاه");
- if(n.includes("east azar")||n.includes("east azer")||hasAll(n,"azarbaijan","east"))return one("آذربایجان شرقی");
- if(n.includes("west azar")||n.includes("western azer")||hasAll(n,"azarbaijan","west"))return split("آذربایجان غربی","جنوب آذربایجان","آذربایجان غربی / جنوب آذربایجان","y",.58);
- if(n.includes("ardabil"))return {regions:[],label:"اردبیل",colors:[STATUS_COLORS.gray],direction:"x"};
- if(n.includes("isfahan")||n.includes("esfahan"))return split("غرب اصفهان","شرق اصفهان","غرب / شرق اصفهان","x",.5);
- if(n.includes("chahar")||n.includes("bakhtiari"))return one("غرب اصفهان","غرب اصفهان");
- if(n.includes("kerman")&&!n.includes("kermanshah"))return split("کرمان","هرمزگان و جنوب کرمان","کرمان / جنوب کرمان","y",.62);
- if(n.includes("hormozgan"))return one("هرمزگان و جنوب کرمان","هرمزگان و جنوب کرمان");
- if(n.includes("gilan"))return split("غرب گیلان","شرق گیلان","غرب / شرق گیلان","x",.5);
- if(n.includes("mazandaran")||n.includes("golestan"))return one("مازندران");
- if(n.includes("khuzestan"))return split("غرب خوزستان","شرق خوزستان","غرب / شرق خوزستان","x",.5);
- if(n.includes("ilam")||n.includes("lorestan"))return one("ایلام/لرستان");
- if(n.includes("fars"))return split("غرب فارس","شرق فارس","غرب فارس / شرق فارس","x",.48);
- if(n.includes("bushehr"))return one("غرب فارس","غرب فارس");
- if(n.includes("hamadan")||n.includes("hamedan"))return one("همدان");
- if(n.includes("markazi"))return one("اسلامشهر/ساوه","اسلامشهر/ساوه");
- if(n.includes("tehran"))return split("غرب تهران","شرق تهران","غرب / شرق تهران","x",.5);
- if(n.includes("semnan")||n.includes("qom"))return one("ری/سمنان");
- if(n.includes("alborz")||n.includes("qazvin")||n.includes("zanjan"))return one("البرز/الوند");
- if(n.includes("khorasan"))return one("خراسان");
- if(n.includes("sistan")||n.includes("baluch"))return one("سیستان و بلوچستان");
- if(n.includes("yazd"))return {regions:[],label:"یزد",colors:[STATUS_COLORS.gray],direction:"x"};
- if(n.includes("kohgiluyeh")||n.includes("buyer")||n.includes("boyer"))return {regions:[],label:"کهگیلویه و بویراحمد",colors:[STATUS_COLORS.gray],direction:"x"};
- return {regions:[],label:properties?.name||"",colors:[STATUS_COLORS.gray],direction:"x"};
+ const plan=(label,regions=[])=>({label,regions});
+ if(n.includes("kermanshah"))return plan("کرمانشاه",["کرمانشاه"]);
+ if(n.includes("kurdistan"))return plan("کردستان",["کرمانشاه"]);
+ if(n.includes("east azar")||n.includes("east azer")||hasAll(n,"azarbaijan","east"))return plan("آذربایجان شرقی",["آذربایجان شرقی"]);
+ if(n.includes("west azar")||n.includes("western azer")||hasAll(n,"azarbaijan","west"))return plan("آذربایجان غربی",["آذربایجان غربی","جنوب آذربایجان"]);
+ if(n.includes("ardabil"))return plan("اردبیل",[]);
+ if(n.includes("isfahan")||n.includes("esfahan"))return plan("اصفهان",["غرب اصفهان","شرق اصفهان"]);
+ if(n.includes("chahar")||n.includes("bakhtiari"))return plan("چهارمحال و بختیاری",["غرب اصفهان"]);
+ if(n.includes("kerman")&&!n.includes("kermanshah"))return plan("کرمان",["کرمان","هرمزگان و جنوب کرمان"]);
+ if(n.includes("hormozgan"))return plan("هرمزگان",["هرمزگان و جنوب کرمان"]);
+ if(n.includes("gilan"))return plan("گیلان",["غرب گیلان","شرق گیلان"]);
+ if(n.includes("mazandaran"))return plan("مازندران",["مازندران"]);
+ if(n.includes("golestan"))return plan("گلستان",["مازندران"]);
+ if(n.includes("khuzestan"))return plan("خوزستان",["غرب خوزستان","شرق خوزستان"]);
+ if(n.includes("ilam"))return plan("ایلام",["ایلام/لرستان"]);
+ if(n.includes("lorestan"))return plan("لرستان",["ایلام/لرستان"]);
+ if(n.includes("fars"))return plan("فارس",["غرب فارس","شرق فارس"]);
+ if(n.includes("bushehr"))return plan("بوشهر",["غرب فارس"]);
+ if(n.includes("kohgiluyeh")||n.includes("buyer")||n.includes("boyer"))return plan("کهگیلویه و بویراحمد",["غرب فارس"]);
+ if(n.includes("hamadan")||n.includes("hamedan"))return plan("همدان",["همدان"]);
+ if(n.includes("markazi"))return plan("مرکزی",["اسلامشهر/ساوه"]);
+ if(n.includes("tehran"))return plan("تهران",["غرب تهران","شرق تهران","اسلامشهر/ساوه","ری/سمنان"]);
+ if(n.includes("semnan"))return plan("سمنان",["ری/سمنان"]);
+ if(n.includes("qom"))return plan("قم",["ری/سمنان"]);
+ if(n.includes("alborz"))return plan("البرز",["البرز/الوند"]);
+ if(n.includes("qazvin"))return plan("قزوین",["البرز/الوند"]);
+ if(n.includes("zanjan"))return plan("زنجان",["البرز/الوند"]);
+ if(n.includes("razavi")||hasAll(n,"khorasan","razavi"))return plan("خراسان رضوی",["خراسان"]);
+ if(n.includes("north khorasan")||hasAll(n,"khorasan","north"))return plan("خراسان شمالی",["خراسان"]);
+ if(n.includes("south khorasan")||hasAll(n,"khorasan","south"))return plan("خراسان جنوبی",["خراسان"]);
+ if(n.includes("khorasan"))return plan("خراسان",["خراسان"]);
+ if(n.includes("sistan")||n.includes("baluch"))return plan("سیستان و بلوچستان",["سیستان و بلوچستان"]);
+ if(n.includes("yazd"))return plan("یزد",[]);
+ return plan(properties?.name||"",[]);
 }
-function gradientColor(plan){
- if(plan.colors.length===1)return plan.colors[0];
- const r=Math.max(.2,Math.min(.8,plan.ratio||.5)),a=plan.colors[0],b=plan.colors[1];
- return {linearGradient:plan.direction==="y"?{x1:0,y1:0,x2:0,y2:1}:{x1:0,y1:0,x2:1,y2:0},stops:[[0,a],[r-.012,a],[r+.012,b],[1,b]]};
+function provinceStatus(regions,metrics){
+ if(!regions.length)return "gray";
+ const order={gray:0,green:1,amber:2,red:3};
+ return regions.map(r=>metrics.get(r)?.status||"gray").sort((a,b)=>order[b]-order[a])[0]||"gray";
 }
 function combinedMetrics(regions,metrics){
  const out={value:0,urgent:0,soon:0,safe:0,qty:0,stores:new Set(),products:new Set()};
  regions.forEach(name=>{const o=metrics.get(name);if(!o)return;out.value+=o.value;out.urgent+=o.urgent;out.soon+=o.soon;out.safe+=o.safe;out.qty+=o.qty;o.stores.forEach(v=>out.stores.add(v));o.products.forEach(v=>out.products.add(v));});
  out.storeCount=out.stores.size;out.productCount=out.products.size;return{value:out.value,urgent:out.urgent,soon:out.soon,safe:out.safe,qty:out.qty,storeCount:out.storeCount,productCount:out.productCount};
 }
+function applyRegionFilter(region){
+ const option=[...$("regionFilter").options].find(x=>x.value===region);
+ if(!option){showToast("منطقه «"+region+"» در فیلترهای داشبورد پیدا نشد.");return;}
+ $("regionFilter").value=region;fillStores();render();closeProvinceModal();showToast("فیلتر داشبورد روی «"+region+"» قرار گرفت.");document.getElementById("filtersCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function closeProvinceModal(){$("provinceModal").classList.remove("show");$("provinceModal").setAttribute("aria-hidden","true");}
+function openProvinceModal(province,regions,metrics,status,combined){
+ $("provinceModalTitle").textContent="استان "+province;
+ $("provinceModalSub").textContent=regions.length>1?"این استان با چند منطقه عملیاتی مرتبط است؛ وضعیت هر منطقه به‌صورت مستقل نمایش داده شده است.":"جزئیات منطقه عملیاتی مرتبط با این استان";
+ const cards=regions.map(region=>{const o=metrics.get(region)||{name:region,urgent:0,soon:0,value:0,storeCount:0,totalStores:0,participation:0,status:"gray"};return `<div class="province-region-card ${o.status}"><div class="province-region-name">${esc(region)}</div><span class="province-region-status">${esc(STATUS_LABELS[o.status])}</span><div class="province-region-metrics"><div class="province-region-metric"><small>۰ تا ۳ روز</small><b>${nhFormatRial(o.urgent)}</b></div><div class="province-region-metric"><small>کل ارزش فعال</small><b>${nhFormatRial(o.value)}</b></div><div class="province-region-metric"><small>مشارکت فروشگاه‌ها</small><b>${fa(o.participation,1)}٪</b></div><div class="province-region-metric"><small>فروشگاه ثبت‌کننده</small><b>${fa(o.storeCount,0)} از ${fa(o.totalStores,0)}</b></div></div><button type="button" class="province-region-action" data-region-select="${esc(region)}">نمایش دیتای این منطقه</button></div>`}).join("");
+ $("provinceModalBody").innerHTML=`<div class="province-status-banner"><div><strong>وضعیت رنگی استان: ${esc(STATUS_LABELS[status])}</strong><span>مبنای رنگ، پرریسک‌ترین منطقه عملیاتی مرتبط با استان است.</span></div><b>${nhFormatRial(combined.urgent)}</b></div><div class="province-region-grid">${cards}</div>`;
+ $("provinceModal").classList.add("show");$("provinceModal").setAttribute("aria-hidden","false");
+ $("provinceModalBody").querySelectorAll("[data-region-select]").forEach(btn=>btn.onclick=()=>applyRegionFilter(btn.getAttribute("data-region-select")));
+}
+$("provinceModalClose").onclick=closeProvinceModal;
+$("provinceModal").onclick=e=>{if(e.target===$("provinceModal"))closeProvinceModal();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProvinceModal();});
 function renderIranMap(metrics){
  const host=$("iranMap");
  if(typeof Highcharts==="undefined"||!Highcharts.maps||!Highcharts.maps["countries/ir/ir-all"]){host.innerHTML='<div class="map-fallback">نقشه استان‌های ایران بارگذاری نشد.<br>اتصال اینترنت یا دسترسی به CDN را بررسی کنید.</div>';return;}
  if(iranChart){try{iranChart.destroy()}catch(_e){}iranChart=null;}
  const mapData=Highcharts.maps["countries/ir/ir-all"];
  const points=Highcharts.geojson(mapData).map(p=>{
-  const props=p.properties||{},plan=provincePlan(props,metrics),combined=combinedMetrics(plan.regions,metrics);
-  return {"hc-key":props["hc-key"],name:props.name||p.name,color:gradientColor(plan),custom:{...combined,regions:plan.regions,label:plan.label,statuses:plan.regions.map(r=>STATUS_LABELS[metrics.get(r)?.status||"gray"]),province:props.name||p.name}};
+  const props=p.properties||{},plan=provincePlan(props,metrics),combined=combinedMetrics(plan.regions,metrics),status=provinceStatus(plan.regions,metrics);
+  return {"hc-key":props["hc-key"],name:plan.label||props.name||p.name,color:STATUS_COLORS[status],custom:{...combined,regions:plan.regions,label:plan.label,status,province:plan.label||props.name||p.name}};
  });
  iranChart=Highcharts.mapChart("iranMap",{
-  chart:{
-   map:mapData,
-   backgroundColor:"transparent",
-   spacing:[56,6,8,6],
-   animation:false,
-   style:{fontFamily:"Vazirmatn,Tahoma,sans-serif"},
-   events:{
-    render:function(){
-     const c=this;
-     if(c.seaLabels)c.seaLabels.forEach(x=>x.destroy());
-     c.seaLabels=[];
-     const labels=[
-      ["دریای خزر",c.plotLeft+c.plotWidth*.53,c.plotTop+20],
-      ["خلیج فارس",c.plotLeft+c.plotWidth*.33,c.plotTop+c.plotHeight*.91],
-      ["دریای عمان",c.plotLeft+c.plotWidth*.68,c.plotTop+c.plotHeight*.94]
-     ];
-     labels.forEach(([t,x,y])=>c.seaLabels.push(
-      c.renderer.text(t,x,y)
-       .css({color:"#2f82bd",fontSize:"12px",fontWeight:"800"})
-       .attr({zIndex:1})
-       .add()
-     ));
-    }
-   }
-  },
-  title:{text:null},
-  credits:{enabled:false},
-  legend:{enabled:false},
-  mapNavigation:{
-   enabled:true,
-   buttonOptions:{
-    verticalAlign:"bottom",
-    theme:{
-     fill:"#111820",stroke:"#33404a",r:6,
-     style:{color:"#fff"},
-     states:{hover:{fill:"#1b252c"},select:{fill:"#1b252c"}}
-    }
-   }
-  },
-  tooltip:{
-   useHTML:true,
-   backgroundColor:"rgba(7,10,12,.96)",
-   borderColor:"#3b4650",
-   borderRadius:12,
-   shadow:true,
-   style:{color:"#fff",fontFamily:"Vazirmatn"},
-   formatter:function(){
-    const c=this.point.custom||{},regions=c.regions||[];
-    if(!regions.length){
-     return `<div style="min-width:170px"><b>${esc(c.label||this.point.name)}</b><div style="color:#7f8b94;margin-top:6px">برای این استان منطقه عملیاتی در فایل تخصیص داده نشده است.</div></div>`;
-    }
-    return `<div style="min-width:210px"><b>${esc(c.label)}</b><div style="color:#9aa6af;margin:5px 0">${regions.map((r,i)=>esc(r)+" · "+esc(c.statuses[i]||"")).join("<br>")}</div><div>ارزش فعال: <b>${nhFormatRial(c.value)}</b></div><div>۰ تا ۳ روز: <b style="color:#ff6374">${nhFormatRial(c.urgent)}</b></div><div>۴ تا ۷ روز: <b style="color:#ffb047">${nhFormatRial(c.soon)}</b></div><div style="color:#81909a;margin-top:5px">${fa(c.storeCount,0)} فروشگاه · ${fa(c.qty)} واحد</div></div>`;
-   }
-  },
-  plotOptions:{
-   series:{
-    animation:false,
-    states:{hover:{brightness:.18,borderColor:"#ffffff",borderWidth:2.2}},
-    point:{
-     events:{
-      click:function(){
-       const regs=this.custom?.regions||[];
-       const option=[...$("regionFilter").options].find(x=>x.value===regs[0]);
-       if(regs.length===1&&option){
-        $("regionFilter").value=regs[0];
-        fillStores();
-        render();
-        showToast("فیلتر داشبورد روی «"+regs[0]+"» قرار گرفت.");
-        document.getElementById("filtersCard").scrollIntoView({behavior:"smooth",block:"start"});
-       }else if(regs.length>1){
-        showToast("این استان بین مناطق «"+regs.join("» و «")+"» تقسیم شده است.");
-       }
-      }
-     }
-    }
-   }
-  },
-  series:[{
-   data:points,
-   joinBy:"hc-key",
-   allAreas:true,
-   nullColor:STATUS_COLORS.gray,
-   borderColor:"#cfd7dc",
-   borderWidth:1.05,
-   shadow:{color:"rgba(255,255,255,.12)",offsetX:0,offsetY:0,width:6},
-   dataLabels:{
-    enabled:true,
-    useHTML:true,
-    allowOverlap:false,
-    padding:0,
-    formatter:function(){
-     const t=this.point.custom?.label||"";
-     if(!t)return"";
-     return `<span style="display:inline-block;max-width:104px;text-align:center;line-height:1.45;color:#f7f8fa;font-size:10px;font-weight:900;text-shadow:0 1px 3px #000,0 0 5px #000">${esc(t).replace(" / ","<br>")}</span>`;
-    },
-    style:{textOutline:"none"}
-   }
-  }]
+  chart:{map:mapData,backgroundColor:"transparent",spacing:[56,6,8,6],animation:false,style:{fontFamily:"Vazirmatn,Tahoma,sans-serif"},events:{render:function(){const c=this;if(c.seaLabels)c.seaLabels.forEach(x=>x.destroy());c.seaLabels=[];[["دریای خزر",c.plotLeft+c.plotWidth*.53,c.plotTop+20],["خلیج فارس",c.plotLeft+c.plotWidth*.33,c.plotTop+c.plotHeight*.91],["دریای عمان",c.plotLeft+c.plotWidth*.68,c.plotTop+c.plotHeight*.94]].forEach(([t,x,y])=>c.seaLabels.push(c.renderer.text(t,x,y).css({color:"#2f82bd",fontSize:"12px",fontWeight:"800"}).attr({zIndex:1}).add()));}}},
+  title:{text:null},credits:{enabled:false},legend:{enabled:false},
+  mapNavigation:{enabled:true,buttonOptions:{verticalAlign:"bottom",theme:{fill:"#111820",stroke:"#33404a",r:6,style:{color:"#fff"},states:{hover:{fill:"#1b252c"},select:{fill:"#1b252c"}}}}},
+  tooltip:{useHTML:true,backgroundColor:"rgba(7,10,12,.97)",borderColor:"#3b4650",borderRadius:12,shadow:true,style:{color:"#fff",fontFamily:"Vazirmatn"},formatter:function(){const c=this.point.custom||{},regions=c.regions||[];if(!regions.length)return `<div style="min-width:190px"><b>استان ${esc(c.province||this.point.name)}</b><div style="color:#7f8b94;margin-top:6px">برای این استان منطقه عملیاتی تخصیص داده نشده است.</div></div>`;return `<div style="min-width:225px"><b>استان ${esc(c.province)}</b><div style="margin:6px 0;color:${STATUS_COLORS[c.status]};font-weight:900">${esc(STATUS_LABELS[c.status])}</div><div style="color:#9aa6af;margin-bottom:6px">${regions.map(r=>esc(r)).join("، ")}</div><div>۰ تا ۳ روز: <b style="color:#ff6374">${nhFormatRial(c.urgent)}</b></div><div>کل ارزش فعال: <b>${nhFormatRial(c.value)}</b></div><div style="color:#81909a;margin-top:5px">برای مشاهده جزئیات روی استان کلیک کنید.</div></div>`;}},
+  plotOptions:{series:{animation:false,states:{hover:{brightness:.18,borderColor:"#ffffff",borderWidth:2.2}},point:{events:{click:function(){const c=this.custom||{},regs=c.regions||[];if(!regs.length){showToast("برای استان «"+(c.province||this.name)+"» منطقه عملیاتی تعریف نشده است.");return;}if(regs.length===1){applyRegionFilter(regs[0]);return;}openProvinceModal(c.province||this.name,regs,metrics,c.status,c);}}}}},
+  series:[{data:points,joinBy:"hc-key",allAreas:true,nullColor:STATUS_COLORS.gray,borderColor:"#cfd7dc",borderWidth:1.05,shadow:{color:"rgba(255,255,255,.12)",offsetX:0,offsetY:0,width:6},dataLabels:{enabled:true,useHTML:true,allowOverlap:false,padding:0,formatter:function(){const t=this.point.custom?.province||this.point.name||"";if(!t)return"";return `<span style="display:inline-block;max-width:104px;text-align:center;line-height:1.4;color:#f7f8fa;font-size:10.5px;font-weight:900;text-shadow:0 1px 3px #000,0 0 5px #000">${esc(t)}</span>`;},style:{textOutline:"none"}}}]
  });
 }
 async function downloadExecutiveReport(){
@@ -383,54 +343,30 @@ function renderExecutiveReport(activeRows){
  const totalValue=activeRows.reduce((s,x)=>s+x.rial,0),urgent=activeRows.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0),soon=activeRows.filter(x=>x.rk.key==="4-7").reduce((s,x)=>s+x.rial,0),qty=activeRows.reduce((s,x)=>s+(Number(x.quantity)||0),0),storesCount=new Set(activeRows.map(x=>String(x.store_id))).size;
  const red=regions.filter(x=>x.status==="red").length,amber=regions.filter(x=>x.status==="amber").length,green=regions.filter(x=>x.status==="green").length;
  const ranked=[...regions].filter(x=>x.value>0).sort((a,b)=>b.urgent-a.urgent||b.soon-a.soon||b.value-a.value),top=ranked[0]||null;
- const best=[...regions].filter(x=>x.value>0).sort((a,b)=>({green:0,amber:1,red:2,gray:3}[a.status]-{green:0,amber:1,red:2,gray:3}[b.status])||a.urgent-b.urgent||a.soon-b.soon||a.value-b.value)[0]||null;
- const mostStores=[...regions].sort((a,b)=>b.storeCount-a.storeCount||b.value-a.value)[0]||null;
- const urgentRows=activeRows.filter(x=>x.rk.key==="0-3"),urgentStores=new Set(urgentRows.map(x=>String(x.store_id))).size;
- const urgentShare=totalValue?urgent/totalValue*100:0,urgentStoreShare=storesCount?urgentStores/storesCount*100:0;
- const top5Urgent=ranked.slice(0,5).reduce((s,x)=>s+x.urgent,0),concentration=urgent?top5Urgent/urgent*100:0;
- const riskTone=urgentShare>=25?"بسیار بالا":urgentShare>=15?"بالا":urgentShare>=7?"متوسط":"کنترل‌شده";
+ const participationRank=[...regions].filter(x=>x.totalStores>0).sort((a,b)=>b.participation-a.participation||b.storeCount-a.storeCount);
+ const bestParticipation=participationRank[0]||null,lowestParticipation=participationRank[participationRank.length-1]||null;
+ const urgentByStore=new Map();activeRows.filter(x=>x.rk.key==="0-3").forEach(x=>urgentByStore.set(String(x.store_id),(urgentByStore.get(String(x.store_id))||0)+x.rial));
+ const highRiskStores=[...urgentByStore.entries()].filter(([,value])=>value>=50000000); // ۵ میلیون تومان
+ const urgentStores=urgentByStore.size,urgentStoreShare=storesCount?urgentStores/storesCount*100:0;
+ const topFive=ranked.slice(0,5);
+ const provinceMap=(typeof Highcharts!=="undefined"&&Highcharts.maps&&Highcharts.maps["countries/ir/ir-all"])?Highcharts.geojson(Highcharts.maps["countries/ir/ir-all"]):[];
+ const provinceStatuses=provinceMap.map(p=>{const plan=provincePlan(p.properties||{},metrics);return provinceStatus(plan.regions,metrics);});
+ const provinceCounts={red:provinceStatuses.filter(x=>x==="red").length,amber:provinceStatuses.filter(x=>x==="amber").length,green:provinceStatuses.filter(x=>x==="green").length,gray:provinceStatuses.filter(x=>x==="gray").length};
  $("execUpdatedAt").textContent=dt(new Date().toISOString());
  $("execKpis").innerHTML=`
-  <div class="exec-kpi gray"><div class="icon">◈</div><div class="label">نرخ تمرکز ریسک شبکه</div><div class="value">${fa(concentration,1)}٪</div><div class="meta">سهم ۵ منطقه اول از ارزش فوری</div></div>
+  <div class="exec-kpi blue"><div class="icon">▦</div><div class="label">فروشگاه‌های بالای ۵ میلیون تومان</div><div class="value">${fa(highRiskStores.length,0)} فروشگاه</div><div class="meta">ارزش ۰ تا ۳ روز هر فروشگاه ≥ ۵ میلیون تومان</div></div>
   <div class="exec-kpi green"><div class="icon">▦</div><div class="label">کل ارزش کالاهای فعال</div><div class="value">${nhFormatRial(totalValue)}</div><div class="meta">${fa(storesCount,0)} فروشگاه · ${fa(qty)} واحد</div></div>
-  <div class="exec-kpi red"><div class="icon">◷</div><div class="label">ارزش فوری ۰ تا ۳ روز</div><div class="value">${nhFormatRial(urgent)}</div><div class="meta">${fa(red,0)} منطقه بحرانی</div></div>
-  <div class="exec-kpi amber"><div class="icon">▣</div><div class="label">ارزش ۴ تا ۷ روز آینده</div><div class="value">${nhFormatRial(soon)}</div><div class="meta">${fa(amber,0)} منطقه نیازمند پیگیری</div></div>
-  <div class="exec-kpi red"><div class="icon">△</div><div class="label">مناطق بحرانی</div><div class="value">${fa(red,0)} منطقه</div><div class="meta">از ${fa(OPERATIONAL_REGIONS.length,0)} منطقه عملیاتی</div></div>`;
- const topFive=ranked.slice(0,5);$("criticalRegions").innerHTML=topFive.length?topFive.map((o,i)=>`<div class="critical-row"><div class="critical-rank">${fa(i+1,0)}</div><div><div class="critical-name">${esc(o.name)}</div><div class="critical-value">${nhFormatRial(o.urgent||o.soon||o.value)}</div><div class="critical-meta">${fa(o.storeCount,0)} فروشگاه · ${fa(o.qty)} واحد · ${o.urgent?"۰ تا ۳ روز":o.soon?"۴ تا ۷ روز":"فعال"}</div></div></div>`).join(""):'<div class="critical-empty">در حال حاضر منطقه دارای ثبت فعال وجود ندارد.</div>';
+  <div class="exec-kpi red"><div class="icon">◷</div><div class="label">ارزش فوری ۰ تا ۳ روز</div><div class="value">${nhFormatRial(urgent)}</div><div class="meta">${fa(urgentStores,0)} فروشگاه دارای کالای فوری</div></div>
+  <div class="exec-kpi amber"><div class="icon">▣</div><div class="label">ارزش ۴ تا ۷ روز آینده</div><div class="value">${nhFormatRial(soon)}</div><div class="meta">فرصت اقدام پیشگیرانه پیش از ورود به بحران</div></div>
+  <div class="exec-kpi green"><div class="icon">△</div><div class="label">بیشترین نرخ مشارکت منطقه</div><div class="value">${bestParticipation?fa(bestParticipation.participation,1)+"٪":"—"}</div><div class="meta">${bestParticipation?esc(bestParticipation.name)+" · "+fa(bestParticipation.storeCount,0)+" از "+fa(bestParticipation.totalStores,0)+" فروشگاه":"بدون داده"}${lowestParticipation?" · کمترین: "+esc(lowestParticipation.name)+" "+fa(lowestParticipation.participation,1)+"٪":""}</div></div>`;
+ $("criticalRegions").innerHTML=topFive.length?topFive.map((o,i)=>`<div class="critical-row"><div class="critical-rank">${fa(i+1,0)}</div><div><div class="critical-name">${esc(o.name)}</div><div class="critical-value">${nhFormatRial(o.urgent||o.soon||o.value)}</div><div class="critical-meta">${fa(o.storeCount,0)} از ${fa(o.totalStores,0)} فروشگاه · مشارکت ${fa(o.participation,1)}٪ · ${o.urgent?"۰ تا ۳ روز":o.soon?"۴ تا ۷ روز":"فعال"}</div></div></div>`).join(""):'<div class="critical-empty">در حال حاضر منطقه دارای ثبت فعال وجود ندارد.</div>';
  $("executiveSummary").innerHTML=`
-  <div class="summary-hero ${top?.status||"gray"}">
-   <div class="summary-eyebrow">هشدار اصلی امروز</div>
-   <div class="summary-headline">${esc(top?.name||"بدون منطقه بحرانی")}</div>
-   <div class="summary-sentence">${top?`${fa(top.storeCount,0)} فروشگاه و ${nhFormatRial(top.urgent||top.soon||top.value)} در نزدیک‌ترین بازه انقضا قرار دارند.`:"در حال حاضر داده فعالی برای هشدار منطقه‌ای ثبت نشده است."}</div>
-  </div>
-  <div class="summary-analysis red">
-   <div class="summary-analysis-head"><span class="summary-analysis-label">شدت ریسک فوری شبکه</span><b class="summary-analysis-value">${fa(urgentShare,1)}٪</b></div>
-   <div class="summary-analysis-meta">${riskTone} · سهم ارزش کالاهای ۰ تا ۳ روز از کل ارزش فعال</div>
-   <div class="summary-meter"><span style="width:${Math.min(100,urgentShare)}%"></span></div>
-  </div>
-  <div class="summary-analysis blue">
-   <div class="summary-analysis-head"><span class="summary-analysis-label">دامنه درگیری فروشگاه‌ها</span><b class="summary-analysis-value">${fa(urgentStores,0)} فروشگاه</b></div>
-   <div class="summary-analysis-meta">${fa(urgentStoreShare,1)}٪ از فروشگاه‌های دارای ثبت فعال، کالای فوری دارند.</div>
-   <div class="summary-meter"><span style="width:${Math.min(100,urgentStoreShare)}%"></span></div>
-  </div>
-  <div class="summary-analysis amber">
-   <div class="summary-analysis-head"><span class="summary-analysis-label">فرصت اقدام ۴ تا ۷ روز</span><b class="summary-analysis-value">${nhFormatRial(soon)}</b></div>
-   <div class="summary-analysis-meta">در ${fa(amber,0)} منطقه هنوز پیش از ورود به بازه بحرانی فرصت پیگیری وجود دارد.</div>
-   <div class="summary-meter"><span style="width:${totalValue?Math.min(100,soon/totalValue*100):0}%"></span></div>
-  </div>
-  <div class="summary-analysis red">
-   <div class="summary-analysis-head"><span class="summary-analysis-label">تمرکز ریسک در مناطق اول</span><b class="summary-analysis-value">${fa(concentration,1)}٪</b></div>
-   <div class="summary-analysis-meta">این سهم از ارزش فوری فقط در ۵ منطقه اول متمرکز شده است.</div>
-   <div class="summary-meter"><span style="width:${Math.min(100,concentration)}%"></span></div>
-  </div>
-  <div class="summary-status">
-   <div class="summary-status-title">ترکیب وضعیت ۲۴ منطقه عملیاتی</div>
-   <div class="summary-status-grid">
-    <div class="summary-status-item red"><b>${fa(red,0)}</b><small>بحرانی</small></div>
-    <div class="summary-status-item amber"><b>${fa(amber,0)}</b><small>پیگیری</small></div>
-    <div class="summary-status-item green"><b>${fa(green,0)}</b><small>پایدار</small></div>
-   </div>
-  </div>`;
+  <div class="summary-hero ${top?.status||"gray"}"><div class="summary-eyebrow">هشدار اصلی امروز</div><div class="summary-headline">${esc(top?.name||"بدون هشدار فوری")}</div><div class="summary-sentence">${top?`${nhFormatRial(top.urgent)} کالای ۰ تا ۳ روز در ${fa(top.storeCount,0)} فروشگاه ثبت شده و وضعیت این منطقه «${STATUS_LABELS[top.status]}» است.`:"در حال حاضر داده فعالی برای هشدار منطقه‌ای ثبت نشده است."}</div></div>
+  <div class="summary-analysis red"><div class="summary-analysis-head"><span class="summary-analysis-label">فروشگاه‌های با ریسک مالی بالا</span><b class="summary-analysis-value">${fa(highRiskStores.length,0)}</b></div><div class="summary-analysis-meta">تعداد فروشگاه‌هایی که حداقل ۵ میلیون تومان کالای ۰ تا ۳ روز دارند.</div><div class="summary-meter"><span style="width:${storesCount?Math.min(100,highRiskStores.length/storesCount*100):0}%"></span></div></div>
+  <div class="summary-participation"><div class="summary-analysis blue"><div class="summary-analysis-head"><span class="summary-analysis-label">بیشترین مشارکت</span><b class="summary-analysis-value">${bestParticipation?fa(bestParticipation.participation,1)+"٪":"—"}</b></div><div class="summary-analysis-meta">${bestParticipation?esc(bestParticipation.name)+" · "+fa(bestParticipation.storeCount,0)+" از "+fa(bestParticipation.totalStores,0)+" فروشگاه":"بدون داده"}</div><div class="summary-meter"><span style="width:${bestParticipation?.participation||0}%"></span></div></div><div class="summary-analysis amber"><div class="summary-analysis-head"><span class="summary-analysis-label">کمترین مشارکت</span><b class="summary-analysis-value">${lowestParticipation?fa(lowestParticipation.participation,1)+"٪":"—"}</b></div><div class="summary-analysis-meta">${lowestParticipation?esc(lowestParticipation.name)+" · "+fa(lowestParticipation.storeCount,0)+" از "+fa(lowestParticipation.totalStores,0)+" فروشگاه":"بدون داده"}</div><div class="summary-meter"><span style="width:${lowestParticipation?.participation||0}%"></span></div></div></div>
+  <div class="summary-analysis blue"><div class="summary-analysis-head"><span class="summary-analysis-label">دامنه درگیری فروشگاه‌ها</span><b class="summary-analysis-value">${fa(urgentStores,0)} فروشگاه</b></div><div class="summary-analysis-meta">${fa(urgentStoreShare,1)}٪ از فروشگاه‌های دارای ثبت فعال، کالای ۰ تا ۳ روز دارند.</div><div class="summary-meter"><span style="width:${Math.min(100,urgentStoreShare)}%"></span></div></div>
+  <div class="summary-analysis amber"><div class="summary-analysis-head"><span class="summary-analysis-label">فرصت اقدام ۴ تا ۷ روز</span><b class="summary-analysis-value">${nhFormatRial(soon)}</b></div><div class="summary-analysis-meta">ارزش کالاهایی که هنوز پیش از ورود به بازه فوری امکان پیگیری دارند.</div><div class="summary-meter"><span style="width:${totalValue?Math.min(100,soon/totalValue*100):0}%"></span></div></div>
+  <div class="summary-status"><div class="summary-status-title">ترکیب وضعیت استان‌های ایران</div><div class="summary-status-grid"><div class="summary-status-item red"><b>${fa(provinceCounts.red,0)}</b><small>بحرانی</small></div><div class="summary-status-item amber"><b>${fa(provinceCounts.amber,0)}</b><small>پیگیری</small></div><div class="summary-status-item green"><b>${fa(provinceCounts.green,0)}</b><small>پایدار</small></div></div></div>`;
  renderIranMap(metrics);
 }
 
