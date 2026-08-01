@@ -184,6 +184,152 @@
       animation: none;
     }
   }
+
+  /* ===== Operator edit/delete actions ===== */
+  .operator-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 132px;
+  }
+
+  .operator-action-btn {
+    appearance: none;
+    border: 0;
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+  }
+
+  .operator-action-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .operator-action-btn:disabled {
+    opacity: .5;
+    cursor: wait;
+    transform: none;
+  }
+
+  .operator-action-btn.is-edit {
+    color: #7a4d00;
+    background: #fff4d7;
+    box-shadow: inset 0 0 0 1px #efd79b;
+  }
+
+  .operator-action-btn.is-delete {
+    color: #9c2f2f;
+    background: #fff0ee;
+    box-shadow: inset 0 0 0 1px #efc5c0;
+  }
+
+  .operator-actions-locked {
+    color: var(--muted);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .operator-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(28, 24, 21, .48);
+    backdrop-filter: blur(5px);
+  }
+
+  .operator-modal.show {
+    display: flex;
+  }
+
+  .operator-modal-card {
+    width: min(100%, 520px);
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    padding: 22px;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 26px 80px rgba(30, 24, 19, .22);
+  }
+
+  .operator-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .operator-modal-title {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .operator-modal-product {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .operator-modal-close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 12px;
+    background: #f4f1ed;
+    color: #4c4640;
+    font-size: 21px;
+    cursor: pointer;
+  }
+
+  .operator-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .operator-btn-secondary {
+    border: 1px solid #ded8d1;
+    background: #fff;
+    color: #4c4640;
+  }
+
+  .alert-success {
+    color: #235e46 !important;
+    background: #eaf7f0 !important;
+    border-color: #b9dfcb !important;
+  }
+
+  body.operator-modal-open {
+    overflow: hidden;
+  }
+
+  @media (max-width: 620px) {
+    .operator-actions {
+      min-width: 116px;
+      gap: 5px;
+    }
+
+    .operator-action-btn {
+      padding: 7px 9px;
+      font-size: 10.5px;
+    }
+
+    .operator-modal-card {
+      padding: 17px;
+      border-radius: 20px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -292,6 +438,39 @@
   </div>
 </div>
 
+<div class="operator-modal" id="editModal" aria-hidden="true">
+  <div class="operator-modal-card" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="operator-modal-head">
+      <div>
+        <h2 class="operator-modal-title" id="editModalTitle">ویرایش ثبت کالا</h2>
+        <p class="operator-modal-product" id="editProductName"></p>
+      </div>
+      <button type="button" class="operator-modal-close" id="editModalClose" aria-label="بستن">×</button>
+    </div>
+
+    <form id="editBatchForm">
+      <div class="field">
+        <label for="edit_quantity">تعداد</label>
+        <input type="number" id="edit_quantity" min="1" step="1" required>
+      </div>
+
+      <div class="field">
+        <label for="edit_expiry_day">تاریخ انقضا (شمسی)</label>
+        <div class="jalali-date-row">
+          <select id="edit_expiry_year"></select>
+          <select id="edit_expiry_month"></select>
+          <select id="edit_expiry_day"></select>
+        </div>
+      </div>
+
+      <div class="operator-modal-actions">
+        <button type="button" class="btn operator-btn-secondary" id="editCancelBtn">انصراف</button>
+        <button type="submit" class="btn btn-primary" id="editSaveBtn">ذخیره تغییرات</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["store_operator"]);
@@ -301,6 +480,7 @@
   let selectedProductGroup = null;
   let selectedProductPrice = null;
   let allBatches = [];
+  let editingBatchId = null;
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -315,6 +495,13 @@
   const wastedMetaEl = document.getElementById("wastedMeta");
   const dangerRialEl = document.getElementById("dangerRial");
   const dangerMetaEl = document.getElementById("dangerMeta");
+  const editModal = document.getElementById("editModal");
+  const editBatchForm = document.getElementById("editBatchForm");
+  const editProductName = document.getElementById("editProductName");
+  const editQuantity = document.getElementById("edit_quantity");
+  const editSaveBtn = document.getElementById("editSaveBtn");
+  const editModalClose = document.getElementById("editModalClose");
+  const editCancelBtn = document.getElementById("editCancelBtn");
   let searchTimer = null;
 
   searchInput.addEventListener("input", () => {
@@ -499,6 +686,88 @@
   }
   populateJalaliSelects();
 
+  function populateEditJalaliSelects(initialIso) {
+    const yearSel = document.getElementById("edit_expiry_year");
+    const monthSel = document.getElementById("edit_expiry_month");
+    const daySel = document.getElementById("edit_expiry_day");
+
+    const [gy, gm, gd] = String(initialIso).split("-").map(Number);
+    const [jy, jm, jd] = nhGregorianToJalali(gy, gm, gd);
+    const [todayJy] = nhTodayJalali();
+
+    yearSel.innerHTML = "";
+    const startYear = Math.min(todayJy, jy);
+    const endYear = Math.max(todayJy + 3, jy);
+
+    for (let year = startYear; year <= endYear; year++) {
+      yearSel.innerHTML += `<option value="${year}">${year}</option>`;
+    }
+
+    monthSel.innerHTML = JALALI_MONTHS
+      .map((month, index) => `<option value="${index + 1}">${month}</option>`)
+      .join("");
+
+    function refreshEditDays(preferredDay) {
+      const month = Number(monthSel.value);
+      const maxDay = nhDaysInJalaliMonth(month);
+      const safeDay = Math.min(Number(preferredDay) || 1, maxDay);
+
+      daySel.innerHTML = "";
+      for (let day = 1; day <= maxDay; day++) {
+        daySel.innerHTML += `<option value="${day}">${day}</option>`;
+      }
+      daySel.value = safeDay;
+    }
+
+    yearSel.value = jy;
+    monthSel.value = jm;
+    refreshEditDays(jd);
+
+    monthSel.onchange = () => refreshEditDays(daySel.value);
+  }
+
+  function openEditModal(batchId) {
+    const batch = allBatches.find(item => String(item.id) === String(batchId));
+
+    if (!batch || batch.status !== "approved") {
+      showError("این ثبت دیگر قابل ویرایش نیست.");
+      return;
+    }
+
+    editingBatchId = batch.id;
+    editProductName.textContent = batch.product_name || "کالای بدون نام";
+    editQuantity.value = Number(batch.quantity) || 1;
+    populateEditJalaliSelects(batch.expiry_date);
+
+    editModal.classList.add("show");
+    editModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("operator-modal-open");
+    setTimeout(() => editQuantity.focus(), 50);
+  }
+
+  function closeEditModal() {
+    editingBatchId = null;
+    editBatchForm.reset();
+    editModal.classList.remove("show");
+    editModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("operator-modal-open");
+    editSaveBtn.disabled = false;
+    editSaveBtn.textContent = "ذخیره تغییرات";
+  }
+
+  editModalClose.addEventListener("click", closeEditModal);
+  editCancelBtn.addEventListener("click", closeEditModal);
+
+  editModal.addEventListener("click", event => {
+    if (event.target === editModal) closeEditModal();
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && editModal.classList.contains("show")) {
+      closeEditModal();
+    }
+  });
+
   function selectProduct(id, name, group, price) {
     selectedProductId = id;
     selectedProductName = name;
@@ -524,21 +793,32 @@
     selectedBox.classList.remove("show");
   }
 
+  function clearAlert() {
+    alertEl.textContent = "";
+    alertEl.classList.remove("show", "alert-success");
+  }
+
   function showError(message) {
+    alertEl.classList.remove("alert-success");
+
     if (message === "SESSION_EXPIRED") {
-      alertEl.className = "alert alert-error show";
       alertEl.textContent = "نشست شما منقضی شده است. در حال انتقال به صفحه‌ی ورود...";
+      alertEl.classList.add("show");
       setTimeout(nhLogout, 1500);
       return;
     }
-    alertEl.className = "alert alert-error show";
-    alertEl.textContent = "خطا: " + message;
+
+    const normalizedMessage = String(message || "خطای ناشناخته")
+      .replace("DUPLICATE_ACTIVE_EXPIRY_BATCH", "برای همین کالا و همین تاریخ انقضا قبلاً یک ثبت فعال وجود دارد.");
+
+    alertEl.textContent = "خطا: " + normalizedMessage;
+    alertEl.classList.add("show");
   }
 
-  function showNotice(message) {
-    alertEl.className = "alert alert-success show";
+  function showSuccess(message) {
     alertEl.textContent = message;
-    alertEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    alertEl.classList.add("show", "alert-success");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
 
@@ -666,6 +946,7 @@
         active_list: expiry_batches(
           where: {
             store_id: { _eq: $store_id }
+            status: { _neq: "cancelled" }
             expiry_date: { _gte: $today }
           }
           order_by: [{ expiry_date: asc }, { created_at: desc }]
@@ -683,6 +964,7 @@
         archive_list: expiry_batches(
           where: {
             store_id: { _eq: $store_id }
+            status: { _neq: "cancelled" }
             expiry_date: { _lt: $today }
           }
           order_by: [{ expiry_date: desc }, { created_at: desc }]
@@ -777,10 +1059,23 @@
     listWrap.innerHTML = `
       <div class="table-wrap">
       <table>
-        <thead><tr><th>کالا</th><th>تعداد</th><th>ارزش ریالی</th><th>انقضا</th><th>وضعیت نمایش</th><th>وضعیت ثبت</th><th>یادداشت بررسی</th></tr></thead>
+        <thead>
+          <tr>
+            <th>کالا</th>
+            <th>تعداد</th>
+            <th>ارزش ریالی</th>
+            <th>انقضا</th>
+            <th>وضعیت نمایش</th>
+            <th>وضعیت ثبت</th>
+            <th>یادداشت بررسی</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
         <tbody>
           ${rows.map(b => {
             const archived = b.expiry_date < today;
+            const canManage = b.status === "approved";
+
             return `
             <tr>
               <td>${b.product_name}</td>
@@ -790,6 +1085,14 @@
               <td><span class="${archived ? "stamp stamp-rejected" : "stamp stamp-approved"}">${archived ? "آرشیو" : "فعال"}</span></td>
               <td><span class="${nhStampClass(b.status)}">${STATUS_LABEL[b.status] || b.status}</span></td>
               <td>${b.review_note || "—"}</td>
+              <td>
+                ${canManage ? `
+                  <div class="operator-actions">
+                    <button type="button" class="operator-action-btn is-edit" data-action="edit" data-id="${b.id}">ویرایش</button>
+                    <button type="button" class="operator-action-btn is-delete" data-action="delete" data-id="${b.id}">حذف</button>
+                  </div>
+                ` : '<span class="operator-actions-locked">غیرقابل تغییر</span>'}
+              </td>
             </tr>
           `}).join("")}
         </tbody>
@@ -801,10 +1104,155 @@
   document.getElementById("statusFilter").addEventListener("change", renderBatches);
   document.getElementById("viewFilter").addEventListener("change", renderBatches);
 
+  listWrap.addEventListener("click", event => {
+    const button = event.target.closest("[data-action][data-id]");
+    if (!button) return;
+
+    const batchId = button.dataset.id;
+
+    if (button.dataset.action === "edit") {
+      openEditModal(batchId);
+      return;
+    }
+
+    if (button.dataset.action === "delete") {
+      deleteBatch(batchId, button);
+    }
+  });
+
+  editBatchForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!editingBatchId || !myStoreId) return;
+    clearAlert();
+
+    const quantity = Number(editQuantity.value);
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      showError("تعداد باید یک عدد صحیح و بزرگ‌تر از صفر باشد.");
+      return;
+    }
+
+    const expiryIso = nhJalaliToIso(
+      Number(document.getElementById("edit_expiry_year").value),
+      Number(document.getElementById("edit_expiry_month").value),
+      Number(document.getElementById("edit_expiry_day").value)
+    );
+
+    if (expiryIso < localIsoDate(0)) {
+      showError("تاریخ انقضا نمی‌تواند قبل از امروز باشد.");
+      return;
+    }
+
+    editSaveBtn.disabled = true;
+    editSaveBtn.textContent = "در حال ذخیره...";
+
+    const mutation = `
+      mutation UpdateOperatorBatch(
+        $id: uuid!
+        $store_id: uuid!
+        $quantity: numeric!
+        $expiry_date: date!
+      ) {
+        update_expiry_batches(
+          where: {
+            id: { _eq: $id }
+            store_id: { _eq: $store_id }
+            status: { _eq: "approved" }
+          }
+          _set: {
+            quantity: $quantity
+            expiry_date: $expiry_date
+          }
+        ) {
+          affected_rows
+        }
+      }
+    `;
+
+    try {
+      const data = await nhGql(mutation, {
+        id: editingBatchId,
+        store_id: myStoreId,
+        quantity,
+        expiry_date: expiryIso
+      }, session.token);
+
+      if (!data.update_expiry_batches.affected_rows) {
+        throw new Error("این ثبت پیدا نشد یا دیگر اجازه ویرایش آن را ندارید.");
+      }
+
+      closeEditModal();
+      await loadOperatorDashboard();
+      showSuccess("تغییرات کالا با موفقیت ذخیره شد.");
+    } catch (error) {
+      showError(error.message);
+      editSaveBtn.disabled = false;
+      editSaveBtn.textContent = "ذخیره تغییرات";
+    }
+  });
+
+  async function deleteBatch(batchId, button) {
+    const batch = allBatches.find(item => String(item.id) === String(batchId));
+
+    if (!batch || batch.status !== "approved") {
+      showError("این ثبت دیگر قابل حذف نیست.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `آیا از حذف «${batch.product_name}» مطمئن هستید؟\n\nاین ثبت از فهرست‌های عملیاتی و گزارش‌های فعال حذف می‌شود.`
+    );
+
+    if (!confirmed) return;
+
+    clearAlert();
+    button.disabled = true;
+    const previousText = button.textContent;
+    button.textContent = "در حال حذف...";
+
+    const mutation = `
+      mutation RemoveOperatorBatch(
+        $id: uuid!
+        $store_id: uuid!
+      ) {
+        update_expiry_batches(
+          where: {
+            id: { _eq: $id }
+            store_id: { _eq: $store_id }
+            status: { _eq: "approved" }
+          }
+          _set: {
+            status: "cancelled"
+          }
+        ) {
+          affected_rows
+        }
+      }
+    `;
+
+    try {
+      const data = await nhGql(mutation, {
+        id: batch.id,
+        store_id: myStoreId
+      }, session.token);
+
+      if (!data.update_expiry_batches.affected_rows) {
+        throw new Error("این ثبت پیدا نشد یا دیگر اجازه حذف آن را ندارید.");
+      }
+
+      await loadOperatorDashboard();
+      showSuccess("ثبت کالا با موفقیت حذف شد.");
+    } catch (error) {
+      showError(error.message);
+      button.disabled = false;
+      button.textContent = previousText;
+    }
+  }
+
   document.getElementById("productForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!myStoreId) return;
-    alertEl.classList.remove("show");
+    clearAlert();
 
     if (!selectedProductId) {
       showError("لطفاً یک کالا را از فهرست جست‌وجو انتخاب کنید.");
@@ -823,34 +1271,8 @@
       return;
     }
 
-    const enteredQuantity = parseInt(document.getElementById("quantity").value);
-
     submitBtn.disabled = true;
-    submitBtn.textContent = "در حال بررسی...";
-
-    const duplicateQuery = `
-      query FindExistingActiveBatch(
-        $store_id: uuid!,
-        $product_id: uuid!,
-        $expiry_date: date!
-      ) {
-        expiry_batches(
-          where: {
-            store_id: { _eq: $store_id }
-            product_id: { _eq: $product_id }
-            expiry_date: { _eq: $expiry_date }
-            status: { _nin: ["sold", "cancelled", "rejected"] }
-          }
-          order_by: { created_at: desc }
-          limit: 1
-        ) {
-          id
-          product_name
-          quantity
-          expiry_date
-        }
-      }
-    `;
+    submitBtn.textContent = "در حال ثبت...";
 
     const mutation = `
       mutation InsertBatch(
@@ -866,32 +1288,13 @@
     `;
 
     try {
-      const duplicateData = await nhGql(duplicateQuery, {
-        store_id: myStoreId,
-        product_id: selectedProductId,
-        expiry_date: expiryIso
-      }, session.token);
-
-      const existingBatch = (duplicateData.expiry_batches || [])[0];
-
-      if (existingBatch) {
-        showNotice(
-          `«${existingBatch.product_name || selectedProductName}» با همین تاریخ انقضا قبلاً با تعداد ` +
-          `${faNumber(existingBatch.quantity)} ثبت شده است؛ برای جلوگیری از دوبرابر شدن موجودی، ثبت تکراری انجام نشد.`
-        );
-        await loadOperatorDashboard();
-        return;
-      }
-
-      submitBtn.textContent = "در حال ثبت...";
-
       await nhGql(mutation, {
         store_id: myStoreId,
         product_id: selectedProductId,
         product_name: selectedProductName,
         product_group: selectedProductGroup,
         unit_price: selectedProductPrice,
-        quantity: enteredQuantity,
+        quantity: parseInt(document.getElementById("quantity").value),
         expiry_date: expiryIso,
         created_by: session.userId
       }, session.token);
@@ -900,18 +1303,10 @@
       clearProduct();
       populateJalaliSelects();
       await loadOperatorDashboard();
+      showSuccess("کالا با موفقیت ثبت شد.");
 
     } catch (err) {
-      const message = String(err?.message || err || "");
-
-      if (message.includes("DUPLICATE_ACTIVE_EXPIRY_BATCH")) {
-        showNotice(
-          "این کالا با همین تاریخ انقضا قبلاً برای این فروشگاه ثبت شده است؛ ثبت تکراری انجام نشد."
-        );
-        await loadOperatorDashboard();
-      } else {
-        showError(message);
-      }
+      showError(err.message);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "ثبت کالا";
