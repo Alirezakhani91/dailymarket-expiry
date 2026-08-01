@@ -2,65 +2,54 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name=ش"viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>رصد سراسری | dailymarket-expiry</title>
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--pbg:#f7f3ef;--pc:#fff;--pi:#28221f;--pm:#766d67;--pl:#e8dfd8;--pg:#315c49;--pgr:#e8f1ec;--pr:#a52b3f;--prs:#fbe8ec;--pa:#9a5a0d;--pas:#fff1d5}
-*{box-sizing:border-box}body{font-family:Vazirmatn,Tahoma,sans-serif;background:linear-gradient(180deg,#faf7f3,var(--pbg));color:var(--pi)}
-.admin-wrap{width:min(1480px,calc(100% - 28px));margin:auto;padding:24px 0 56px}
-.admin-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
-.admin-head h1{margin:0;font-size:clamp(25px,3vw,38px);font-weight:900}.admin-head p{margin:6px 0 0;color:var(--pm);font-size:13px}
-.live-box{display:flex;align-items:center;gap:12px;background:#ffffffd9;border:1px solid var(--pl);border-radius:18px;padding:11px 13px;min-width:260px;box-shadow:0 10px 28px #382c2410}
-.live-dot{width:10px;height:10px;border-radius:50%;background:#259c61;box-shadow:0 0 0 5px #259c611c}.live-dot.loading{background:#d1851f;box-shadow:0 0 0 5px #d1851f22;animation:pulse 1s infinite alternate}.live-dot.error{background:var(--pr);box-shadow:0 0 0 5px #a52b3f1e}@keyframes pulse{to{opacity:.45}}
-.live-main{font-size:12px;font-weight:800}.live-sub{font-size:10px;color:var(--pm);margin-top:2px}.refresh{margin-right:auto;width:40px;height:40px;border:0;border-radius:13px;background:var(--pgr);color:var(--pg);font-size:20px;cursor:pointer}
-.alert-admin{display:none;background:var(--prs);color:var(--pr);padding:12px 14px;border-radius:14px;margin-bottom:14px;border:1px solid #a52b3f20}.alert-admin.show{display:block}
-.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin-bottom:15px}.stat{min-height:125px;padding:15px;border-radius:21px;border:1px solid #ffffffc7;background:#fff;box-shadow:0 11px 28px #372c2410}.stat.green{background:linear-gradient(145deg,#eef6f1,#dcece3);color:#295442}.stat.red{background:linear-gradient(145deg,#fff0f2,#f5d8dd);color:#92273a}.stat.amber{background:linear-gradient(145deg,#fff8e8,#f5dfb2);color:#85500e}.stat.blue{background:linear-gradient(145deg,#eef5fa,#dbe8f2);color:#315c81}.stat-l{font-size:11px;font-weight:800;opacity:.75}.stat-v{font-size:clamp(20px,2.2vw,29px);font-weight:900;margin-top:14px;line-height:1.25;overflow-wrap:anywhere}.stat-s{font-size:10px;opacity:.68;margin-top:7px}
-.card-admin{background:#ffffffed;border:1px solid var(--pl);border-radius:23px;padding:17px;margin-bottom:15px;box-shadow:0 12px 30px #352b2410}.card-admin h2{font-size:16px;margin:0;font-weight:900}.desc{font-size:11.5px;color:var(--pm);margin:5px 0 13px}
-.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr auto;gap:9px;align-items:end}.field label{display:block;font-size:10.5px;color:var(--pm);font-weight:800;margin-bottom:5px}.field input,.field select{width:100%;height:43px;border:1px solid var(--pl);border-radius:12px;background:#faf8f6;padding:0 11px;outline:none}.clear{height:43px;border:0;border-radius:12px;background:#eee8e3;color:#665d57;padding:0 15px;font-weight:800}.filter-foot{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:11px;color:var(--pm)}.filter-foot input{accent-color:var(--pg)}
-.grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:15px}
-.region-list{display:grid;gap:8px}.region-row{display:grid;grid-template-columns:1.25fr repeat(4,.7fr);gap:8px;align-items:center;border:1px solid var(--pl);border-radius:14px;padding:11px;background:#fff}.region-row strong{display:block;font-size:12px}.region-row small{font-size:9.5px;color:var(--pm)}.region-title{font-weight:900;font-size:12px}
-.table-shell{overflow:auto;border:1px solid var(--pl);border-radius:16px;background:#fff}.admin-table{width:100%;min-width:950px;border-collapse:collapse}.admin-table th{position:sticky;top:0;z-index:1;text-align:right;padding:11px 10px;background:#f7f3f0;color:#6d645f;font-size:10.5px;white-space:nowrap;border-bottom:1px solid var(--pl)}.admin-table td{padding:11px 10px;font-size:11.5px;border-bottom:1px solid #eee7e1;vertical-align:middle}.admin-table tbody tr:hover{background:#fcfaf8}.title{font-weight:800}.sub{font-size:9.5px;color:var(--pm);margin-top:2px}.num{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-.chip{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:9.5px;font-weight:900;white-space:nowrap}.expired{background:var(--prs);color:var(--pr)}.urgent{background:var(--pas);color:var(--pa)}.warn{background:#fff8d9;color:#7f6013}.safe{background:var(--pgr);color:var(--pg)}.sold{background:#eeeae7;color:#655f5b}
-.expand{cursor:pointer}.detail td{padding:0;background:#fbf8f6}.detail-box{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px}.store-pill{padding:6px 9px;border:1px solid var(--pl);border-radius:10px;background:#fff;font-size:10px}.empty{padding:34px 15px;text-align:center;color:var(--pm);font-size:12px}
 
-.daily-brief-card{padding:0;overflow:hidden;background:linear-gradient(180deg,#fffdfa,#fff7f1)}
-.daily-brief-shell{padding:18px}
-.daily-brief-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
-.daily-brief-title{display:flex;align-items:flex-start;gap:10px}.daily-brief-title h2{margin:0;font-size:18px}.daily-brief-title p{margin:5px 0 0;color:var(--pm);font-size:11.5px}
-.daily-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;background:#f5ece4;color:#7a5d46;font-size:10.5px;font-weight:900;border:1px solid #ead8ca}
-.daily-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:#d1861f;box-shadow:0 0 0 4px rgba(209,134,31,.12)}
-.snapshot-stamp{padding:12px 14px;border-radius:16px;border:1px solid var(--pl);background:#fff;min-width:220px;box-shadow:0 10px 30px #3c2f2710}.snapshot-stamp strong{display:block;font-size:11px;color:#6e655f}.snapshot-stamp span{display:block;margin-top:6px;font-size:13px;font-weight:900}
-.snapshot-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.snapshot-kpi{padding:14px;border-radius:18px;border:1px solid #f0e4d7;background:#fff;box-shadow:0 8px 24px #392e2510}.snapshot-kpi.red{background:linear-gradient(145deg,#fff3f4,#fae0e3)}.snapshot-kpi.amber{background:linear-gradient(145deg,#fff8ea,#f7e6c0)}.snapshot-kpi.green{background:linear-gradient(145deg,#f0f8f3,#deeee4)}.snapshot-kpi.blue{background:linear-gradient(145deg,#eff6fb,#ddebf5)}.snapshot-kpi .k{font-size:10.5px;font-weight:800;color:#6e655f}.snapshot-kpi .v{margin-top:10px;font-size:20px;font-weight:900;line-height:1.3}.snapshot-kpi .s{margin-top:6px;font-size:10px;color:#7d736c}
-.snapshot-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-.map-card,.insight-card,.status-table-card{background:#fff;border:1px solid var(--pl);border-radius:22px;box-shadow:0 12px 32px #392d2510}
-.map-card{padding:14px;display:flex;flex-direction:column;gap:12px}
-.map-card-head,.insight-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.map-card-head h3,.insight-head h3,.status-table-card h3{margin:0;font-size:14px;font-weight:900}.mini-desc{margin-top:4px;color:var(--pm);font-size:10.5px}
-.legend{display:flex;flex-wrap:wrap;gap:7px}.legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#faf6f2;border:1px solid #efe4d8;font-size:10px;font-weight:800;color:#665d56}.legend i{display:inline-block;width:10px;height:10px;border-radius:50%}.legend .lg-red{background:#b73e53}.legend .lg-amber{background:#d08a14}.legend .lg-green{background:#2d8357}.legend .lg-gray{background:#aeb6bd}
-.iran-map-panel{position:relative;min-height:440px;border-radius:20px;overflow:hidden;background:radial-gradient(circle at 30% 20%,#fff6ed,transparent 40%),linear-gradient(180deg,#fffdf9,#f7f1ea)}
-.iran-shape{position:absolute;inset:20px 18px 20px 18px;opacity:.22}.iran-shape svg{width:100%;height:100%}.iran-shape path{fill:#d9c9b8}
-.iran-grid-note{position:absolute;left:18px;top:18px;padding:8px 10px;border-radius:13px;background:#ffffffd7;border:1px solid #efe4d8;font-size:10px;color:#6f665f;font-weight:800;backdrop-filter:blur(3px)}
-.iran-markers{position:absolute;inset:0}
-.iran-marker{position:absolute;transform:translate(-50%,-50%);min-width:110px;max-width:128px;padding:9px 10px;border-radius:16px;background:#fffffff2;border:1px solid rgba(206,193,181,.9);box-shadow:0 16px 28px rgba(57,45,37,.12);cursor:pointer;backdrop-filter:blur(4px);transition:transform .16s ease, box-shadow .16s ease,border-color .16s ease}.iran-marker:hover{transform:translate(-50%,-53%);box-shadow:0 18px 34px rgba(57,45,37,.18)}
-.iran-marker.active{border-color:#2d8357;box-shadow:0 0 0 3px rgba(45,131,87,.14),0 20px 36px rgba(57,45,37,.18)}
-.iran-marker::before{content:"";position:absolute;top:-7px;right:16px;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.12)}
-.iran-marker.red::before{background:#b73e53}.iran-marker.amber::before{background:#d08a14}.iran-marker.green::before{background:#2d8357}.iran-marker.gray::before{background:#aeb6bd}
-.iran-marker .name{display:block;font-size:11px;font-weight:900;color:#2f2a27;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:14px}.iran-marker .meta{margin-top:6px;display:flex;justify-content:space-between;gap:8px;font-size:9.5px;color:#6d635d}.iran-marker .meta b{font-size:10px;color:#322b27}
-.insight-card{padding:15px;display:flex;flex-direction:column;gap:12px}
-.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.insight-stat{padding:12px;border-radius:16px;background:#faf6f2;border:1px solid #efe4d8}.insight-stat .label{font-size:10.5px;color:#766c65;font-weight:800}.insight-stat .value{margin-top:7px;font-size:16px;font-weight:900}.insight-stat .hint{margin-top:4px;font-size:10px;color:#8a807a}
-.insight-list{display:grid;gap:8px}.rank-row{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:9px 10px;border-radius:14px;background:#fcf9f6;border:1px solid #f0e7df}.rank-no{width:28px;height:28px;border-radius:10px;background:#efe6dd;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#6d625a}.rank-main strong{display:block;font-size:11.5px}.rank-main small{display:block;font-size:9.5px;color:var(--pm);margin-top:2px}.rank-value{font-size:10px;font-weight:900;color:#413a35;text-align:left}
-.status-table-card{margin-top:14px;padding:14px}.status-table-card .table-shell{margin-top:10px}.status-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;font-size:9.5px;font-weight:900}.status-chip::before{content:"";width:8px;height:8px;border-radius:50%}.status-chip.red{background:#fdecef;color:#a6374b}.status-chip.red::before{background:#b73e53}.status-chip.amber{background:#fff4df;color:#8a580d}.status-chip.amber::before{background:#d08a14}.status-chip.green{background:#ebf6ef;color:#2d8357}.status-chip.green::before{background:#2d8357}.status-chip.gray{background:#eef1f3;color:#6d7780}.status-chip.gray::before{background:#aeb6bd}
-.snapshot-empty{padding:32px 18px;text-align:center;color:var(--pm);font-size:12px}
-.snapshot-footnote{margin-top:10px;color:#8a8078;font-size:10px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-@media(max-width:1180px){.snapshot-kpis{grid-template-columns:repeat(2,1fr)}.snapshot-layout{grid-template-columns:1fr}.iran-map-panel{min-height:410px}}
-@media(max-width:720px){.daily-brief-shell{padding:12px}.daily-brief-head{flex-direction:column}.snapshot-stamp{min-width:0;width:100%}.snapshot-kpis{grid-template-columns:1fr 1fr}.iran-map-panel{min-height:500px}.iran-marker{min-width:88px;max-width:100px;padding:8px}.iran-marker .name{font-size:10px}.iran-marker .meta{display:block}.insight-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:480px){.snapshot-kpis{grid-template-columns:1fr}.iran-map-panel{min-height:560px}.insight-grid{grid-template-columns:1fr}.iran-marker{min-width:84px;max-width:92px;font-size:9px}.iran-grid-note{font-size:9px}}
-@media(max-width:1180px){.stats{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
-@media(max-width:720px){.admin-wrap{width:calc(100% - 18px);padding-top:15px}.admin-head{display:block}.live-box{width:100%;margin-top:13px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{min-height:116px;padding:13px}.stat-v{font-size:20px}.card-admin{padding:12px;border-radius:19px}.filters{grid-template-columns:1fr 1fr}.search-wide{grid-column:1/-1}.region-row{grid-template-columns:1fr 1fr}.region-row>div:first-child{grid-column:1/-1}.filter-foot{flex-direction:column}}
-@media(max-width:410px){.filters{grid-template-columns:1fr}.search-wide{grid-column:auto}}
+:root{
+  --bg:#050708;--bg2:#0a0e11;--panel:#0d1216;--panel2:#11171c;--line:#273039;
+  --text:#f7f8fa;--muted:#8d99a3;--muted2:#66727c;--red:#ff3f52;--red2:#a51024;
+  --amber:#ff9d1c;--amber2:#a85b00;--green:#64d36f;--green2:#1d7430;--blue:#41a8ff;
+  --gray:#56616a;--shadow:0 20px 60px rgba(0,0,0,.36);--radius:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Vazirmatn,Tahoma,sans-serif;background:
+  radial-gradient(circle at 75% 0%,rgba(255,58,74,.07),transparent 28%),
+  radial-gradient(circle at 20% 8%,rgba(65,168,255,.06),transparent 30%),
+  linear-gradient(180deg,#030506,#070a0c 45%,#050708);color:var(--text);min-height:100vh}
+button,input,select{font-family:inherit}
+a{color:inherit}
+.topbar{position:sticky;top:0;z-index:90;display:flex;justify-content:space-between;align-items:center;gap:18px;padding:12px 22px;background:rgba(4,6,8,.86);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(18px)}
+.brand-group{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#ff2f48,#a30719);box-shadow:0 0 24px rgba(255,47,72,.28)}.mark span{font-weight:900;color:#fff;font-size:13px}.brand-name{font-size:13px;font-weight:900}.brand-name small{display:block;color:var(--muted);font-size:9px;margin-top:2px;font-weight:600}.topbar .right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.pill,.context-label,.link-ghost{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:10px;text-decoration:none;background:#0c1115;color:#cbd3d9}.pill{color:#fff;font-weight:900;background:linear-gradient(145deg,#1a2026,#0f1418)}.link-ghost:hover{border-color:#56616a;color:#fff}
+.admin-wrap{width:min(1640px,calc(100% - 28px));margin:auto;padding:18px 0 60px}
+.admin-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin:16px 0}.admin-head h1{margin:0;font-size:clamp(24px,2.7vw,38px);font-weight:900}.admin-head p{margin:6px 0 0;color:var(--muted);font-size:12px}.live-box{display:flex;align-items:center;gap:12px;background:linear-gradient(145deg,#10161b,#0b1014);border:1px solid var(--line);border-radius:18px;padding:11px 13px;min-width:270px;box-shadow:var(--shadow)}.live-dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(100,211,111,.12),0 0 18px rgba(100,211,111,.5)}.live-dot.loading{background:var(--amber);box-shadow:0 0 0 5px rgba(255,157,28,.12),0 0 18px rgba(255,157,28,.5);animation:pulse 1s infinite alternate}.live-dot.error{background:var(--red);box-shadow:0 0 0 5px rgba(255,63,82,.12),0 0 18px rgba(255,63,82,.5)}@keyframes pulse{to{opacity:.45}}.live-main{font-size:11px;font-weight:900}.live-sub{font-size:9px;color:var(--muted);margin-top:2px}.refresh{margin-right:auto;width:40px;height:40px;border:1px solid #33404a;border-radius:13px;background:#111820;color:#d8e2e9;font-size:20px;cursor:pointer}.refresh:hover{border-color:#657682}
+.alert-admin{display:none;background:rgba(255,63,82,.1);color:#ff8d9b;padding:12px 14px;border-radius:14px;margin-bottom:14px;border:1px solid rgba(255,63,82,.24)}.alert-admin.show{display:block}
+
+/* Executive report */
+.exec-report{position:relative;overflow:hidden;background:linear-gradient(145deg,#080b0e,#050708 72%);border:1px solid #2a333b;border-radius:28px;padding:16px;margin-bottom:18px;box-shadow:0 28px 90px rgba(0,0,0,.5)}
+.exec-report::before{content:"";position:absolute;inset:-1px;background:radial-gradient(circle at 78% -10%,rgba(255,45,67,.12),transparent 31%),radial-gradient(circle at 28% 105%,rgba(28,139,255,.1),transparent 30%);pointer-events:none}
+.exec-report>*{position:relative;z-index:1}
+.exec-head{display:grid;grid-template-columns:250px 1fr 260px;gap:16px;align-items:center;margin-bottom:14px;direction:ltr}.exec-head>*{direction:rtl}.exec-date,.exec-logo,.exec-title{min-height:78px;border:1px solid #2a333b;border-radius:19px;background:linear-gradient(145deg,rgba(18,24,29,.94),rgba(8,12,15,.94));box-shadow:inset 0 1px rgba(255,255,255,.025),0 12px 28px rgba(0,0,0,.24)}.exec-date{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px}.exec-date-icon{font-size:28px;color:var(--red);filter:drop-shadow(0 0 10px rgba(255,63,82,.45))}.exec-date small{display:block;color:var(--muted);font-size:9.5px}.exec-date strong{display:block;margin-top:5px;font-size:13px;direction:ltr;text-align:right}.exec-title{border-color:transparent;background:transparent;box-shadow:none;text-align:center;padding:5px 12px;display:flex;flex-direction:column;justify-content:center}.exec-title h2{margin:0;font-size:clamp(24px,2.5vw,38px);font-weight:900;letter-spacing:-.7px}.exec-title p{margin:7px 0 0;color:#9aa6af;font-size:11px}.exec-logo{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px}.exec-logo-mark{font-size:30px;color:var(--red);filter:drop-shadow(0 0 14px rgba(255,63,82,.38))}.exec-logo strong{font-size:25px;color:var(--red);font-weight:900}.exec-logo small{display:block;font-size:8px;color:#ff8a98;margin-top:-2px}.exec-actions{display:flex;gap:8px;justify-content:center;margin-top:8px}.exec-action{border:1px solid #34404a;background:#10161b;color:#dce4e9;border-radius:10px;padding:7px 10px;font-size:9.5px;font-weight:800;cursor:pointer}.exec-action:hover{border-color:#687b88;color:#fff}.exec-action.primary{background:linear-gradient(145deg,#c4142b,#7f0717);border-color:#d52a40;color:#fff}
+.exec-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}.exec-kpi{min-height:117px;border:1px solid #2b353d;border-radius:18px;padding:13px 14px;background:linear-gradient(145deg,#11171c,#090d10);position:relative;overflow:hidden}.exec-kpi::after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;left:-28px;bottom:-45px;filter:blur(9px);opacity:.15}.exec-kpi.red::after{background:var(--red)}.exec-kpi.amber::after{background:var(--amber)}.exec-kpi.green::after{background:var(--green)}.exec-kpi.blue::after{background:var(--blue)}.exec-kpi.gray::after{background:#b4bec6}.exec-kpi .icon{position:absolute;left:13px;top:13px;font-size:27px;opacity:.9}.exec-kpi.red .icon,.exec-kpi.red .value{color:#ff5366;text-shadow:0 0 18px rgba(255,63,82,.22)}.exec-kpi.amber .icon,.exec-kpi.amber .value{color:#ffad35;text-shadow:0 0 18px rgba(255,157,28,.2)}.exec-kpi.green .icon,.exec-kpi.green .value{color:#75db7d;text-shadow:0 0 18px rgba(100,211,111,.2)}.exec-kpi.blue .icon,.exec-kpi.blue .value{color:#66baff}.exec-kpi .label{font-size:10.5px;color:#c2cbd1;font-weight:800;padding-left:38px}.exec-kpi .value{font-size:clamp(18px,1.7vw,25px);font-weight:900;margin-top:15px;line-height:1.3;direction:ltr;text-align:right}.exec-kpi .meta{font-size:9.5px;color:var(--muted);margin-top:6px}
+.exec-main{display:grid;grid-template-columns:310px minmax(0,1fr) 290px;gap:12px;direction:ltr;align-items:stretch}.exec-main>*{direction:rtl}.exec-panel,.map-panel{border:1px solid #2a333b;border-radius:20px;background:linear-gradient(145deg,#0e1418,#080c0f);overflow:hidden;min-height:618px}.exec-panel{padding:13px}.exec-panel h3,.map-title{font-size:13px;margin:0;font-weight:900}.panel-sub{font-size:9.5px;color:var(--muted);margin-top:4px}.critical-list{display:grid;gap:8px;margin-top:12px}.critical-row{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:center;border:1px solid #29323a;border-radius:14px;padding:9px;background:linear-gradient(145deg,#11171b,#0a0f12);min-height:78px}.critical-rank{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#d61d35,#8b0918);box-shadow:0 0 14px rgba(255,63,82,.22);font-size:12px;font-weight:900}.critical-name{font-size:11px;font-weight:900}.critical-value{font-size:11px;color:#ff697a;font-weight:900;margin-top:6px;direction:ltr;text-align:right}.critical-meta{font-size:8.5px;color:var(--muted);margin-top:3px}.critical-empty{color:var(--muted);font-size:10px;text-align:center;padding:30px 10px}.view-all-regions{display:flex;justify-content:space-between;align-items:center;margin-top:12px;border:1px solid #2c363e;border-radius:13px;padding:12px;background:#0d1216;color:#e6ecf0;font-size:10px;font-weight:900;cursor:pointer}.view-all-regions:hover{border-color:#5a6974}
+.map-panel{position:relative;background:radial-gradient(circle at 48% 50%,#0d1f2b,#061017 62%,#05090c);padding:0}.map-head{position:absolute;right:13px;left:13px;top:11px;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.map-head>*{pointer-events:auto}.map-title-wrap{padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(3,7,10,.72);backdrop-filter:blur(8px)}.map-title-wrap small{display:block;color:#7e8c96;font-size:8.5px;margin-top:2px}.map-legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;padding:7px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(3,7,10,.72);backdrop-filter:blur(8px)}.legend-item{display:inline-flex;align-items:center;gap:5px;padding:4px 6px;border-radius:999px;font-size:8.5px;color:#c6d0d7;white-space:nowrap}.legend-dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 10px currentColor}.legend-dot.red{background:var(--red);color:var(--red)}.legend-dot.amber{background:var(--amber);color:var(--amber)}.legend-dot.green{background:var(--green);color:var(--green)}.legend-dot.gray{background:#6a747d;color:#6a747d}#iranMap{width:100%;height:618px}.map-fallback{height:100%;display:grid;place-items:center;color:#9aa6ae;text-align:center;padding:30px;font-size:11px}
+.summary-stack{display:grid;gap:9px;margin-top:12px}.summary-card{position:relative;min-height:100px;border:1px solid #2b353d;border-radius:15px;padding:12px 13px;background:linear-gradient(145deg,#11171b,#090d10);overflow:hidden}.summary-card .s-label{font-size:9.5px;color:var(--muted)}.summary-card .s-value{font-size:18px;font-weight:900;margin-top:9px}.summary-card .s-meta{font-size:9px;color:#7f8b94;margin-top:4px}.summary-card .s-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:30px;opacity:.9}.summary-card.red .s-value,.summary-card.red .s-icon{color:var(--red);text-shadow:0 0 16px rgba(255,63,82,.32)}.summary-card.green .s-value,.summary-card.green .s-icon{color:var(--green);text-shadow:0 0 16px rgba(100,211,111,.28)}.summary-card.amber .s-value,.summary-card.amber .s-icon{color:var(--amber)}.summary-card.blue .s-value,.summary-card.blue .s-icon{color:var(--blue)}
+.exec-foot{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:#697680;font-size:8.5px}.exec-foot strong{color:#9aa6af}.map-source{direction:ltr}
+
+/* Existing dashboard sections */
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0 0 15px}.stat{min-height:118px;padding:14px;border-radius:18px;border:1px solid #273039;background:linear-gradient(145deg,#11171c,#090d10);box-shadow:0 12px 30px rgba(0,0,0,.23)}.stat.green{background:linear-gradient(145deg,rgba(30,116,48,.35),#0a0f0c);color:#8be093}.stat.red{background:linear-gradient(145deg,rgba(165,16,36,.38),#10080b);color:#ff7c8b}.stat.amber{background:linear-gradient(145deg,rgba(168,91,0,.35),#100c06);color:#ffbd55}.stat.blue{background:linear-gradient(145deg,rgba(24,93,145,.35),#071019);color:#75c2ff}.stat-l{font-size:10px;font-weight:800;opacity:.78}.stat-v{font-size:clamp(18px,1.9vw,26px);font-weight:900;margin-top:13px;line-height:1.25;overflow-wrap:anywhere}.stat-s{font-size:9px;opacity:.7;margin-top:6px}.card-admin{background:linear-gradient(145deg,#0f1519,#080c0f);border:1px solid #283139;border-radius:21px;padding:16px;margin-bottom:15px;box-shadow:0 14px 34px rgba(0,0,0,.25)}.card-admin h2{font-size:15px;margin:0;font-weight:900}.desc{font-size:10.5px;color:var(--muted);margin:5px 0 13px}.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr auto;gap:9px;align-items:end}.field label{display:block;font-size:9.5px;color:#8f9aa2;font-weight:800;margin-bottom:5px}.field input,.field select{width:100%;height:43px;border:1px solid #303a42;border-radius:12px;background:#0a0f12;color:#eef3f6;padding:0 11px;outline:none}.field select option{background:#0b1013;color:#fff}.field input:focus,.field select:focus{border-color:#60717e;box-shadow:0 0 0 3px rgba(91,116,133,.12)}.clear{height:43px;border:1px solid #303a42;border-radius:12px;background:#151c21;color:#cbd4da;padding:0 15px;font-weight:800;cursor:pointer}.filter-foot{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:9.5px;color:var(--muted)}.grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:15px}.region-list{display:grid;gap:8px}.region-row{display:grid;grid-template-columns:1.25fr repeat(4,.7fr);gap:8px;align-items:center;border:1px solid #283139;border-radius:14px;padding:11px;background:#0b1013}.region-row strong{display:block;font-size:11px}.region-row small{font-size:8.5px;color:var(--muted)}.region-title{font-weight:900;font-size:11px}.table-shell{overflow:auto;border:1px solid #283139;border-radius:16px;background:#090d10}.admin-table{width:100%;min-width:950px;border-collapse:collapse}.admin-table th{position:sticky;top:0;z-index:1;text-align:right;padding:11px 10px;background:#141a1f;color:#9ca7ae;font-size:9.5px;white-space:nowrap;border-bottom:1px solid #2c353c}.admin-table td{padding:11px 10px;font-size:10.5px;border-bottom:1px solid #20272c;vertical-align:middle}.admin-table tbody tr:hover{background:#10161a}.title{font-weight:800}.sub{font-size:8.5px;color:var(--muted);margin-top:2px}.num{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.chip{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:8.5px;font-weight:900;white-space:nowrap}.expired{background:rgba(255,63,82,.13);color:#ff7585}.urgent{background:rgba(255,63,82,.13);color:#ff7585}.warn{background:rgba(255,157,28,.13);color:#ffb94c}.safe{background:rgba(100,211,111,.12);color:#7cdd84}.sold{background:#20262b;color:#9ca6ad}.expand{cursor:pointer}.detail td{padding:0;background:#070a0c}.detail-box{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px}.store-pill{padding:6px 9px;border:1px solid #2b343b;border-radius:10px;background:#0d1216;font-size:9px}.empty{padding:34px 15px;text-align:center;color:var(--muted);font-size:11px}
+.toast{position:fixed;left:18px;bottom:18px;z-index:120;max-width:360px;padding:12px 14px;border:1px solid #35414a;border-radius:14px;background:#10161b;color:#edf2f5;box-shadow:0 20px 50px rgba(0,0,0,.45);font-size:10.5px;opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}
+body.capture-mode{overflow:auto;background:#050708}body.capture-mode .topbar,body.capture-mode .admin-head,body.capture-mode .admin-wrap>*:not(#executiveReport){display:none!important}body.capture-mode .admin-wrap{width:100%;padding:0}body.capture-mode #executiveReport{border-radius:0;margin:0;min-height:100vh}body.capture-mode .exec-report{box-shadow:none}
+@media(max-width:1400px){.exec-main{grid-template-columns:280px minmax(0,1fr) 260px}.exec-kpis{grid-template-columns:repeat(5,minmax(170px,1fr));overflow-x:auto;padding-bottom:4px}}
+@media(max-width:1180px){.exec-head{grid-template-columns:220px 1fr 220px}.exec-main{grid-template-columns:1fr}.exec-panel,.map-panel{min-height:auto}#iranMap{height:590px}.exec-kpis{grid-template-columns:repeat(3,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.critical-list{grid-template-columns:1fr 1fr}.summary-stack{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.topbar{padding:10px 12px}.context-label{display:none}.admin-wrap{width:calc(100% - 16px);padding-top:10px}.admin-head{display:block}.live-box{width:100%;margin-top:12px}.exec-report{padding:10px;border-radius:20px}.exec-head{grid-template-columns:1fr}.exec-title{order:-1}.exec-logo{min-height:62px}.exec-title h2{font-size:23px}.exec-kpis{grid-template-columns:1fr 1fr}.exec-main{display:block}.exec-panel,.map-panel{margin-bottom:10px}.critical-list{grid-template-columns:1fr}.summary-stack{grid-template-columns:1fr 1fr}#iranMap{height:520px}.map-head{position:relative;right:auto;left:auto;top:auto;padding:10px;display:block}.map-legend{margin-top:7px}.stats{grid-template-columns:1fr 1fr}.card-admin{padding:12px}.filters{grid-template-columns:1fr 1fr}.search-wide{grid-column:1/-1}.region-row{grid-template-columns:1fr 1fr}.region-row>div:first-child{grid-column:1/-1}.filter-foot{flex-direction:column}.exec-foot{display:block}.map-source{margin-top:4px}}
+@media(max-width:440px){.exec-kpis,.stats,.filters,.summary-stack{grid-template-columns:1fr}.search-wide{grid-column:auto}#iranMap{height:470px}.exec-date,.exec-logo{min-height:68px}.exec-title h2{font-size:20px}}
+
 </style>
 </head>
 <body>
@@ -76,13 +65,46 @@
   </div>
 
   <div class="alert-admin" id="alert"></div>
-  <div class="stats" id="stats"></div>
 
-  <section class="card-admin daily-brief-card">
-    <div id="dailyBriefWrap" class="daily-brief-shell"></div>
+  <section class="exec-report" id="executiveReport">
+    <div class="exec-head">
+      <div class="exec-date">
+        <div><small>آخرین به‌روزرسانی گزارش</small><strong id="execUpdatedAt">—</strong></div>
+        <div class="exec-date-icon">▣</div>
+      </div>
+      <div class="exec-title">
+        <h2>گزارش تصویری وضعیت مناطق روی نقشه ایران</h2>
+        <p>گزارش روزانه کالاهای نزدیک به انقضا برای مدیریت ارشد و مدیرعامل</p>
+        <div class="exec-actions">
+          <button class="exec-action primary" id="downloadReportBtn" type="button">دانلود تصویر گزارش</button>
+          <button class="exec-action" id="focusReportBtn" type="button">نمای تمام‌صفحه</button>
+        </div>
+      </div>
+      <div class="exec-logo"><div class="exec-logo-mark">▤</div><div><strong>دیلی‌مارکت</strong><small>DAILY MARKET</small></div></div>
+    </div>
+    <div class="exec-kpis" id="execKpis"></div>
+    <div class="exec-main">
+      <aside class="exec-panel">
+        <h3>بحرانی‌ترین مناطق امروز</h3><div class="panel-sub">رتبه‌بندی بر اساس ارزش کالاهای ۰ تا ۳ روز</div>
+        <div class="critical-list" id="criticalRegions"></div>
+        <button class="view-all-regions" type="button" id="viewAllRegionsBtn"><span>مشاهده همه مناطق</span><span>‹</span></button>
+      </aside>
+      <section class="map-panel">
+        <div class="map-head">
+          <div class="map-title-wrap"><div class="map-title">نقشه زنده وضعیت مناطق</div><small>رنگ هر استان یا نیمه استان از وضعیت منطقه عملیاتی آن دریافت می‌شود.</small></div>
+          <div class="map-legend"><span class="legend-item"><i class="legend-dot red"></i>بحرانی</span><span class="legend-item"><i class="legend-dot amber"></i>نیازمند پیگیری</span><span class="legend-item"><i class="legend-dot green"></i>پایدار</span><span class="legend-item"><i class="legend-dot gray"></i>بدون ثبت</span></div>
+        </div>
+        <div id="iranMap"><div class="map-fallback">در حال آماده‌سازی نقشه دقیق استان‌های ایران…</div></div>
+      </section>
+      <aside class="exec-panel">
+        <h3>خلاصه مدیریتی امروز</h3><div class="panel-sub">مهم‌ترین نکات شبکه در یک نگاه</div>
+        <div class="summary-stack" id="executiveSummary"></div>
+      </aside>
+    </div>
+    <div class="exec-foot"><span><strong>مبنای وضعیت:</strong> قرمز = دارای کالای ۰ تا ۳ روز، نارنجی = فقط ۴ تا ۷ روز، سبز = فقط بیش از ۷ روز، خاکستری = بدون ثبت فعال</span><span class="map-source">Map geometry: Highcharts Map Collection / Natural Earth</span></div>
   </section>
 
-  <section class="card-admin">
+  <section class="card-admin" id="filtersCard">
     <h2>فیلتر نمای مدیریتی</h2><p class="desc">تمام جدول‌ها و کارت‌ها با فیلترهای زیر تغییر می‌کنند.</p>
     <div class="filters">
       <div class="field"><label>منطقه</label><select id="regionFilter"><option value="">همه مناطق</option></select></div>
@@ -94,6 +116,8 @@
     </div>
     <div class="filter-foot"><span>فقط کالاهای فعالِ امروز و آینده نمایش داده می‌شوند؛ تاریخ‌گذشته‌ها در آرشیو پایین صفحه هستند.</span><span id="resultCount">در حال محاسبه...</span></div>
   </section>
+
+  <div class="stats" id="stats"></div>
 
   <div class="grid2">
     <section class="card-admin"><h2>وضعیت تمام مناطق</h2><p class="desc">مقایسه سریع مناطق بر اساس ارزش و ریسک فوری.</p><div id="regionOverview" class="region-list"></div></section>
@@ -112,18 +136,30 @@
     <div id="archiveWrap" style="margin-top:12px;"></div>
   </section>
 </main>
+<div class="toast" id="toast"></div>
 
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<script src="https://code.highcharts.com/mapdata/countries/ir/ir-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="auth.js"></script>
 <script>
 const session=nhRequireRole(["system_admin","platform_admin"]);
 const REFRESH_MS=60000,PAGE=1000,MAX=100000;
-let stores=[],batches=[],storeMap=new Map(),productMap=new Map(),expanded=null,busy=false,timer=null;
+let stores=[],batches=[],storeMap=new Map(),productMap=new Map(),expanded=null,busy=false,timer=null,iranChart=null,toastTimer=null;
 const $=id=>document.getElementById(id);
 $("logoutBtn").onclick=e=>{e.preventDefault();nhLogout()};
 $("refreshBtn").onclick=()=>refresh(true);
 ["regionFilter","storeFilter","groupFilter","daysFilter"].forEach(id=>$(id).onchange=()=>{if(id==="regionFilter")fillStores();render()});
 let st=null;$("search").oninput=()=>{clearTimeout(st);st=setTimeout(render,180)};
 $("clearBtn").onclick=()=>{["regionFilter","storeFilter","groupFilter","daysFilter","search"].forEach(id=>$(id).value="");fillStores();render()};
+$("focusReportBtn").onclick=()=>{
+ document.body.classList.toggle("capture-mode");
+ $("focusReportBtn").textContent=document.body.classList.contains("capture-mode")?"بازگشت به داشبورد":"نمای تمام‌صفحه";
+ window.scrollTo({top:0,behavior:"smooth"});
+ setTimeout(()=>{if(iranChart)iranChart.reflow()},250);
+};
+$("downloadReportBtn").onclick=downloadExecutiveReport;
+$("viewAllRegionsBtn").onclick=()=>document.getElementById("regionOverview").scrollIntoView({behavior:"smooth",block:"start"});
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function fa(v,d=3){return new Intl.NumberFormat("fa-IR",{maximumFractionDigits:d}).format(Number(v)||0)}
@@ -137,6 +173,215 @@ function val(b){return(Number(b.quantity)||0)*(Number(b.unit_price)||0)}
 function live(state,text){$("liveDot").className="live-dot"+(state==="loading"?" loading":state==="error"?" error":"");$("liveText").textContent=text}
 function err(m){$("alert").textContent="خطا: "+m;$("alert").classList.add("show");live("error","اتصال با خطا مواجه شد")}
 function ok(){ $("alert").classList.remove("show") }
+
+
+const OPERATIONAL_REGIONS=[
+ "غرب اصفهان","کرمان","آذربایجان شرقی","خراسان","البرز/الوند","هرمزگان و جنوب کرمان",
+ "غرب گیلان","کرمانشاه","مازندران","غرب خوزستان","شرق اصفهان","ایلام/لرستان",
+ "ری/سمنان","غرب تهران","اسلامشهر/ساوه","شرق تهران","شرق فارس","جنوب آذربایجان",
+ "شرق خوزستان","غرب فارس","همدان","آذربایجان غربی","شرق گیلان","سیستان و بلوچستان"
+];
+const STATUS_COLORS={red:"#ff3f52",amber:"#ff9d1c",green:"#64d36f",gray:"#4e5962"};
+const STATUS_LABELS={red:"بحرانی",amber:"نیازمند پیگیری",green:"پایدار",gray:"بدون ثبت"};
+function showToast(message){
+ const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3000);
+}
+function regionMetrics(activeRows){
+ const map=new Map(OPERATIONAL_REGIONS.map(name=>[name,{name,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,safe:0,last:null,lastMs:0}]));
+ activeRows.forEach(x=>{
+  const name=x.region||"نامشخص";
+  if(!map.has(name))map.set(name,{name,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,safe:0,last:null,lastMs:0});
+  const o=map.get(name),q=Number(x.quantity)||0,dl=daysLeft(x.expiry_date);
+  o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.qty+=q;o.value+=x.rial;
+  if(dl!==null&&dl<=3)o.urgent+=x.rial;else if(dl!==null&&dl<=7)o.soon+=x.rial;else o.safe+=x.rial;
+  const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at;}
+ });
+ map.forEach(o=>{o.storeCount=o.stores.size;o.productCount=o.products.size;o.status=o.urgent>0?"red":o.soon>0?"amber":o.value>0?"green":"gray";});
+ return map;
+}
+function latin(v){return String(v||"").toLowerCase().replace(/[^a-z]+/g," ").trim();}
+function hasAll(n,...words){return words.every(w=>n.includes(w));}
+function provincePlan(properties,metrics){
+ const n=latin(Object.values(properties||{}).join(" "));
+ const one=(region,label=region)=>({regions:[region],label,colors:[STATUS_COLORS[metrics.get(region)?.status||"gray"]],direction:"x"});
+ const split=(a,b,label,direction="x",ratio=.5)=>({regions:[a,b],label,colors:[STATUS_COLORS[metrics.get(a)?.status||"gray"],STATUS_COLORS[metrics.get(b)?.status||"gray"]],direction,ratio});
+ if(n.includes("kermanshah"))return one("کرمانشاه");
+ if(n.includes("kurdistan"))return one("کرمانشاه","کرمانشاه");
+ if(n.includes("east azar")||n.includes("east azer")||hasAll(n,"azarbaijan","east"))return one("آذربایجان شرقی");
+ if(n.includes("west azar")||n.includes("western azer")||hasAll(n,"azarbaijan","west"))return split("آذربایجان غربی","جنوب آذربایجان","آذربایجان غربی / جنوب آذربایجان","y",.58);
+ if(n.includes("ardabil"))return {regions:[],label:"اردبیل",colors:[STATUS_COLORS.gray],direction:"x"};
+ if(n.includes("isfahan")||n.includes("esfahan"))return split("غرب اصفهان","شرق اصفهان","غرب / شرق اصفهان","x",.5);
+ if(n.includes("chahar")||n.includes("bakhtiari"))return one("غرب اصفهان","غرب اصفهان");
+ if(n.includes("kerman")&&!n.includes("kermanshah"))return split("کرمان","هرمزگان و جنوب کرمان","کرمان / جنوب کرمان","y",.62);
+ if(n.includes("hormozgan"))return one("هرمزگان و جنوب کرمان","هرمزگان و جنوب کرمان");
+ if(n.includes("gilan"))return split("غرب گیلان","شرق گیلان","غرب / شرق گیلان","x",.5);
+ if(n.includes("mazandaran")||n.includes("golestan"))return one("مازندران");
+ if(n.includes("khuzestan"))return split("غرب خوزستان","شرق خوزستان","غرب / شرق خوزستان","x",.5);
+ if(n.includes("ilam")||n.includes("lorestan"))return one("ایلام/لرستان");
+ if(n.includes("fars"))return split("غرب فارس","شرق فارس","غرب / شرق فارس","x",.5);
+ if(n.includes("bushehr"))return one("غرب فارس","غرب فارس");
+ if(n.includes("hamadan")||n.includes("hamedan"))return one("همدان");
+ if(n.includes("markazi"))return split("همدان","اسلامشهر/ساوه","همدان / اسلامشهر-ساوه","x",.64);
+ if(n.includes("tehran"))return split("غرب تهران","شرق تهران","غرب / شرق تهران","x",.5);
+ if(n.includes("semnan")||n.includes("qom"))return one("ری/سمنان");
+ if(n.includes("alborz")||n.includes("qazvin")||n.includes("zanjan"))return one("البرز/الوند");
+ if(n.includes("khorasan"))return one("خراسان");
+ if(n.includes("sistan")||n.includes("baluch"))return one("سیستان و بلوچستان");
+ if(n.includes("yazd"))return {regions:[],label:"یزد",colors:[STATUS_COLORS.gray],direction:"x"};
+ if(n.includes("kohgiluyeh")||n.includes("buyer")||n.includes("boyer"))return {regions:[],label:"کهگیلویه و بویراحمد",colors:[STATUS_COLORS.gray],direction:"x"};
+ return {regions:[],label:properties?.name||"",colors:[STATUS_COLORS.gray],direction:"x"};
+}
+function gradientColor(plan){
+ if(plan.colors.length===1)return plan.colors[0];
+ const r=Math.max(.2,Math.min(.8,plan.ratio||.5)),a=plan.colors[0],b=plan.colors[1];
+ return {linearGradient:plan.direction==="y"?{x1:0,y1:0,x2:0,y2:1}:{x1:0,y1:0,x2:1,y2:0},stops:[[0,a],[r-.012,a],[r+.012,b],[1,b]]};
+}
+function combinedMetrics(regions,metrics){
+ const out={value:0,urgent:0,soon:0,safe:0,qty:0,stores:new Set(),products:new Set()};
+ regions.forEach(name=>{const o=metrics.get(name);if(!o)return;out.value+=o.value;out.urgent+=o.urgent;out.soon+=o.soon;out.safe+=o.safe;out.qty+=o.qty;o.stores.forEach(v=>out.stores.add(v));o.products.forEach(v=>out.products.add(v));});
+ out.storeCount=out.stores.size;out.productCount=out.products.size;return{value:out.value,urgent:out.urgent,soon:out.soon,safe:out.safe,qty:out.qty,storeCount:out.storeCount,productCount:out.productCount};
+}
+function renderIranMap(metrics){
+ const host=$("iranMap");
+ if(typeof Highcharts==="undefined"||!Highcharts.maps||!Highcharts.maps["countries/ir/ir-all"]){host.innerHTML='<div class="map-fallback">نقشه استان‌های ایران بارگذاری نشد.<br>اتصال اینترنت یا دسترسی به CDN را بررسی کنید.</div>';return;}
+ if(iranChart){try{iranChart.destroy()}catch(_e){}iranChart=null;}
+ const mapData=Highcharts.maps["countries/ir/ir-all"];
+ const points=Highcharts.geojson(mapData).map(p=>{
+  const props=p.properties||{},plan=provincePlan(props,metrics),combined=combinedMetrics(plan.regions,metrics);
+  return {"hc-key":props["hc-key"],name:props.name||p.name,color:gradientColor(plan),custom:{...combined,regions:plan.regions,label:plan.label,statuses:plan.regions.map(r=>STATUS_LABELS[metrics.get(r)?.status||"gray"]),province:props.name||p.name}};
+ });
+ iranChart=Highcharts.mapChart("iranMap",{
+  chart:{
+   map:mapData,
+   backgroundColor:"transparent",
+   spacing:[56,6,8,6],
+   animation:false,
+   style:{fontFamily:"Vazirmatn,Tahoma,sans-serif"},
+   events:{
+    render:function(){
+     const c=this;
+     if(c.seaLabels)c.seaLabels.forEach(x=>x.destroy());
+     c.seaLabels=[];
+     const labels=[
+      ["دریای خزر",c.plotLeft+c.plotWidth*.53,c.plotTop+20],
+      ["خلیج فارس",c.plotLeft+c.plotWidth*.33,c.plotTop+c.plotHeight*.91],
+      ["دریای عمان",c.plotLeft+c.plotWidth*.68,c.plotTop+c.plotHeight*.94]
+     ];
+     labels.forEach(([t,x,y])=>c.seaLabels.push(
+      c.renderer.text(t,x,y)
+       .css({color:"#2f82bd",fontSize:"12px",fontWeight:"800"})
+       .attr({zIndex:1})
+       .add()
+     ));
+    }
+   }
+  },
+  title:{text:null},
+  credits:{enabled:false},
+  legend:{enabled:false},
+  mapNavigation:{
+   enabled:true,
+   buttonOptions:{
+    verticalAlign:"bottom",
+    theme:{
+     fill:"#111820",stroke:"#33404a",r:6,
+     style:{color:"#fff"},
+     states:{hover:{fill:"#1b252c"},select:{fill:"#1b252c"}}
+    }
+   }
+  },
+  tooltip:{
+   useHTML:true,
+   backgroundColor:"rgba(7,10,12,.96)",
+   borderColor:"#3b4650",
+   borderRadius:12,
+   shadow:true,
+   style:{color:"#fff",fontFamily:"Vazirmatn"},
+   formatter:function(){
+    const c=this.point.custom||{},regions=c.regions||[];
+    if(!regions.length){
+     return `<div style="min-width:170px"><b>${esc(c.label||this.point.name)}</b><div style="color:#7f8b94;margin-top:6px">برای این استان منطقه عملیاتی در فایل تخصیص داده نشده است.</div></div>`;
+    }
+    return `<div style="min-width:210px"><b>${esc(c.label)}</b><div style="color:#9aa6af;margin:5px 0">${regions.map((r,i)=>esc(r)+" · "+esc(c.statuses[i]||"")).join("<br>")}</div><div>ارزش فعال: <b>${nhFormatRial(c.value)}</b></div><div>۰ تا ۳ روز: <b style="color:#ff6374">${nhFormatRial(c.urgent)}</b></div><div>۴ تا ۷ روز: <b style="color:#ffb047">${nhFormatRial(c.soon)}</b></div><div style="color:#81909a;margin-top:5px">${fa(c.storeCount,0)} فروشگاه · ${fa(c.qty)} واحد</div></div>`;
+   }
+  },
+  plotOptions:{
+   series:{
+    animation:false,
+    states:{hover:{brightness:.18,borderColor:"#ffffff",borderWidth:2.2}},
+    point:{
+     events:{
+      click:function(){
+       const regs=this.custom?.regions||[];
+       const option=[...$("regionFilter").options].find(x=>x.value===regs[0]);
+       if(regs.length===1&&option){
+        $("regionFilter").value=regs[0];
+        fillStores();
+        render();
+        showToast("فیلتر داشبورد روی «"+regs[0]+"» قرار گرفت.");
+        document.getElementById("filtersCard").scrollIntoView({behavior:"smooth",block:"start"});
+       }else if(regs.length>1){
+        showToast("این استان بین مناطق «"+regs.join("» و «")+"» تقسیم شده است.");
+       }
+      }
+     }
+    }
+   }
+  },
+  series:[{
+   data:points,
+   joinBy:"hc-key",
+   allAreas:true,
+   nullColor:STATUS_COLORS.gray,
+   borderColor:"#cfd7dc",
+   borderWidth:1.05,
+   shadow:{color:"rgba(255,255,255,.12)",offsetX:0,offsetY:0,width:6},
+   dataLabels:{
+    enabled:true,
+    useHTML:true,
+    allowOverlap:false,
+    padding:0,
+    formatter:function(){
+     const t=this.point.custom?.label||"";
+     if(!t)return"";
+     return `<span style="display:inline-block;max-width:92px;text-align:center;line-height:1.4;color:#f7f8fa;font-size:9px;font-weight:900;text-shadow:0 1px 3px #000,0 0 5px #000">${esc(t).replace(" / ","<br>")}</span>`;
+    },
+    style:{textOutline:"none"}
+   }
+  }]
+ });
+}
+async function downloadExecutiveReport(){
+ const btn=$("downloadReportBtn"),old=btn.textContent;btn.disabled=true;btn.textContent="در حال ساخت تصویر…";
+ try{
+  if(typeof html2canvas==="undefined")throw new Error("کتابخانه خروجی تصویر بارگذاری نشده است.");
+  const el=$("executiveReport");const canvas=await html2canvas(el,{backgroundColor:"#050708",scale:2,useCORS:true,logging:false,scrollX:0,scrollY:-window.scrollY});
+  const link=document.createElement("a");link.download=`daily-expiry-report-${new Date().toISOString().slice(0,10)}.png`;link.href=canvas.toDataURL("image/png",1);link.click();
+ }catch(e){showToast(e.message||"ساخت تصویر با خطا مواجه شد.");}finally{btn.disabled=false;btn.textContent=old;}
+}
+function renderExecutiveReport(activeRows){
+ const metrics=regionMetrics(activeRows),regions=[...metrics.values()];
+ const totalValue=activeRows.reduce((s,x)=>s+x.rial,0),urgent=activeRows.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0),soon=activeRows.filter(x=>x.rk.key==="4-7").reduce((s,x)=>s+x.rial,0),qty=activeRows.reduce((s,x)=>s+(Number(x.quantity)||0),0),storesCount=new Set(activeRows.map(x=>String(x.store_id))).size;
+ const red=regions.filter(x=>x.status==="red").length,amber=regions.filter(x=>x.status==="amber").length,green=regions.filter(x=>x.status==="green").length;
+ const ranked=[...regions].filter(x=>x.value>0).sort((a,b)=>b.urgent-a.urgent||b.soon-a.soon||b.value-a.value),top=ranked[0]||null;
+ const best=[...regions].filter(x=>x.value>0).sort((a,b)=>({green:0,amber:1,red:2,gray:3}[a.status]-{green:0,amber:1,red:2,gray:3}[b.status])||a.urgent-b.urgent||a.soon-b.soon||a.value-b.value)[0]||null;
+ const mostStores=[...regions].sort((a,b)=>b.storeCount-a.storeCount||b.value-a.value)[0]||null;
+ const top5Urgent=ranked.slice(0,5).reduce((s,x)=>s+x.urgent,0),concentration=urgent?top5Urgent/urgent*100:0;
+ $("execUpdatedAt").textContent=dt(new Date().toISOString());
+ $("execKpis").innerHTML=`
+  <div class="exec-kpi gray"><div class="icon">◈</div><div class="label">نرخ تمرکز ریسک شبکه</div><div class="value">${fa(concentration,1)}٪</div><div class="meta">سهم ۵ منطقه اول از ارزش فوری</div></div>
+  <div class="exec-kpi green"><div class="icon">▦</div><div class="label">کل ارزش کالاهای فعال</div><div class="value">${nhFormatRial(totalValue)}</div><div class="meta">${fa(storesCount,0)} فروشگاه · ${fa(qty)} واحد</div></div>
+  <div class="exec-kpi red"><div class="icon">◷</div><div class="label">ارزش فوری ۰ تا ۳ روز</div><div class="value">${nhFormatRial(urgent)}</div><div class="meta">${fa(red,0)} منطقه بحرانی</div></div>
+  <div class="exec-kpi amber"><div class="icon">▣</div><div class="label">ارزش ۴ تا ۷ روز آینده</div><div class="value">${nhFormatRial(soon)}</div><div class="meta">${fa(amber,0)} منطقه نیازمند پیگیری</div></div>
+  <div class="exec-kpi red"><div class="icon">△</div><div class="label">مناطق بحرانی</div><div class="value">${fa(red,0)} منطقه</div><div class="meta">از ${fa(OPERATIONAL_REGIONS.length,0)} منطقه عملیاتی</div></div>`;
+ const topFive=ranked.slice(0,5);$("criticalRegions").innerHTML=topFive.length?topFive.map((o,i)=>`<div class="critical-row"><div class="critical-rank">${fa(i+1,0)}</div><div><div class="critical-name">${esc(o.name)}</div><div class="critical-value">${nhFormatRial(o.urgent||o.soon||o.value)}</div><div class="critical-meta">${fa(o.storeCount,0)} فروشگاه · ${fa(o.qty)} واحد · ${o.urgent?"۰ تا ۳ روز":o.soon?"۴ تا ۷ روز":"فعال"}</div></div></div>`).join(""):'<div class="critical-empty">در حال حاضر منطقه دارای ثبت فعال وجود ندارد.</div>';
+ $("executiveSummary").innerHTML=`
+  <div class="summary-card red"><div class="s-label">بحرانی‌ترین منطقه امروز</div><div class="s-value">${esc(top?.name||"—")}</div><div class="s-meta">${top?nhFormatRial(top.urgent||top.soon||top.value):"بدون داده"}</div><div class="s-icon">△</div></div>
+  <div class="summary-card green"><div class="s-label">بهترین وضعیت امروز</div><div class="s-value">${esc(best?.name||"—")}</div><div class="s-meta">${best?STATUS_LABELS[best.status]+" · "+nhFormatRial(best.value):"بدون داده"}</div><div class="s-icon">◇</div></div>
+  <div class="summary-card amber"><div class="s-label">بیشترین درگیری فروشگاهی</div><div class="s-value">${esc(mostStores?.name||"—")}</div><div class="s-meta">${mostStores?fa(mostStores.storeCount,0)+" فروشگاه درگیر":"بدون داده"}</div><div class="s-icon">▥</div></div>
+  <div class="summary-card blue"><div class="s-label">تعداد مناطق پایدار</div><div class="s-value">${fa(green,0)} منطقه</div><div class="s-meta">${fa(amber,0)} نیازمند پیگیری · ${fa(red,0)} بحرانی</div><div class="s-icon">▮</div></div>`;
+ renderIranMap(metrics);
+}
 
 async function loadStores(){
  const q=`query{stores(order_by:[{region:asc},{name:asc}]){id store_code name region region_manager_name executive_manager_name}}`;
@@ -156,68 +401,6 @@ async function loadProducts(rows){
   (d.products||[]).forEach(p=>productMap.set(String(p.id),p));
  }
 }
-const IRAN_MARKER_POSITIONS=[
- {x:22,y:17},{x:38,y:14},{x:54,y:12},{x:70,y:16},{x:84,y:23},
- {x:20,y:29},{x:36,y:27},{x:51,y:25},{x:67,y:29},{x:82,y:35},
- {x:18,y:42},{x:33,y:40},{x:48,y:39},{x:63,y:43},{x:77,y:48},
- {x:21,y:55},{x:36,y:54},{x:51,y:54},{x:66,y:58},{x:80,y:64},
- {x:27,y:69},{x:42,y:69},{x:58,y:72},{x:74,y:77}
-];
-function regionSnapshot(r){
- const m=new Map();
- r.filter(active).forEach(x=>{
-  if(!m.has(x.region))m.set(x.region,{name:x.region,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,today:0,last:null,lastMs:0});
-  const o=m.get(x.region);const q=Number(x.quantity)||0;const dl=daysLeft(x.expiry_date);o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.qty+=q;o.value+=x.rial;if(dl===0)o.today+=x.rial;if(dl!==null&&dl<=3)o.urgent+=x.rial;if(dl!==null&&dl>=4&&dl<=7)o.soon+=x.rial;const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at;}
- });
- const arr=[...m.values()];
- const maxUrgent=Math.max(1,...arr.map(x=>x.urgent));
- const maxValue=Math.max(1,...arr.map(x=>x.value));
- const maxStores=Math.max(1,...arr.map(x=>x.stores.size));
- arr.forEach(o=>{
-  o.storeCount=o.stores.size;o.productCount=o.products.size;
-  const score=((o.urgent/maxUrgent)*65)+((o.value/maxValue)*25)+((o.storeCount/maxStores)*10);
-  o.score=Math.round(score);
-  if(!o.value){o.status='gray';o.statusLabel='بدون داده';}
-  else if(o.score>=67||o.urgent/maxUrgent>=.72){o.status='red';o.statusLabel='بحرانی';}
-  else if(o.score>=35||o.urgent>0){o.status='amber';o.statusLabel='نیازمند پیگیری';}
-  else{o.status='green';o.statusLabel='پایدار';}
- });
- return arr.sort((a,b)=>b.score-a.score||b.urgent-a.urgent||b.value-a.value||a.name.localeCompare(b.name,'fa'));
-}
-function statusChip(status,label){return `<span class="status-chip ${status}">${esc(label)}</span>`}
-function iranShape(){return `<svg viewBox="0 0 800 620" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><path d="M160 78l68-28 82 14 60-17 80 20 53-15 61 29 53 58 4 55 38 34-18 56-44 12-6 56-24 47-66 34-41 48-59-2-56 33-82-18-71-38-43-44-67-17-30-52-49-19-15-74 40-42-7-62 28-56 54-17 29-63z"/></svg>`}
-function renderDailyBrief(r){
- const host=$("dailyBriefWrap");
- const activeRows=r.filter(active);
- if(!activeRows.length){host.innerHTML=`<div class="daily-brief-head"><div class="daily-brief-title"><div><h2>گزارش روزانه وضعیت مناطق روی نقشه ایران</h2><p>این نما برای اسکرین‌شات و ارسال روزانه طراحی شده است.</p></div></div><div class="snapshot-stamp"><strong>آخرین وضعیت</strong><span>${dt(new Date().toISOString())}</span></div></div><div class="snapshot-empty">برای بازه فعلی داده فعالی وجود ندارد.</div>`;return}
- const regions=regionSnapshot(activeRows), totalValue=activeRows.reduce((s,x)=>s+x.rial,0), urgentValue=activeRows.filter(x=>x.rk.key==='0-3').reduce((s,x)=>s+x.rial,0), soonValue=activeRows.filter(x=>x.rk.key==='4-7').reduce((s,x)=>s+x.rial,0), totalStores=new Set(activeRows.map(x=>String(x.store_id))).size, totalQty=activeRows.reduce((s,x)=>s+(Number(x.quantity)||0),0), redCount=regions.filter(x=>x.status==='red').length, amberCount=regions.filter(x=>x.status==='amber').length, greenCount=regions.filter(x=>x.status==='green').length;
- const critical=regions[0], best=[...regions].filter(x=>x.status!=='gray').sort((a,b)=>a.score-b.score||a.urgent-b.urgent)[0]||regions[regions.length-1], mostStores=[...regions].sort((a,b)=>b.storeCount-a.storeCount||b.value-a.value)[0]||critical;
- const markers=regions.slice(0,IRAN_MARKER_POSITIONS.length).map((o,i)=>{const p=IRAN_MARKER_POSITIONS[i], activeClass=$("regionFilter").value===o.name?' active':'';return `<button type="button" class="iran-marker ${o.status}${activeClass}" style="left:${p.x}%;top:${p.y}%" data-region-map="${esc(o.name)}" title="${esc(o.name)}"><span class="name">${esc(o.name)}</span><span class="meta"><span>وضعیت: <b>${esc(o.statusLabel)}</b></span><span>${nhFormatRial(o.urgent)}</span></span></button>`}).join('');
- const criticalRows=regions.slice(0,5).map((o,i)=>`<div class="rank-row"><div class="rank-no">${fa(i+1,0)}</div><div class="rank-main"><strong>${esc(o.name)}</strong><small>${esc(o.statusLabel)} · ${fa(o.storeCount,0)} فروشگاه درگیر</small></div><div class="rank-value">${nhFormatRial(o.urgent)}<br><small style="color:var(--pm)">۰ تا ۳ روز</small></div></div>`).join('');
- const tableRows=regions.map((o,i)=>`<tr><td class="num">${fa(i+1,0)}</td><td><div class="title">${esc(o.name)}</div><div class="sub">آخرین ثبت: ${dt(o.last)}</div></td><td>${statusChip(o.status,o.statusLabel)}</td><td class="num">${fa(o.storeCount,0)}</td><td class="num">${fa(o.productCount,0)}</td><td class="num">${nhFormatRial(o.value)}</td><td class="num">${nhFormatRial(o.urgent)}</td><td class="num">${fa(o.score,0)}</td></tr>`).join('');
- host.innerHTML=`<div class="daily-brief-head"><div class="daily-brief-title"><div><div class="daily-badge">گزارش روزانه قابل ارسال برای مدیران</div><h2>گزارش تصویری وضعیت مناطق روی نقشه ایران</h2><p>نمای حاضر بر اساس داده‌های فعالِ فیلتر فعلی ساخته می‌شود و برای اسکرین‌شات و ارسال در بله/واتساپ مناسب است.</p></div></div><div class="snapshot-stamp"><strong>آخرین به‌روزرسانی این گزارش</strong><span>${dt(new Date().toISOString())}</span></div></div>
- <div class="snapshot-kpis">
-   <div class="snapshot-kpi red"><div class="k">ارزش فوری ۰ تا ۳ روز</div><div class="v">${nhFormatRial(urgentValue)}</div><div class="s">${fa(redCount,0)} منطقه بحرانی</div></div>
-   <div class="snapshot-kpi amber"><div class="k">ارزش ۴ تا ۷ روز آینده</div><div class="v">${nhFormatRial(soonValue)}</div><div class="s">${fa(amberCount,0)} منطقه نیازمند پیگیری</div></div>
-   <div class="snapshot-kpi blue"><div class="k">کل ارزش کالاهای فعال</div><div class="v">${nhFormatRial(totalValue)}</div><div class="s">${fa(totalStores,0)} فروشگاه · ${fa(totalQty)} واحد</div></div>
-   <div class="snapshot-kpi green"><div class="k">مناطق پایدار</div><div class="v">${fa(greenCount,0)} منطقه</div><div class="s">از مجموع ${fa(regions.length,0)} منطقه دارای ثبت فعال</div></div>
- </div>
- <div class="snapshot-layout">
-   <div class="map-card"><div class="map-card-head"><div><h3>نقشه مدیریتی مناطق</h3><div class="mini-desc">با کلیک روی هر منطقه، همان منطقه در فیلتر انتخاب می‌شود.</div></div><div class="legend"><span><i class="lg-red"></i>بحرانی</span><span><i class="lg-amber"></i>نیازمند پیگیری</span><span><i class="lg-green"></i>پایدار</span><span><i class="lg-gray"></i>بدون داده</span></div></div><div class="iran-map-panel"><div class="iran-shape">${iranShape()}</div><div class="iran-grid-note">نقشه نمای مدیریتی برای رصد سریع وضعیت روزانه مناطق</div><div class="iran-markers">${markers}</div></div></div>
-   <div class="insight-card"><div class="insight-head"><div><h3>جمع‌بندی مدیریتی روز</h3><div class="mini-desc">برای مدیر منطقه، مدیر اجرایی و مدیرعامل</div></div></div>
-    <div class="insight-grid">
-      <div class="insight-stat"><div class="label">بحرانی‌ترین منطقه امروز</div><div class="value">${esc(critical?.name||'—')}</div><div class="hint">${critical?nhFormatRial(critical.urgent)+' ارزش فوری':''}</div></div>
-      <div class="insight-stat"><div class="label">بهترین وضعیت امروز</div><div class="value">${esc(best?.name||'—')}</div><div class="hint">${best?best.statusLabel+' · '+nhFormatRial(best.value):''}</div></div>
-      <div class="insight-stat"><div class="label">بیشترین درگیری فروشگاهی</div><div class="value">${esc(mostStores?.name||'—')}</div><div class="hint">${mostStores?fa(mostStores.storeCount,0)+' فروشگاه درگیر':''}</div></div>
-      <div class="insight-stat"><div class="label">تمرکز ریسک شبکه</div><div class="value">${totalValue?fa((urgentValue/totalValue)*100,1):fa(0,1)}٪</div><div class="hint">سهم ۰ تا ۳ روز از کل ارزش فعال</div></div>
-    </div>
-    <div><h3 style="font-size:13px;margin:2px 0 8px">بحرانی‌ترین مناطق امروز</h3><div class="insight-list">${criticalRows}</div></div>
-   </div>
- </div>
- <div class="status-table-card"><h3>جدول خلاصه وضعیت مناطق</h3><div class="mini-desc">این جدول برای گزارش‌دهی مدیریتی و مقایسه سریع مناطق طراحی شده است.</div><div class="table-shell"><table class="admin-table" style="min-width:780px"><thead><tr><th>رتبه ریسک</th><th>منطقه</th><th>وضعیت</th><th>فروشگاه درگیر</th><th>محصول</th><th>ارزش فعال</th><th>ارزش ۰ تا ۳ روز</th><th>امتیاز ریسک</th></tr></thead><tbody>${tableRows}</tbody></table></div><div class="snapshot-footnote"><span>منطق رنگ‌بندی: امتیاز ریسک هر منطقه بر اساس ارزش ۰ تا ۳ روز، ارزش کل کالاهای فعال و تعداد فروشگاه‌های درگیر محاسبه می‌شود.</span><span>نمای فعلی با فیلترهای بالای صفحه همگام است؛ برای گزارش سراسری، فیلترها را روی «همه» نگه دارید.</span></div></div>`;
- host.querySelectorAll('[data-region-map]').forEach(btn=>btn.onclick=()=>{const region=btn.getAttribute('data-region-map');$("regionFilter").value=region;fillStores();render();window.scrollTo({top:0,behavior:'smooth'})});
-}
-
 async function refresh(force=false){
  if(busy)return;busy=true;ok();live("loading","در حال به‌روزرسانی");$("refreshBtn").disabled=true;
  try{if(force||!stores.length)await loadStores();const r=await loadBatches();await loadProducts(r);batches=r;fillFilters();render();$("lastUpdate").textContent="آخرین دریافت: "+dt(new Date().toISOString());live("ok","داده‌ها به‌روز هستند");clearTimeout(timer);timer=setTimeout(()=>refresh(),REFRESH_MS)}
@@ -242,7 +425,7 @@ function rows(){
  const r=$("regionFilter").value,s=$("storeFilter").value,g=$("groupFilter").value,d=$("daysFilter").value,t=$("search").value.trim().toLocaleLowerCase("fa");
  return enriched().filter(x=>{if(!active(x))return false;if(r&&x.region!==r)return false;if(s&&String(x.store_id)!==s)return false;if(g&&x.pgroup!==g)return false;if(d&&x.rk.key!==d)return false;if(t){const h=[x.pname,x.pgroup,x.article,x.barcode,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa");if(!h.includes(t))return false}return true});
 }
-function render(){const r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت فعال";renderStats(r);renderDailyBrief(r);renderRegions(r);renderLatest(r);renderSummary(r);renderArchive()}
+function render(){const allActive=enriched().filter(active),r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت فعال";renderExecutiveReport(allActive);renderStats(r);renderRegions(r);renderLatest(r);renderSummary(r);renderArchive()}
 function renderStats(r){
  const a=r,regions=new Set(a.map(x=>x.region)),storesSet=new Set(a.map(x=>String(x.store_id))),products=new Set(a.map(x=>x.product_id||x.pname));
  const qty=a.reduce((s,x)=>s+(Number(x.quantity)||0),0),value=a.reduce((s,x)=>s+x.rial,0),todayValue=a.filter(x=>daysLeft(x.expiry_date)===0).reduce((s,x)=>s+x.rial,0),urg=a.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0);
