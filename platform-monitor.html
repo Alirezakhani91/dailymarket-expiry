@@ -26,6 +26,38 @@
 .table-shell{overflow:auto;border:1px solid var(--pl);border-radius:16px;background:#fff}.admin-table{width:100%;min-width:950px;border-collapse:collapse}.admin-table th{position:sticky;top:0;z-index:1;text-align:right;padding:11px 10px;background:#f7f3f0;color:#6d645f;font-size:10.5px;white-space:nowrap;border-bottom:1px solid var(--pl)}.admin-table td{padding:11px 10px;font-size:11.5px;border-bottom:1px solid #eee7e1;vertical-align:middle}.admin-table tbody tr:hover{background:#fcfaf8}.title{font-weight:800}.sub{font-size:9.5px;color:var(--pm);margin-top:2px}.num{direction:ltr;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .chip{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:9.5px;font-weight:900;white-space:nowrap}.expired{background:var(--prs);color:var(--pr)}.urgent{background:var(--pas);color:var(--pa)}.warn{background:#fff8d9;color:#7f6013}.safe{background:var(--pgr);color:var(--pg)}.sold{background:#eeeae7;color:#655f5b}
 .expand{cursor:pointer}.detail td{padding:0;background:#fbf8f6}.detail-box{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px}.store-pill{padding:6px 9px;border:1px solid var(--pl);border-radius:10px;background:#fff;font-size:10px}.empty{padding:34px 15px;text-align:center;color:var(--pm);font-size:12px}
+
+.daily-brief-card{padding:0;overflow:hidden;background:linear-gradient(180deg,#fffdfa,#fff7f1)}
+.daily-brief-shell{padding:18px}
+.daily-brief-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.daily-brief-title{display:flex;align-items:flex-start;gap:10px}.daily-brief-title h2{margin:0;font-size:18px}.daily-brief-title p{margin:5px 0 0;color:var(--pm);font-size:11.5px}
+.daily-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;background:#f5ece4;color:#7a5d46;font-size:10.5px;font-weight:900;border:1px solid #ead8ca}
+.daily-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:#d1861f;box-shadow:0 0 0 4px rgba(209,134,31,.12)}
+.snapshot-stamp{padding:12px 14px;border-radius:16px;border:1px solid var(--pl);background:#fff;min-width:220px;box-shadow:0 10px 30px #3c2f2710}.snapshot-stamp strong{display:block;font-size:11px;color:#6e655f}.snapshot-stamp span{display:block;margin-top:6px;font-size:13px;font-weight:900}
+.snapshot-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.snapshot-kpi{padding:14px;border-radius:18px;border:1px solid #f0e4d7;background:#fff;box-shadow:0 8px 24px #392e2510}.snapshot-kpi.red{background:linear-gradient(145deg,#fff3f4,#fae0e3)}.snapshot-kpi.amber{background:linear-gradient(145deg,#fff8ea,#f7e6c0)}.snapshot-kpi.green{background:linear-gradient(145deg,#f0f8f3,#deeee4)}.snapshot-kpi.blue{background:linear-gradient(145deg,#eff6fb,#ddebf5)}.snapshot-kpi .k{font-size:10.5px;font-weight:800;color:#6e655f}.snapshot-kpi .v{margin-top:10px;font-size:20px;font-weight:900;line-height:1.3}.snapshot-kpi .s{margin-top:6px;font-size:10px;color:#7d736c}
+.snapshot-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.map-card,.insight-card,.status-table-card{background:#fff;border:1px solid var(--pl);border-radius:22px;box-shadow:0 12px 32px #392d2510}
+.map-card{padding:14px;display:flex;flex-direction:column;gap:12px}
+.map-card-head,.insight-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.map-card-head h3,.insight-head h3,.status-table-card h3{margin:0;font-size:14px;font-weight:900}.mini-desc{margin-top:4px;color:var(--pm);font-size:10.5px}
+.legend{display:flex;flex-wrap:wrap;gap:7px}.legend span{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#faf6f2;border:1px solid #efe4d8;font-size:10px;font-weight:800;color:#665d56}.legend i{display:inline-block;width:10px;height:10px;border-radius:50%}.legend .lg-red{background:#b73e53}.legend .lg-amber{background:#d08a14}.legend .lg-green{background:#2d8357}.legend .lg-gray{background:#aeb6bd}
+.iran-map-panel{position:relative;min-height:440px;border-radius:20px;overflow:hidden;background:radial-gradient(circle at 30% 20%,#fff6ed,transparent 40%),linear-gradient(180deg,#fffdf9,#f7f1ea)}
+.iran-shape{position:absolute;inset:20px 18px 20px 18px;opacity:.22}.iran-shape svg{width:100%;height:100%}.iran-shape path{fill:#d9c9b8}
+.iran-grid-note{position:absolute;left:18px;top:18px;padding:8px 10px;border-radius:13px;background:#ffffffd7;border:1px solid #efe4d8;font-size:10px;color:#6f665f;font-weight:800;backdrop-filter:blur(3px)}
+.iran-markers{position:absolute;inset:0}
+.iran-marker{position:absolute;transform:translate(-50%,-50%);min-width:110px;max-width:128px;padding:9px 10px;border-radius:16px;background:#fffffff2;border:1px solid rgba(206,193,181,.9);box-shadow:0 16px 28px rgba(57,45,37,.12);cursor:pointer;backdrop-filter:blur(4px);transition:transform .16s ease, box-shadow .16s ease,border-color .16s ease}.iran-marker:hover{transform:translate(-50%,-53%);box-shadow:0 18px 34px rgba(57,45,37,.18)}
+.iran-marker.active{border-color:#2d8357;box-shadow:0 0 0 3px rgba(45,131,87,.14),0 20px 36px rgba(57,45,37,.18)}
+.iran-marker::before{content:"";position:absolute;top:-7px;right:16px;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.iran-marker.red::before{background:#b73e53}.iran-marker.amber::before{background:#d08a14}.iran-marker.green::before{background:#2d8357}.iran-marker.gray::before{background:#aeb6bd}
+.iran-marker .name{display:block;font-size:11px;font-weight:900;color:#2f2a27;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:14px}.iran-marker .meta{margin-top:6px;display:flex;justify-content:space-between;gap:8px;font-size:9.5px;color:#6d635d}.iran-marker .meta b{font-size:10px;color:#322b27}
+.insight-card{padding:15px;display:flex;flex-direction:column;gap:12px}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.insight-stat{padding:12px;border-radius:16px;background:#faf6f2;border:1px solid #efe4d8}.insight-stat .label{font-size:10.5px;color:#766c65;font-weight:800}.insight-stat .value{margin-top:7px;font-size:16px;font-weight:900}.insight-stat .hint{margin-top:4px;font-size:10px;color:#8a807a}
+.insight-list{display:grid;gap:8px}.rank-row{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:9px 10px;border-radius:14px;background:#fcf9f6;border:1px solid #f0e7df}.rank-no{width:28px;height:28px;border-radius:10px;background:#efe6dd;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#6d625a}.rank-main strong{display:block;font-size:11.5px}.rank-main small{display:block;font-size:9.5px;color:var(--pm);margin-top:2px}.rank-value{font-size:10px;font-weight:900;color:#413a35;text-align:left}
+.status-table-card{margin-top:14px;padding:14px}.status-table-card .table-shell{margin-top:10px}.status-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;font-size:9.5px;font-weight:900}.status-chip::before{content:"";width:8px;height:8px;border-radius:50%}.status-chip.red{background:#fdecef;color:#a6374b}.status-chip.red::before{background:#b73e53}.status-chip.amber{background:#fff4df;color:#8a580d}.status-chip.amber::before{background:#d08a14}.status-chip.green{background:#ebf6ef;color:#2d8357}.status-chip.green::before{background:#2d8357}.status-chip.gray{background:#eef1f3;color:#6d7780}.status-chip.gray::before{background:#aeb6bd}
+.snapshot-empty{padding:32px 18px;text-align:center;color:var(--pm);font-size:12px}
+.snapshot-footnote{margin-top:10px;color:#8a8078;font-size:10px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media(max-width:1180px){.snapshot-kpis{grid-template-columns:repeat(2,1fr)}.snapshot-layout{grid-template-columns:1fr}.iran-map-panel{min-height:410px}}
+@media(max-width:720px){.daily-brief-shell{padding:12px}.daily-brief-head{flex-direction:column}.snapshot-stamp{min-width:0;width:100%}.snapshot-kpis{grid-template-columns:1fr 1fr}.iran-map-panel{min-height:500px}.iran-marker{min-width:88px;max-width:100px;padding:8px}.iran-marker .name{font-size:10px}.iran-marker .meta{display:block}.insight-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.snapshot-kpis{grid-template-columns:1fr}.iran-map-panel{min-height:560px}.insight-grid{grid-template-columns:1fr}.iran-marker{min-width:84px;max-width:92px;font-size:9px}.iran-grid-note{font-size:9px}}
 @media(max-width:1180px){.stats{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media(max-width:720px){.admin-wrap{width:calc(100% - 18px);padding-top:15px}.admin-head{display:block}.live-box{width:100%;margin-top:13px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{min-height:116px;padding:13px}.stat-v{font-size:20px}.card-admin{padding:12px;border-radius:19px}.filters{grid-template-columns:1fr 1fr}.search-wide{grid-column:1/-1}.region-row{grid-template-columns:1fr 1fr}.region-row>div:first-child{grid-column:1/-1}.filter-foot{flex-direction:column}}
 @media(max-width:410px){.filters{grid-template-columns:1fr}.search-wide{grid-column:auto}}
@@ -45,6 +77,10 @@
 
   <div class="alert-admin" id="alert"></div>
   <div class="stats" id="stats"></div>
+
+  <section class="card-admin daily-brief-card">
+    <div id="dailyBriefWrap" class="daily-brief-shell"></div>
+  </section>
 
   <section class="card-admin">
     <h2>فیلتر نمای مدیریتی</h2><p class="desc">تمام جدول‌ها و کارت‌ها با فیلترهای زیر تغییر می‌کنند.</p>
@@ -120,6 +156,68 @@ async function loadProducts(rows){
   (d.products||[]).forEach(p=>productMap.set(String(p.id),p));
  }
 }
+const IRAN_MARKER_POSITIONS=[
+ {x:22,y:17},{x:38,y:14},{x:54,y:12},{x:70,y:16},{x:84,y:23},
+ {x:20,y:29},{x:36,y:27},{x:51,y:25},{x:67,y:29},{x:82,y:35},
+ {x:18,y:42},{x:33,y:40},{x:48,y:39},{x:63,y:43},{x:77,y:48},
+ {x:21,y:55},{x:36,y:54},{x:51,y:54},{x:66,y:58},{x:80,y:64},
+ {x:27,y:69},{x:42,y:69},{x:58,y:72},{x:74,y:77}
+];
+function regionSnapshot(r){
+ const m=new Map();
+ r.filter(active).forEach(x=>{
+  if(!m.has(x.region))m.set(x.region,{name:x.region,stores:new Set(),products:new Set(),qty:0,value:0,urgent:0,soon:0,today:0,last:null,lastMs:0});
+  const o=m.get(x.region);const q=Number(x.quantity)||0;const dl=daysLeft(x.expiry_date);o.stores.add(String(x.store_id));o.products.add(x.product_id||x.pname);o.qty+=q;o.value+=x.rial;if(dl===0)o.today+=x.rial;if(dl!==null&&dl<=3)o.urgent+=x.rial;if(dl!==null&&dl>=4&&dl<=7)o.soon+=x.rial;const ms=Date.parse(x.created_at)||0;if(ms>o.lastMs){o.lastMs=ms;o.last=x.created_at;}
+ });
+ const arr=[...m.values()];
+ const maxUrgent=Math.max(1,...arr.map(x=>x.urgent));
+ const maxValue=Math.max(1,...arr.map(x=>x.value));
+ const maxStores=Math.max(1,...arr.map(x=>x.stores.size));
+ arr.forEach(o=>{
+  o.storeCount=o.stores.size;o.productCount=o.products.size;
+  const score=((o.urgent/maxUrgent)*65)+((o.value/maxValue)*25)+((o.storeCount/maxStores)*10);
+  o.score=Math.round(score);
+  if(!o.value){o.status='gray';o.statusLabel='بدون داده';}
+  else if(o.score>=67||o.urgent/maxUrgent>=.72){o.status='red';o.statusLabel='بحرانی';}
+  else if(o.score>=35||o.urgent>0){o.status='amber';o.statusLabel='نیازمند پیگیری';}
+  else{o.status='green';o.statusLabel='پایدار';}
+ });
+ return arr.sort((a,b)=>b.score-a.score||b.urgent-a.urgent||b.value-a.value||a.name.localeCompare(b.name,'fa'));
+}
+function statusChip(status,label){return `<span class="status-chip ${status}">${esc(label)}</span>`}
+function iranShape(){return `<svg viewBox="0 0 800 620" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><path d="M160 78l68-28 82 14 60-17 80 20 53-15 61 29 53 58 4 55 38 34-18 56-44 12-6 56-24 47-66 34-41 48-59-2-56 33-82-18-71-38-43-44-67-17-30-52-49-19-15-74 40-42-7-62 28-56 54-17 29-63z"/></svg>`}
+function renderDailyBrief(r){
+ const host=$("dailyBriefWrap");
+ const activeRows=r.filter(active);
+ if(!activeRows.length){host.innerHTML=`<div class="daily-brief-head"><div class="daily-brief-title"><div><h2>گزارش روزانه وضعیت مناطق روی نقشه ایران</h2><p>این نما برای اسکرین‌شات و ارسال روزانه طراحی شده است.</p></div></div><div class="snapshot-stamp"><strong>آخرین وضعیت</strong><span>${dt(new Date().toISOString())}</span></div></div><div class="snapshot-empty">برای بازه فعلی داده فعالی وجود ندارد.</div>`;return}
+ const regions=regionSnapshot(activeRows), totalValue=activeRows.reduce((s,x)=>s+x.rial,0), urgentValue=activeRows.filter(x=>x.rk.key==='0-3').reduce((s,x)=>s+x.rial,0), soonValue=activeRows.filter(x=>x.rk.key==='4-7').reduce((s,x)=>s+x.rial,0), totalStores=new Set(activeRows.map(x=>String(x.store_id))).size, totalQty=activeRows.reduce((s,x)=>s+(Number(x.quantity)||0),0), redCount=regions.filter(x=>x.status==='red').length, amberCount=regions.filter(x=>x.status==='amber').length, greenCount=regions.filter(x=>x.status==='green').length;
+ const critical=regions[0], best=[...regions].filter(x=>x.status!=='gray').sort((a,b)=>a.score-b.score||a.urgent-b.urgent)[0]||regions[regions.length-1], mostStores=[...regions].sort((a,b)=>b.storeCount-a.storeCount||b.value-a.value)[0]||critical;
+ const markers=regions.slice(0,IRAN_MARKER_POSITIONS.length).map((o,i)=>{const p=IRAN_MARKER_POSITIONS[i], activeClass=$("regionFilter").value===o.name?' active':'';return `<button type="button" class="iran-marker ${o.status}${activeClass}" style="left:${p.x}%;top:${p.y}%" data-region-map="${esc(o.name)}" title="${esc(o.name)}"><span class="name">${esc(o.name)}</span><span class="meta"><span>وضعیت: <b>${esc(o.statusLabel)}</b></span><span>${nhFormatRial(o.urgent)}</span></span></button>`}).join('');
+ const criticalRows=regions.slice(0,5).map((o,i)=>`<div class="rank-row"><div class="rank-no">${fa(i+1,0)}</div><div class="rank-main"><strong>${esc(o.name)}</strong><small>${esc(o.statusLabel)} · ${fa(o.storeCount,0)} فروشگاه درگیر</small></div><div class="rank-value">${nhFormatRial(o.urgent)}<br><small style="color:var(--pm)">۰ تا ۳ روز</small></div></div>`).join('');
+ const tableRows=regions.map((o,i)=>`<tr><td class="num">${fa(i+1,0)}</td><td><div class="title">${esc(o.name)}</div><div class="sub">آخرین ثبت: ${dt(o.last)}</div></td><td>${statusChip(o.status,o.statusLabel)}</td><td class="num">${fa(o.storeCount,0)}</td><td class="num">${fa(o.productCount,0)}</td><td class="num">${nhFormatRial(o.value)}</td><td class="num">${nhFormatRial(o.urgent)}</td><td class="num">${fa(o.score,0)}</td></tr>`).join('');
+ host.innerHTML=`<div class="daily-brief-head"><div class="daily-brief-title"><div><div class="daily-badge">گزارش روزانه قابل ارسال برای مدیران</div><h2>گزارش تصویری وضعیت مناطق روی نقشه ایران</h2><p>نمای حاضر بر اساس داده‌های فعالِ فیلتر فعلی ساخته می‌شود و برای اسکرین‌شات و ارسال در بله/واتساپ مناسب است.</p></div></div><div class="snapshot-stamp"><strong>آخرین به‌روزرسانی این گزارش</strong><span>${dt(new Date().toISOString())}</span></div></div>
+ <div class="snapshot-kpis">
+   <div class="snapshot-kpi red"><div class="k">ارزش فوری ۰ تا ۳ روز</div><div class="v">${nhFormatRial(urgentValue)}</div><div class="s">${fa(redCount,0)} منطقه بحرانی</div></div>
+   <div class="snapshot-kpi amber"><div class="k">ارزش ۴ تا ۷ روز آینده</div><div class="v">${nhFormatRial(soonValue)}</div><div class="s">${fa(amberCount,0)} منطقه نیازمند پیگیری</div></div>
+   <div class="snapshot-kpi blue"><div class="k">کل ارزش کالاهای فعال</div><div class="v">${nhFormatRial(totalValue)}</div><div class="s">${fa(totalStores,0)} فروشگاه · ${fa(totalQty)} واحد</div></div>
+   <div class="snapshot-kpi green"><div class="k">مناطق پایدار</div><div class="v">${fa(greenCount,0)} منطقه</div><div class="s">از مجموع ${fa(regions.length,0)} منطقه دارای ثبت فعال</div></div>
+ </div>
+ <div class="snapshot-layout">
+   <div class="map-card"><div class="map-card-head"><div><h3>نقشه مدیریتی مناطق</h3><div class="mini-desc">با کلیک روی هر منطقه، همان منطقه در فیلتر انتخاب می‌شود.</div></div><div class="legend"><span><i class="lg-red"></i>بحرانی</span><span><i class="lg-amber"></i>نیازمند پیگیری</span><span><i class="lg-green"></i>پایدار</span><span><i class="lg-gray"></i>بدون داده</span></div></div><div class="iran-map-panel"><div class="iran-shape">${iranShape()}</div><div class="iran-grid-note">نقشه نمای مدیریتی برای رصد سریع وضعیت روزانه مناطق</div><div class="iran-markers">${markers}</div></div></div>
+   <div class="insight-card"><div class="insight-head"><div><h3>جمع‌بندی مدیریتی روز</h3><div class="mini-desc">برای مدیر منطقه، مدیر اجرایی و مدیرعامل</div></div></div>
+    <div class="insight-grid">
+      <div class="insight-stat"><div class="label">بحرانی‌ترین منطقه امروز</div><div class="value">${esc(critical?.name||'—')}</div><div class="hint">${critical?nhFormatRial(critical.urgent)+' ارزش فوری':''}</div></div>
+      <div class="insight-stat"><div class="label">بهترین وضعیت امروز</div><div class="value">${esc(best?.name||'—')}</div><div class="hint">${best?best.statusLabel+' · '+nhFormatRial(best.value):''}</div></div>
+      <div class="insight-stat"><div class="label">بیشترین درگیری فروشگاهی</div><div class="value">${esc(mostStores?.name||'—')}</div><div class="hint">${mostStores?fa(mostStores.storeCount,0)+' فروشگاه درگیر':''}</div></div>
+      <div class="insight-stat"><div class="label">تمرکز ریسک شبکه</div><div class="value">${totalValue?fa((urgentValue/totalValue)*100,1):fa(0,1)}٪</div><div class="hint">سهم ۰ تا ۳ روز از کل ارزش فعال</div></div>
+    </div>
+    <div><h3 style="font-size:13px;margin:2px 0 8px">بحرانی‌ترین مناطق امروز</h3><div class="insight-list">${criticalRows}</div></div>
+   </div>
+ </div>
+ <div class="status-table-card"><h3>جدول خلاصه وضعیت مناطق</h3><div class="mini-desc">این جدول برای گزارش‌دهی مدیریتی و مقایسه سریع مناطق طراحی شده است.</div><div class="table-shell"><table class="admin-table" style="min-width:780px"><thead><tr><th>رتبه ریسک</th><th>منطقه</th><th>وضعیت</th><th>فروشگاه درگیر</th><th>محصول</th><th>ارزش فعال</th><th>ارزش ۰ تا ۳ روز</th><th>امتیاز ریسک</th></tr></thead><tbody>${tableRows}</tbody></table></div><div class="snapshot-footnote"><span>منطق رنگ‌بندی: امتیاز ریسک هر منطقه بر اساس ارزش ۰ تا ۳ روز، ارزش کل کالاهای فعال و تعداد فروشگاه‌های درگیر محاسبه می‌شود.</span><span>نمای فعلی با فیلترهای بالای صفحه همگام است؛ برای گزارش سراسری، فیلترها را روی «همه» نگه دارید.</span></div></div>`;
+ host.querySelectorAll('[data-region-map]').forEach(btn=>btn.onclick=()=>{const region=btn.getAttribute('data-region-map');$("regionFilter").value=region;fillStores();render();window.scrollTo({top:0,behavior:'smooth'})});
+}
+
 async function refresh(force=false){
  if(busy)return;busy=true;ok();live("loading","در حال به‌روزرسانی");$("refreshBtn").disabled=true;
  try{if(force||!stores.length)await loadStores();const r=await loadBatches();await loadProducts(r);batches=r;fillFilters();render();$("lastUpdate").textContent="آخرین دریافت: "+dt(new Date().toISOString());live("ok","داده‌ها به‌روز هستند");clearTimeout(timer);timer=setTimeout(()=>refresh(),REFRESH_MS)}
@@ -144,7 +242,7 @@ function rows(){
  const r=$("regionFilter").value,s=$("storeFilter").value,g=$("groupFilter").value,d=$("daysFilter").value,t=$("search").value.trim().toLocaleLowerCase("fa");
  return enriched().filter(x=>{if(!active(x))return false;if(r&&x.region!==r)return false;if(s&&String(x.store_id)!==s)return false;if(g&&x.pgroup!==g)return false;if(d&&x.rk.key!==d)return false;if(t){const h=[x.pname,x.pgroup,x.article,x.barcode,x.store.name,x.store.store_code,x.region].join(" ").toLocaleLowerCase("fa");if(!h.includes(t))return false}return true});
 }
-function render(){const r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت فعال";renderStats(r);renderRegions(r);renderLatest(r);renderSummary(r);renderArchive()}
+function render(){const r=rows();$("resultCount").textContent=fa(r.length,0)+" ثبت فعال";renderStats(r);renderDailyBrief(r);renderRegions(r);renderLatest(r);renderSummary(r);renderArchive()}
 function renderStats(r){
  const a=r,regions=new Set(a.map(x=>x.region)),storesSet=new Set(a.map(x=>String(x.store_id))),products=new Set(a.map(x=>x.product_id||x.pname));
  const qty=a.reduce((s,x)=>s+(Number(x.quantity)||0),0),value=a.reduce((s,x)=>s+x.rial,0),todayValue=a.filter(x=>daysLeft(x.expiry_date)===0).reduce((s,x)=>s+x.rial,0),urg=a.filter(x=>x.rk.key==="0-3").reduce((s,x)=>s+x.rial,0);
