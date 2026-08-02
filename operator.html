@@ -330,6 +330,252 @@
       border-radius: 20px;
     }
   }
+
+  /* ===== Barcode scanner ===== */
+  .product-search-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px;
+    align-items: stretch;
+  }
+
+  .scan-barcode-btn {
+    min-width: 122px;
+    min-height: 46px;
+    border: 0;
+    border-radius: 13px;
+    padding: 0 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(145deg, #2f604c, #234b3b);
+    box-shadow: 0 10px 24px rgba(35, 75, 59, .2);
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+  }
+
+  .scan-barcode-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(35, 75, 59, .24);
+  }
+
+  .scan-barcode-btn:disabled {
+    opacity: .55;
+    cursor: wait;
+    transform: none;
+  }
+
+  .scan-barcode-btn svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+  }
+
+  .scan-helper {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 10.5px;
+    line-height: 1.8;
+  }
+
+  .scanner-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(12, 15, 14, .82);
+    backdrop-filter: blur(9px);
+  }
+
+  .scanner-modal.show {
+    display: flex;
+  }
+
+  .scanner-card {
+    width: min(100%, 520px);
+    overflow: hidden;
+    border-radius: 25px;
+    background: #111915;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.13);
+    box-shadow: 0 34px 90px rgba(0,0,0,.48);
+  }
+
+  .scanner-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 18px 14px;
+  }
+
+  .scanner-head h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .scanner-head p {
+    margin: 5px 0 0;
+    color: rgba(255,255,255,.66);
+    font-size: 11px;
+    line-height: 1.8;
+  }
+
+  .scanner-close {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    color: #fff;
+    background: rgba(255,255,255,.08);
+    font-family: inherit;
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .scanner-stage {
+    position: relative;
+    margin: 0 14px;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #060807;
+    border: 1px solid rgba(255,255,255,.12);
+  }
+
+  .scanner-video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transform: translateZ(0);
+  }
+
+  .scanner-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(0,0,0,.47), rgba(0,0,0,.47)) top / 100% 24% no-repeat,
+      linear-gradient(rgba(0,0,0,.47), rgba(0,0,0,.47)) bottom / 100% 24% no-repeat,
+      linear-gradient(rgba(0,0,0,.47), rgba(0,0,0,.47)) left / 9% 100% no-repeat,
+      linear-gradient(rgba(0,0,0,.47), rgba(0,0,0,.47)) right / 9% 100% no-repeat;
+  }
+
+  .scanner-frame {
+    position: absolute;
+    inset: 24% 9%;
+    pointer-events: none;
+    border-radius: 15px;
+    border: 2px solid rgba(255,255,255,.9);
+    box-shadow: 0 0 0 1px rgba(49, 196, 127, .55), 0 0 25px rgba(49, 196, 127, .25);
+  }
+
+  .scanner-frame::before,
+  .scanner-frame::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    left: 12px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, #39e493, transparent);
+    box-shadow: 0 0 14px rgba(57,228,147,.72);
+    animation: barcodeScanLine 1.65s ease-in-out infinite alternate;
+  }
+
+  .scanner-frame::before { top: 14px; }
+  .scanner-frame::after { display: none; }
+
+  @keyframes barcodeScanLine {
+    from { transform: translateY(0); opacity: .7; }
+    to { transform: translateY(calc(100px + 5vw)); opacity: 1; }
+  }
+
+  .scanner-status {
+    min-height: 25px;
+    padding: 13px 18px 4px;
+    text-align: center;
+    color: rgba(255,255,255,.76);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.8;
+  }
+
+  .scanner-status.is-success { color: #63e8a4; }
+  .scanner-status.is-error { color: #ff8e98; }
+
+  .scanner-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    padding: 12px 14px 16px;
+  }
+
+  .scanner-action {
+    min-height: 43px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.13);
+    color: #fff;
+    background: rgba(255,255,255,.08);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .scanner-action.primary {
+    border-color: rgba(57,228,147,.35);
+    background: rgba(57,228,147,.13);
+    color: #7af0b5;
+  }
+
+  body.scanner-open {
+    overflow: hidden;
+  }
+
+  @media (max-width: 620px) {
+    .product-search-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .scan-barcode-btn {
+      width: 100%;
+      min-height: 45px;
+    }
+
+    .scanner-modal {
+      padding: 8px;
+      align-items: flex-end;
+    }
+
+    .scanner-card {
+      border-radius: 23px 23px 14px 14px;
+    }
+
+    .scanner-head {
+      padding: 16px 15px 12px;
+    }
+
+    .scanner-stage {
+      margin: 0 9px;
+      border-radius: 17px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scanner-frame::before { animation: none; }
+  }
 </style>
 </head>
 <body>
@@ -394,11 +640,30 @@
   <div class="card">
     <form id="productForm">
       <div class="field">
-        <label for="product_search">جست‌وجوی کالا (نام یا بارکد)</label>
-        <div class="search-wrap">
-          <input type="text" id="product_search" placeholder="مثلاً: ماست، یا بارکد کالا" autocomplete="off">
-          <div id="productResults" class="search-results"></div>
+        <label for="product_search">انتخاب کالا با اسکن بارکد یا جست‌وجوی دستی</label>
+        <div class="product-search-grid">
+          <div class="search-wrap">
+            <input
+              type="text"
+              id="product_search"
+              placeholder="نام کالا یا بارکد را وارد کنید..."
+              autocomplete="off"
+              inputmode="search"
+            >
+            <div id="productResults" class="search-results"></div>
+          </div>
+          <button type="button" id="scanBarcodeBtn" class="scan-barcode-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 7V5a1 1 0 0 1 1-1h2"/>
+              <path d="M17 4h2a1 1 0 0 1 1 1v2"/>
+              <path d="M20 17v2a1 1 0 0 1-1 1h-2"/>
+              <path d="M7 20H5a1 1 0 0 1-1-1v-2"/>
+              <path d="M7 9v6M10 9v6M13 9v6M16 9v6"/>
+            </svg>
+            <span>اسکن بارکد</span>
+          </button>
         </div>
+        <div class="scan-helper">بارکد را با دوربین گوشی اسکن کنید یا نام و بارکد کالا را به‌صورت دستی بنویسید.</div>
         <div id="selectedProduct" class="selected-chip"></div>
       </div>
       <div class="field">
@@ -438,6 +703,31 @@
   </div>
 </div>
 
+<div class="scanner-modal" id="scannerModal" aria-hidden="true">
+  <div class="scanner-card" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
+    <div class="scanner-head">
+      <div>
+        <h2 id="scannerTitle">اسکن بارکد کالا</h2>
+        <p>دوربین را روبه‌روی بارکد نگه دارید؛ پس از شناسایی، کالا خودکار انتخاب می‌شود.</p>
+      </div>
+      <button type="button" class="scanner-close" id="scannerCloseBtn" aria-label="بستن">×</button>
+    </div>
+
+    <div class="scanner-stage">
+      <video id="scannerVideo" class="scanner-video" playsinline muted></video>
+      <div class="scanner-shade"></div>
+      <div class="scanner-frame"></div>
+    </div>
+
+    <div class="scanner-status" id="scannerStatus">برای شروع، اجازه دسترسی به دوربین را تأیید کنید.</div>
+
+    <div class="scanner-actions">
+      <button type="button" class="scanner-action" id="scannerCancelBtn">بستن دوربین</button>
+      <button type="button" class="scanner-action primary" id="scannerTorchBtn" hidden>روشن‌کردن چراغ</button>
+    </div>
+  </div>
+</div>
+
 <div class="operator-modal" id="editModal" aria-hidden="true">
   <div class="operator-modal-card" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
     <div class="operator-modal-head">
@@ -471,6 +761,7 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/@zxing/browser@0.2.1"></script>
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["store_operator"]);
@@ -481,6 +772,11 @@
   let selectedProductPrice = null;
   let allBatches = [];
   let editingBatchId = null;
+  let barcodeReader = null;
+  let scannerControls = null;
+  let scannerBusy = false;
+  let scannerTorchOn = false;
+  let lastScannedBarcode = null;
 
   document.getElementById("logoutBtn").addEventListener("click", (e) => { e.preventDefault(); nhLogout(); });
 
@@ -502,7 +798,254 @@
   const editSaveBtn = document.getElementById("editSaveBtn");
   const editModalClose = document.getElementById("editModalClose");
   const editCancelBtn = document.getElementById("editCancelBtn");
+  const scanBarcodeBtn = document.getElementById("scanBarcodeBtn");
+  const scannerModal = document.getElementById("scannerModal");
+  const scannerVideo = document.getElementById("scannerVideo");
+  const scannerStatus = document.getElementById("scannerStatus");
+  const scannerCloseBtn = document.getElementById("scannerCloseBtn");
+  const scannerCancelBtn = document.getElementById("scannerCancelBtn");
+  const scannerTorchBtn = document.getElementById("scannerTorchBtn");
   let searchTimer = null;
+
+  function normalizeBarcodeValue(value) {
+    return String(value || "")
+      .trim()
+      .replace(/[۰-۹]/g, digit => "۰۱۲۳۴۵۶۷۸۹".indexOf(digit))
+      .replace(/[٠-٩]/g, digit => "٠١٢٣٤٥٦٧٨٩".indexOf(digit))
+      .replace(/\s+/g, "");
+  }
+
+  function setScannerStatus(message, type = "") {
+    scannerStatus.textContent = message;
+    scannerStatus.className = "scanner-status" + (type ? ` is-${type}` : "");
+  }
+
+  function stopScanner() {
+    try {
+      if (scannerControls && typeof scannerControls.stop === "function") {
+        scannerControls.stop();
+      }
+    } catch (error) {
+      console.warn("Stopping barcode scanner failed:", error);
+    }
+
+    scannerControls = null;
+    scannerBusy = false;
+    scannerTorchOn = false;
+    scannerTorchBtn.hidden = true;
+    scannerTorchBtn.textContent = "روشن‌کردن چراغ";
+
+    if (scannerVideo && scannerVideo.srcObject) {
+      scannerVideo.srcObject.getTracks().forEach(track => track.stop());
+      scannerVideo.srcObject = null;
+    }
+  }
+
+  function closeScanner() {
+    stopScanner();
+    scannerModal.classList.remove("show");
+    scannerModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("scanner-open");
+    scanBarcodeBtn.disabled = false;
+    setScannerStatus("برای شروع، اجازه دسترسی به دوربین را تأیید کنید.");
+  }
+
+  async function findProductByExactBarcode(rawBarcode) {
+    const barcode = normalizeBarcodeValue(rawBarcode);
+    if (!barcode) throw new Error("بارکد خوانده‌شده معتبر نیست.");
+
+    const exactActiveQuery = `
+      query ProductByExactBarcode($barcode: String!) {
+        products(
+          where: {
+            _and: [
+              { is_active: { _eq: true } },
+              { barcode: { _eq: $barcode } }
+            ]
+          }
+          limit: 2
+        ) {
+          id
+          name
+          barcode
+          product_group
+          price
+        }
+      }
+    `;
+
+    const exactCompatibleQuery = `
+      query ProductByExactBarcode($barcode: String!) {
+        products(
+          where: { barcode: { _eq: $barcode } }
+          limit: 2
+        ) {
+          id
+          name
+          barcode
+          product_group
+          price
+        }
+      }
+    `;
+
+    let data;
+    try {
+      data = await nhGql(exactActiveQuery, { barcode }, session.token);
+    } catch (error) {
+      data = await nhGql(exactCompatibleQuery, { barcode }, session.token);
+    }
+
+    const products = data.products || [];
+    if (products.length !== 1) {
+      return { barcode, product: null, matches: products.length };
+    }
+
+    return { barcode, product: products[0], matches: 1 };
+  }
+
+  async function acceptScannedBarcode(rawBarcode) {
+    const barcode = normalizeBarcodeValue(rawBarcode);
+    if (!barcode || scannerBusy || barcode === lastScannedBarcode) return;
+
+    scannerBusy = true;
+    lastScannedBarcode = barcode;
+    setScannerStatus(`بارکد ${barcode} شناسایی شد؛ در حال یافتن کالا...`);
+
+    try {
+      const result = await findProductByExactBarcode(barcode);
+
+      if (!result.product) {
+        setScannerStatus("این بارکد در فهرست محصولات پیدا نشد.", "error");
+        searchInput.value = barcode;
+        closeScanner();
+        await runProductSearch(barcode);
+        showError(`کالایی با بارکد ${barcode} پیدا نشد؛ بارکد یا اطلاعات کالا را بررسی کنید.`);
+        return;
+      }
+
+      if (navigator.vibrate) navigator.vibrate(90);
+      setScannerStatus(`کالا شناسایی شد: ${result.product.name}`, "success");
+
+      selectProduct(
+        result.product.id,
+        result.product.name,
+        result.product.product_group || "",
+        result.product.price || ""
+      );
+
+      closeScanner();
+      clearAlert();
+      document.getElementById("quantity").focus();
+    } catch (error) {
+      console.error("Scanned barcode lookup failed:", error);
+      setScannerStatus("شناسایی کالا با خطا مواجه شد.", "error");
+      scannerBusy = false;
+      lastScannedBarcode = null;
+      showError(error.message || "جست‌وجوی بارکد با خطا مواجه شد.");
+    }
+  }
+
+  async function startScanner() {
+    clearAlert();
+    lastScannedBarcode = null;
+
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      showError("دسترسی به دوربین فقط در نسخه امن HTTPS امکان‌پذیر است.");
+      return;
+    }
+
+    if (!window.ZXingBrowser?.BrowserMultiFormatReader) {
+      showError("کتابخانه اسکن بارکد بارگذاری نشده است؛ اتصال اینترنت را بررسی کنید یا بارکد را دستی وارد کنید.");
+      return;
+    }
+
+    scannerModal.classList.add("show");
+    scannerModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("scanner-open");
+    scanBarcodeBtn.disabled = true;
+    setScannerStatus("در حال فعال‌کردن دوربین...");
+
+    try {
+      barcodeReader = barcodeReader || new ZXingBrowser.BrowserMultiFormatReader(undefined, {
+        delayBetweenScanAttempts: 90,
+        delayBetweenScanSuccess: 900
+      });
+
+      scannerControls = await barcodeReader.decodeFromConstraints(
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        },
+        scannerVideo,
+        (result, error, controls) => {
+          if (result) acceptScannedBarcode(result.getText());
+
+          if (error && error.name && ![
+            "NotFoundException",
+            "ChecksumException",
+            "FormatException"
+          ].includes(error.name)) {
+            console.debug("Barcode scanner decode state:", error);
+          }
+        }
+      );
+
+      setScannerStatus("بارکد را داخل کادر قرار دهید.");
+
+      const stream = scannerVideo.srcObject;
+      const track = stream?.getVideoTracks?.()[0];
+      const capabilities = track?.getCapabilities?.();
+
+      if (capabilities?.torch && scannerControls?.switchTorch) {
+        scannerTorchBtn.hidden = false;
+      }
+    } catch (error) {
+      console.error("Opening camera failed:", error);
+      closeScanner();
+
+      if (error?.name === "NotAllowedError") {
+        showError("اجازه دوربین داده نشد. دسترسی Camera را برای این سایت فعال کنید.");
+      } else if (error?.name === "NotFoundError") {
+        showError("دوربین مناسبی روی این دستگاه پیدا نشد.");
+      } else if (error?.name === "NotReadableError") {
+        showError("دوربین در برنامه دیگری در حال استفاده است. برنامه دیگر را ببندید و دوباره تلاش کنید.");
+      } else {
+        showError("فعال‌کردن دوربین با خطا مواجه شد. می‌توانید بارکد را دستی وارد کنید.");
+      }
+    }
+  }
+
+  scanBarcodeBtn.addEventListener("click", startScanner);
+  scannerCloseBtn.addEventListener("click", closeScanner);
+  scannerCancelBtn.addEventListener("click", closeScanner);
+
+  scannerModal.addEventListener("click", event => {
+    if (event.target === scannerModal) closeScanner();
+  });
+
+  scannerTorchBtn.addEventListener("click", async () => {
+    if (!scannerControls?.switchTorch) return;
+    try {
+      scannerTorchOn = !scannerTorchOn;
+      await scannerControls.switchTorch(scannerTorchOn);
+      scannerTorchBtn.textContent = scannerTorchOn ? "خاموش‌کردن چراغ" : "روشن‌کردن چراغ";
+    } catch (error) {
+      scannerTorchOn = false;
+      scannerTorchBtn.textContent = "روشن‌کردن چراغ";
+      showError("چراغ دوربین روی این دستگاه در دسترس نیست.");
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" && scannerModal.classList.contains("show")) {
+      closeScanner();
+    }
+  });
 
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
@@ -645,6 +1188,23 @@
       e.preventDefault();
       if (activeResultIndex >= 0 && items[activeResultIndex]) {
         items[activeResultIndex].click();
+      } else {
+        const possibleBarcode = normalizeBarcodeValue(searchInput.value);
+        if (/^[0-9]{6,18}$/.test(possibleBarcode)) {
+          findProductByExactBarcode(possibleBarcode)
+            .then(result => {
+              if (result.product) {
+                selectProduct(
+                  result.product.id,
+                  result.product.name,
+                  result.product.product_group || "",
+                  result.product.price || ""
+                );
+                document.getElementById("quantity").focus();
+              }
+            })
+            .catch(error => console.warn("Exact barcode enter lookup failed:", error));
+        }
       }
     } else if (e.key === "Escape") {
       resultsBox.classList.remove("show");
@@ -763,7 +1323,14 @@
   });
 
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && editModal.classList.contains("show")) {
+    if (event.key !== "Escape") return;
+
+    if (scannerModal.classList.contains("show")) {
+      closeScanner();
+      return;
+    }
+
+    if (editModal.classList.contains("show")) {
       closeEditModal();
     }
   });
