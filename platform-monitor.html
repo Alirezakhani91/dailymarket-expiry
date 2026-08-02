@@ -540,7 +540,32 @@ async function exportOrderingExcel(){
   function styleData(ws,startRow,endRow,moneyCols=[],centerCols=[]){for(let r=startRow;r<=endRow;r++){const row=ws.getRow(r);row.height=22;row.font={name:"Tahoma",size:9,color:{argb:"FF1E2931"}};row.alignment={vertical:"middle",wrapText:true};if(r%2===0)row.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF8FAFB"}};}moneyCols.forEach(c=>ws.getColumn(c).numFmt='#,##0 "ریال"');centerCols.forEach(c=>ws.getColumn(c).alignment={horizontal:"center",vertical:"middle"});}
   const total=data.rows.reduce((s,x)=>s+x.rial,0),urgent=data.rows.filter(x=>daysLeft(x.expiry_date)<=3).reduce((s,x)=>s+x.rial,0),soon=total-urgent,storeCount=new Set(data.rows.map(x=>String(x.store_id))).size,topProduct=data.products[0],topRegion=data.regions[0];
   const sum=wb.addWorksheet("خلاصه مدیریتی",{views:[{rightToLeft:true}]});sum.mergeCells("A1:H1");sum.getCell("A1").value="گزارش هوش سفارش‌گذاری و ریسک عدم فروش";sum.getCell("A1").font={name:"Tahoma",bold:true,size:18,color:{argb:white}};sum.getCell("A1").fill={type:"pattern",pattern:"solid",fgColor:{argb:burgundy}};sum.getCell("A1").alignment={horizontal:"center"};sum.getRow(1).height=36;sum.mergeCells("A2:H2");sum.getCell("A2").value="بازه بررسی: امروز تا ۷ روز آینده | زمان تولید: "+dt(new Date().toISOString());sum.getCell("A2").alignment={horizontal:"center"};sum.getCell("A2").font={name:"Tahoma",size:10,color:{argb:"FF59656E"}};
-  const summaryRows=[["شاخص","مقدار","توضیح"],["کل ارزش ۰ تا ۷ روز",total,"ریسک فعلی شبکه"],["ارزش فوری ۰ تا ۳ روز",urgent,"نیازمند بررسی فوری"],["ارزش ۴ تا ۷ روز",soon,"فرصت اقدام"],["محصولات یکتا",data.products.length,"محصول"],["فروشگاه‌های درگیر",storeCount,"فروشگاه"],["محصولات چندمنطقه‌ای",data.products.filter(p=>p.regionCount>=2).length,"محصول"],["بالاترین محصول",topProduct?.name||"—",topProduct?topProduct.regionCount+" منطقه / "+topProduct.storeCount+" فروشگاه":""],["بالاترین منطقه",topRegion?.region||"—",topRegion?topRegion.productCount+" محصول":""]];summaryRows.forEach((row,i)=>{const excelRow=sum.addRow(row);if(i===0){excelRow.eachCell(c=>c.style=headerStyle)}else{excelRow.font={name:"Tahoma",size:10};if(typeof row[1]==="number")excelRow.getCell(2).numFmt='#,##0 "ریال"';}});sum.columns=[{width:28},{width:26},{width:46},{width:2},{width:2},{width:2},{width:2},{width:2}];sum.views=[{state:"frozen",ySplit:3,rightToLeft:true}];
+  const summaryRows=[
+   ["شاخص","مقدار","توضیح","نوع شاخص"],
+   ["کل ارزش ۰ تا ۷ روز",total,"ریسک فعلی شبکه","money"],
+   ["ارزش فوری ۰ تا ۳ روز",urgent,"نیازمند بررسی فوری","money"],
+   ["ارزش ۴ تا ۷ روز",soon,"فرصت اقدام","money"],
+   ["محصولات یکتا",data.products.length,"محصول","count"],
+   ["فروشگاه‌های درگیر",storeCount,"فروشگاه","count"],
+   ["محصولات چندمنطقه‌ای",data.products.filter(p=>p.regionCount>=2).length,"محصول","count"],
+   ["بالاترین محصول",topProduct?.name||"—",topProduct?topProduct.regionCount+" منطقه / "+topProduct.storeCount+" فروشگاه":"","text"],
+   ["بالاترین منطقه",topRegion?.region||"—",topRegion?topRegion.productCount+" محصول":"","text"]
+  ];
+  summaryRows.forEach((row,i)=>{
+   const excelRow=sum.addRow(row.slice(0,3));
+   if(i===0){
+    excelRow.eachCell(c=>c.style=headerStyle);
+   }else{
+    excelRow.font={name:"Tahoma",size:10};
+    const valueCell=excelRow.getCell(2);
+    if(row[3]==="money"){
+     valueCell.numFmt='#,##0 "ریال"';
+    }else if(row[3]==="count"){
+     valueCell.numFmt='#,##0';
+     valueCell.alignment={horizontal:"center",vertical:"middle"};
+    }
+   }
+  });sum.columns=[{width:28},{width:26},{width:46},{width:2},{width:2},{width:2},{width:2},{width:2}];sum.views=[{state:"frozen",ySplit:3,rightToLeft:true}];
   const pws=setupSheet("خلاصه محصولات",[{header:"رتبه",key:"rank",width:9},{header:"محصول",key:"name",width:32},{header:"گروه",key:"group",width:20},{header:"آرتیکل",key:"article",width:16},{header:"بارکد",key:"barcode",width:18},{header:"تعداد مناطق",key:"regions",width:12},{header:"تعداد فروشگاه",key:"stores",width:14},{header:"تعداد کالا",key:"qty",width:13},{header:"ارزش ۰ تا ۳ روز",key:"urgent",width:21},{header:"ارزش ۴ تا ۷ روز",key:"soon",width:21},{header:"ارزش کل",key:"total",width:21},{header:"نزدیک‌ترین انقضا",key:"nearest",width:17},{header:"دامنه مشکل",key:"spread",width:18},{header:"پیشنهاد بررسی",key:"action",width:32}],"خلاصه محصولات در معرض ریسک","محصولاتی که از امروز تا ۷ روز آینده در فروشگاه‌ها یا مناطق ثبت شده‌اند.");
   data.products.forEach((p,i)=>{const row=pws.addRow([i+1,p.name,p.group,p.article||"",p.barcode||"",p.regionCount,p.storeCount,p.qty,p.urgent,p.soon,p.total,p.nearestExpiry?nhIsoToJalaliStr(p.nearestExpiry):"",orderSpreadLabel(p),orderRecommendation(p)]);if(p.urgent>0)row.getCell(9).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFE7EA"}};if(p.soon>0)row.getCell(10).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF1D6"}};});styleData(pws,5,pws.rowCount,[9,10,11],[1,6,7,8,12]);
   const rws=setupSheet("منطقه-محصول",[{header:"رتبه",key:"rank",width:9},{header:"منطقه",key:"region",width:22},{header:"محصول",key:"name",width:32},{header:"گروه",key:"group",width:20},{header:"آرتیکل",key:"article",width:16},{header:"بارکد",key:"barcode",width:18},{header:"فروشگاه درگیر",key:"stores",width:14},{header:"تعداد",key:"qty",width:12},{header:"ارزش ۰ تا ۳ روز",key:"urgent",width:21},{header:"ارزش ۴ تا ۷ روز",key:"soon",width:21},{header:"ارزش کل",key:"total",width:21},{header:"نزدیک‌ترین انقضا",key:"nearest",width:17},{header:"پیشنهاد بررسی",key:"action",width:30}],"تحلیل منطقه و محصول","مشخص می‌کند هر منطقه در کدام محصول با ریسک عدم فروش مواجه است.");
