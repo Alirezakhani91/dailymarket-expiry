@@ -196,6 +196,30 @@
     align-items: center;
   }
 
+  .promo-last-export {
+    min-width: 210px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(36, 31, 27, 0.06);
+  }
+
+  .promo-last-export span {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+  }
+
+  .promo-last-export strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--ink);
+    font-size: 11.5px;
+    line-height: 1.8;
+    font-weight: 900;
+  }
+
   .promo-export-btn {
     min-height: 42px;
     border: 0;
@@ -341,6 +365,12 @@
       min-width: 0;
     }
 
+    .promo-last-export {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
     .promo-actions {
       width: 100%;
     }
@@ -391,7 +421,7 @@
         <span class="promo-export-eyebrow">خروجی رسمی تیم بازرگانی</span>
         <h2 class="promo-export-title">فرم قیمت پروموشن کالاهای تاریخ نزدیک</h2>
         <p class="promo-export-description">
-          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۷ روز را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
+          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۱۰ روز را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
         </p>
       </div>
       <span class="promo-excel-badge">EXCEL</span>
@@ -444,9 +474,14 @@
           <span>ارزش موجودی انتخاب‌شده</span>
         </div>
         <div class="promo-metric">
-          <strong id="promoDayLabel">۰ تا ۷ روز</strong>
+          <strong id="promoDayLabel">۰ تا ۱۰ روز</strong>
           <span>بازه انقضا</span>
         </div>
+      </div>
+
+      <div class="promo-last-export">
+        <span>آخرین دریافت فایل اکسل</span>
+        <strong id="promoLastExportValue">هنوز فایلی دریافت نشده است</strong>
       </div>
 
       <div class="promo-actions">
@@ -533,6 +568,9 @@
   const promoMaxDay = document.getElementById("promoMaxDay");
   const promoExportBtn = document.getElementById("promoExportBtn");
   const promoResetBtn = document.getElementById("promoResetBtn");
+  const promoLastExportValue = document.getElementById("promoLastExportValue");
+  const PROMOTION_LAST_EXPORT_KEY =
+    `dailymarket-expiry:last-promotion-export:${session.userId}`;
 
   const BUCKETS = [
     { key: "d0", label: "امروز" },
@@ -1325,14 +1363,14 @@
     }
 
     const dayOptions = Array.from(
-      { length: 8 },
+      { length: 11 },
       (_, day) => `<option value="${day}">${day.toLocaleString("fa-IR")} روز</option>`
     ).join("");
 
     promoMinDay.innerHTML = dayOptions;
     promoMaxDay.innerHTML = dayOptions;
     promoMinDay.value = "0";
-    promoMaxDay.value = "7";
+    promoMaxDay.value = "10";
   }
 
   function buildPromotionRows() {
@@ -1432,7 +1470,7 @@
     if (!canExportPromotion) return;
 
     const minDay = Number(promoMinDay.value || 0);
-    const maxDay = Number(promoMaxDay.value || 7);
+    const maxDay = Number(promoMaxDay.value || 10);
 
     if (minDay > maxDay) {
       promoMaxDay.value = String(minDay);
@@ -1533,17 +1571,72 @@
     promoProductFilter.value = "";
     promoGroupFilter.value = "";
     promoMinDay.value = "0";
-    promoMaxDay.value = "7";
+    promoMaxDay.value = "10";
     renderPromotionExport();
   }
 
   function currentJalaliFileDate() {
-    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+    const parts = new Intl.DateTimeFormat("en-US-u-ca-persian", {
       timeZone: "Asia/Tehran",
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
-    }).format(new Date()).replaceAll("/", "-").replaceAll(" ", "");
+    }).formatToParts(new Date());
+
+    const values = Object.fromEntries(
+      parts.map(part => [part.type, part.value])
+    );
+
+    return `${values.year}${values.month}${values.day}`;
+  }
+
+  function currentTehranJalaliDateTime() {
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(new Date());
+  }
+
+  function safePromotionFilenamePart(value) {
+    const cleaned = String(value || "")
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, " ")
+      .replace(/[. ]+$/g, "");
+
+    return cleaned || "کالاهای نزدیک انقضا";
+  }
+
+  function renderLastPromotionExport() {
+    if (!promoLastExportValue) return;
+
+    try {
+      const savedValue = localStorage.getItem(PROMOTION_LAST_EXPORT_KEY);
+      promoLastExportValue.textContent =
+        savedValue || "هنوز فایلی دریافت نشده است";
+    } catch (error) {
+      console.warn("Reading last Excel export time failed:", error);
+      promoLastExportValue.textContent = "اطلاعات آخرین دریافت در دسترس نیست";
+    }
+  }
+
+  function saveLastPromotionExport() {
+    const value = currentTehranJalaliDateTime();
+
+    try {
+      localStorage.setItem(PROMOTION_LAST_EXPORT_KEY, value);
+    } catch (error) {
+      console.warn("Saving last Excel export time failed:", error);
+    }
+
+    if (promoLastExportValue) {
+      promoLastExportValue.textContent = value;
+    }
   }
 
   async function exportPromotionWorkbook() {
@@ -1767,16 +1860,13 @@
         }
       );
 
-      const regionCodes = [
-        ...new Set(currentPromotionRows.map(row => row.regionCode))
-      ];
-
-      const regionPart = regionCodes.length === 1
-        ? regionCodes[0]
-        : "Multi";
+      const selectedGroupName = promoGroupFilter.value.trim();
+      const reportTitle = selectedGroupName
+        ? selectedGroupName
+        : "کالاهای نزدیک انقضا";
 
       const filename =
-        `Promotion_Region_${regionPart}_${currentJalaliFileDate()}.xlsx`;
+        `${safePromotionFilenamePart(reportTitle)} ${currentJalaliFileDate()}.xlsx`;
 
       const downloadUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
@@ -1785,6 +1875,8 @@
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
+
+      saveLastPromotionExport();
 
       setTimeout(() => URL.revokeObjectURL(downloadUrl), 1500);
       showSuccess(
@@ -1803,6 +1895,8 @@
   }
 
   if (canExportPromotion) {
+    renderLastPromotionExport();
+
     [
       promoStoreFilter,
       promoGroupFilter,
