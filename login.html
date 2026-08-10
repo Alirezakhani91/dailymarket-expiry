@@ -22,8 +22,8 @@
 
     <form id="loginForm">
       <div class="field">
-        <label for="email">ایمیل کاری</label>
-        <input type="email" id="email" required autocomplete="username">
+        <label for="username">نام کاربری یا ایمیل کاری</label>
+        <input type="text" id="username" required autocomplete="username" autocapitalize="none" spellcheck="false">
       </div>
 
       <div class="field">
@@ -48,10 +48,37 @@
   const APP_ROLE_PRIORITY = [
     "system_admin",
     "platform_admin",
+    "ordering_deputy",
     "executive_manager",
     "region_manager",
     "store_operator"
   ];
+
+  // Nhost با ایمیل احراز هویت می‌کند. نام‌های کاربری سازمانی در اینجا
+  // فقط به ایمیل داخلی همان حساب تبدیل می‌شوند؛ هیچ رمزی در کد نگهداری نمی‌شود.
+  const USERNAME_EMAIL_MAP = Object.freeze({
+    tabarzadi: "tabarzadi@dailymarket.local"
+  });
+
+  function resolveLoginEmail(value) {
+    const normalized = String(value || "").trim();
+
+    if (!normalized) {
+      throw new Error("نام کاربری یا ایمیل کاری را وارد کنید.");
+    }
+
+    if (normalized.includes("@")) {
+      return normalized.toLowerCase();
+    }
+
+    const internalEmail = USERNAME_EMAIL_MAP[normalized.toLowerCase()];
+
+    if (!internalEmail) {
+      throw new Error("نام کاربری واردشده در سامانه تعریف نشده است.");
+    }
+
+    return internalEmail;
+  }
 
   function showLoginError(message) {
     alertEl.textContent = nhFriendlyAuthError(message);
@@ -83,6 +110,12 @@
   }
 
   async function getUserAppRole(userId, token, nhostDefaultRole) {
+    // Nhost Auth is the source of truth for the active account role.
+    // Use it first; query user_roles only as a fallback for legacy accounts.
+    if (isKnownAppRole(nhostDefaultRole)) {
+      return nhostDefaultRole;
+    }
+
     const query = `
       query LoginUserRoles($userId: uuid!) {
         user_roles(
@@ -113,10 +146,6 @@
       console.error("خطا در دریافت نقش کاربر:", error);
     }
 
-    if (isKnownAppRole(nhostDefaultRole)) {
-      return nhostDefaultRole;
-    }
-
     throw new Error(
       "ورود انجام شد، اما نقش این حساب در جدول user_roles پیدا نشد."
     );
@@ -145,7 +174,9 @@
     setLoading(true);
 
     try {
-      const email = document.getElementById("email").value.trim();
+      const email = resolveLoginEmail(
+        document.getElementById("username").value
+      );
       const password = document.getElementById("password").value;
 
       const response = await fetch(AUTH_URL, {
