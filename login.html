@@ -54,6 +54,13 @@
     "store_operator"
   ];
 
+  // Keep login routing self-contained. Older deployed auth.js versions do not
+  // know about newly-added application roles such as ordering_deputy.
+  const LOGIN_ROLE_HOME = Object.freeze({
+    ...(typeof ROLE_HOME === "object" && ROLE_HOME ? ROLE_HOME : {}),
+    ordering_deputy: "ordering-deputy-dashboard.html"
+  });
+
   // Nhost با ایمیل احراز هویت می‌کند. نام‌های کاربری سازمانی در اینجا
   // فقط به ایمیل داخلی همان حساب تبدیل می‌شوند؛ هیچ رمزی در کد نگهداری نمی‌شود.
   const USERNAME_EMAIL_MAP = Object.freeze({
@@ -96,11 +103,11 @@
   }
 
   function isKnownAppRole(role) {
-    return Boolean(role && ROLE_HOME[role]);
+    return Boolean(role && LOGIN_ROLE_HOME[role]);
   }
 
   function redirectByRole(role) {
-    const destination = ROLE_HOME[role];
+    const destination = LOGIN_ROLE_HOME[role];
 
     if (!destination) {
       throw new Error("برای این حساب، نقش معتبر سامانه تعریف نشده است.");
