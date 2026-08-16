@@ -593,7 +593,20 @@
   );
 
   function isBcsSourceGroup(value) {
-    return NORMALIZED_BCS_SOURCE_GROUPS.has(normalizePromotionGroup(value));
+    const normalized = normalizePromotionGroup(value);
+
+    if (NORMALIZED_BCS_SOURCE_GROUPS.has(normalized)) return true;
+
+    const compact = normalized.replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, "");
+
+    return (
+      compact.includes("آشامیدنی") ||
+      compact.includes("نوشیدنی") ||
+      compact.includes("ادویه") ||
+      compact.includes("کنسرو") ||
+      compact.includes("شیرینی") ||
+      compact.includes("تنقلات")
+    );
   }
 
   const BUCKETS = [
