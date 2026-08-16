@@ -571,6 +571,30 @@
   const promoLastExportValue = document.getElementById("promoLastExportValue");
   const PROMOTION_LAST_EXPORT_KEY =
     `dailymarket-expiry:last-promotion-export:${session.userId}`;
+  const BCS_GROUP_LABEL = "آشامیدنی و تنقلات (BCS)";
+  const BCS_SOURCE_GROUPS = new Set([
+    "آشامیدنی",
+    "ادویه و کنسروجات",
+    "شیرینیجات و تنقلات",
+    "شیرینی‌جات و تنقلات"
+  ]);
+
+  function normalizePromotionGroup(value) {
+    return String(value || "")
+      .trim()
+      .replace(/ي/g, "ی")
+      .replace(/ك/g, "ک")
+      .replace(/[\u200c\u200f\u202a-\u202e]/g, "")
+      .replace(/\s+/g, " ");
+  }
+
+  const NORMALIZED_BCS_SOURCE_GROUPS = new Set(
+    [...BCS_SOURCE_GROUPS].map(normalizePromotionGroup)
+  );
+
+  function isBcsSourceGroup(value) {
+    return NORMALIZED_BCS_SOURCE_GROUPS.has(normalizePromotionGroup(value));
+  }
 
   const BUCKETS = [
     { key: "d0", label: "امروز" },
@@ -1343,13 +1367,22 @@
       promoStoreFilter.value = currentStore;
     }
 
-    const groups = [
+    const sourceGroups = [
       ...new Set(
         allBatches
           .map(row => row.product_group)
           .filter(Boolean)
       )
-    ].sort((a, b) => a.localeCompare(b, "fa"));
+    ];
+
+    const hasBcsGroup = sourceGroups.some(isBcsSourceGroup);
+    const groups = sourceGroups
+      .filter(group => !isBcsSourceGroup(group))
+      .sort((a, b) => a.localeCompare(b, "fa"));
+
+    if (hasBcsGroup) {
+      groups.unshift(BCS_GROUP_LABEL);
+    }
 
     const currentGroup = promoGroupFilter.value;
     promoGroupFilter.innerHTML =
@@ -1401,7 +1434,14 @@
       const product = productCatalogById.get(String(batch.product_id)) || {};
       const productGroup = batch.product_group || product.product_group || "";
 
-      if (selectedGroup && productGroup !== selectedGroup) return;
+      if (selectedGroup === BCS_GROUP_LABEL) {
+        if (!isBcsSourceGroup(productGroup)) return;
+      } else if (
+        selectedGroup &&
+        normalizePromotionGroup(productGroup) !== normalizePromotionGroup(selectedGroup)
+      ) {
+        return;
+      }
 
       const article = String(product.article || "").trim();
       const barcode = String(product.barcode || "").trim();
