@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- EXPIRY WATCH VERSION: PROMOTION RANGE 0-30 DAYS | 2026-08-17 -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -421,7 +422,7 @@
         <span class="promo-export-eyebrow">خروجی رسمی تیم بازرگانی</span>
         <h2 class="promo-export-title">فرم قیمت پروموشن کالاهای تاریخ نزدیک</h2>
         <p class="promo-export-description">
-          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۱۰ روز را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
+          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۳۰ روز را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
         </p>
       </div>
       <span class="promo-excel-badge">EXCEL</span>
@@ -474,7 +475,7 @@
           <span>ارزش موجودی انتخاب‌شده</span>
         </div>
         <div class="promo-metric">
-          <strong id="promoDayLabel">۰ تا ۱۰ روز</strong>
+          <strong id="promoDayLabel">۰ تا ۳۰ روز</strong>
           <span>بازه انقضا</span>
         </div>
       </div>
@@ -1409,14 +1410,14 @@
     }
 
     const dayOptions = Array.from(
-      { length: 11 },
+      { length: 31 },
       (_, day) => `<option value="${day}">${day.toLocaleString("fa-IR")} روز</option>`
     ).join("");
 
     promoMinDay.innerHTML = dayOptions;
     promoMaxDay.innerHTML = dayOptions;
     promoMinDay.value = "0";
-    promoMaxDay.value = "10";
+    promoMaxDay.value = "30";
   }
 
   function buildPromotionRows() {
@@ -1523,7 +1524,7 @@
     if (!canExportPromotion) return;
 
     const minDay = Number(promoMinDay.value || 0);
-    const maxDay = Number(promoMaxDay.value || 10);
+    const maxDay = Number(promoMaxDay.value || 30);
 
     if (minDay > maxDay) {
       promoMaxDay.value = String(minDay);
@@ -1624,7 +1625,7 @@
     promoProductFilter.value = "";
     promoGroupFilter.value = "";
     promoMinDay.value = "0";
-    promoMaxDay.value = "10";
+    promoMaxDay.value = "30";
     renderPromotionExport();
   }
 
