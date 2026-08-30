@@ -29,6 +29,9 @@ a{color:inherit}
 .admin-wrap{width:min(1640px,calc(100% - 28px));margin:auto;padding:18px 0 60px}
 .admin-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin:16px 0}.admin-head h1{margin:0;font-size:clamp(24px,2.7vw,38px);font-weight:900}.admin-head p{margin:6px 0 0;color:var(--muted);font-size:12px}.live-box{display:flex;align-items:center;gap:12px;background:linear-gradient(145deg,#10161b,#0b1014);border:1px solid var(--line);border-radius:18px;padding:11px 13px;min-width:270px;box-shadow:var(--shadow)}.live-dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(100,211,111,.12),0 0 18px rgba(100,211,111,.5)}.live-dot.loading{background:var(--amber);box-shadow:0 0 0 5px rgba(255,157,28,.12),0 0 18px rgba(255,157,28,.5);animation:pulse 1s infinite alternate}.live-dot.error{background:var(--red);box-shadow:0 0 0 5px rgba(255,63,82,.12),0 0 18px rgba(255,63,82,.5)}@keyframes pulse{to{opacity:.45}}.live-main{font-size:11px;font-weight:900}.live-sub{font-size:9px;color:var(--muted);margin-top:2px}.refresh{margin-right:auto;width:40px;height:40px;border:1px solid #33404a;border-radius:13px;background:#111820;color:#d8e2e9;font-size:20px;cursor:pointer}.refresh:hover{border-color:#657682}
 .alert-admin{display:none;background:rgba(255,63,82,.1);color:#ff8d9b;padding:12px 14px;border-radius:14px;margin-bottom:14px;border:1px solid rgba(255,63,82,.24)}.alert-admin.show{display:block}
+.store-create{border-color:rgba(159,33,54,.65);background:radial-gradient(circle at 90% -20%,rgba(159,33,54,.3),transparent 38%),linear-gradient(145deg,#11171b,#080c0f)}
+.store-create-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.store-create-badge{display:inline-flex;padding:7px 10px;border-radius:999px;background:rgba(159,33,54,.2);border:1px solid rgba(255,90,115,.24);color:#ff8da0;font-size:9px;font-weight:900}
+.store-create-grid{display:grid;grid-template-columns:.7fr 1fr 1fr 1fr 1fr;gap:10px;margin-top:14px}.store-create-grid .field input,.store-create-grid .field select{height:47px}.store-create-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}.store-create-btn{height:47px;border:0;border-radius:13px;padding:0 22px;background:linear-gradient(145deg,#bd2942,#831329);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 12px 28px rgba(159,33,54,.28)}.store-create-btn:disabled{opacity:.55;cursor:wait}.password-wrap{position:relative}.password-wrap input{padding-left:88px!important;direction:ltr;text-align:left}.password-tool{position:absolute;left:6px;top:6px;height:35px;border:1px solid #39454e;border-radius:9px;background:#171e23;color:#dce4e9;padding:0 9px;font-size:9px;cursor:pointer}.store-create-note{color:#75828b;font-size:9px;line-height:1.8}.credential-box{display:none;margin-top:14px;border:1px solid rgba(100,211,111,.35);border-radius:16px;padding:13px;background:rgba(29,116,48,.12)}.credential-box.show{display:block}.credential-title{color:#80df88;font-size:12px;font-weight:900}.credential-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.credential-item{padding:10px;border:1px solid #2f3b42;border-radius:11px;background:#090e11}.credential-item small{display:block;color:#82909a;font-size:8px}.credential-item b{display:block;margin-top:4px;direction:ltr;text-align:left;font-size:12px;overflow-wrap:anywhere}.credential-copy{height:39px;border:1px solid #41624a;border-radius:10px;background:#172a1c;color:#8ce294;font-weight:900;cursor:pointer;padding:0 13px}
 
 /* Executive report */
 .exec-report{position:relative;overflow:hidden;background:linear-gradient(145deg,#080b0e,#050708 72%);border:1px solid #2a333b;border-radius:28px;padding:16px;margin-bottom:18px;box-shadow:0 28px 90px rgba(0,0,0,.5)}
@@ -56,6 +59,8 @@ a{color:inherit}
 @media(max-width:1400px){.exec-main{grid-template-columns:280px minmax(0,1fr) 260px}.exec-kpis{grid-template-columns:repeat(5,minmax(170px,1fr));overflow-x:auto;padding-bottom:4px}}
 @media(max-width:1180px){.exec-head{grid-template-columns:220px 1fr 220px}.exec-main{grid-template-columns:1fr}.exec-panel,.map-panel{min-height:auto}#iranMap{height:590px}.exec-kpis{grid-template-columns:repeat(3,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.critical-list{grid-template-columns:1fr 1fr}.summary-stack{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.topbar{padding:10px 12px}.context-label{display:none}.admin-wrap{width:calc(100% - 16px);padding-top:10px}.admin-head{display:block}.live-box{width:100%;margin-top:12px}.exec-report{padding:10px;border-radius:20px}.exec-head{grid-template-columns:1fr}.exec-title{order:-1}.exec-logo{min-height:62px}.exec-title h2{font-size:23px}.exec-kpis{grid-template-columns:1fr 1fr}.exec-main{display:block}.exec-panel,.map-panel{margin-bottom:10px}.critical-list{grid-template-columns:1fr}.summary-stack{grid-template-columns:1fr 1fr}.summary-hero,.summary-status{grid-column:1/-1}#iranMap{height:520px}.map-head{position:relative;right:auto;left:auto;top:auto;padding:10px;display:block}.map-legend{margin-top:7px}.stats{grid-template-columns:1fr 1fr}.card-admin{padding:12px}.filters{grid-template-columns:1fr 1fr}.search-wide{grid-column:1/-1}.region-row{grid-template-columns:1fr 1fr}.region-row>div:first-child{grid-column:1/-1}.filter-foot{flex-direction:column}.exec-foot{display:block}.map-source{margin-top:4px}}
+@media(max-width:1100px){.store-create-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.store-create-head{display:block}.store-create-badge{margin-top:8px}.store-create-grid,.credential-grid{grid-template-columns:1fr}}
 @media(max-width:440px){.exec-kpis,.stats,.filters,.summary-stack{grid-template-columns:1fr}.search-wide{grid-column:auto}#iranMap{height:470px}.exec-date,.exec-logo{min-height:68px}.exec-title h2{font-size:20px}}
 
 
@@ -98,6 +103,28 @@ a{color:inherit}
   </div>
 
   <div class="alert-admin" id="alert"></div>
+
+  <section class="card-admin store-create" id="storeCreateCard">
+    <div class="store-create-head">
+      <div><h2>ساخت فروشگاه و حساب کاربری جدید</h2><p class="desc">با یک ثبت، فروشگاه، حساب ورود اپراتور و اتصال سطح دسترسی ساخته می‌شود.</p></div>
+      <span class="store-create-badge">ویژه مدیر پلتفرم</span>
+    </div>
+    <form id="storeCreateForm">
+      <div class="store-create-grid">
+        <div class="field"><label for="newStoreCode">کد فروشگاه</label><input id="newStoreCode" required maxlength="32" autocomplete="off" placeholder="F1010" dir="ltr"></div>
+        <div class="field"><label for="newStoreName">نام فروشگاه</label><input id="newStoreName" required maxlength="120" autocomplete="off" placeholder="مثلاً نوبران"></div>
+        <div class="field"><label for="newStoreRegion">منطقه</label><select id="newStoreRegion" required><option value="">انتخاب منطقه</option></select></div>
+        <div class="field"><label for="newRegionManager">مدیر منطقه</label><input id="newRegionManager" required maxlength="120" placeholder="نام مدیر منطقه"></div>
+        <div class="field"><label for="newExecutiveManager">مدیر اجرایی</label><input id="newExecutiveManager" required maxlength="120" placeholder="نام مدیر اجرایی"></div>
+      </div>
+      <div class="store-create-grid" style="grid-template-columns:1fr 1fr;max-width:720px">
+        <div class="field"><label for="newStorePassword">رمز اولیه</label><div class="password-wrap"><input id="newStorePassword" required minlength="8" maxlength="50" autocomplete="new-password"><button class="password-tool" id="generatePasswordBtn" type="button">رمز تازه</button></div></div>
+        <div class="field"><label>نام کاربری ساخته‌شده</label><input id="newStoreUsernamePreview" disabled value="—" dir="ltr"></div>
+      </div>
+      <div class="store-create-actions"><button class="store-create-btn" id="storeCreateBtn" type="submit">ساخت فروشگاه و حساب ورود</button><span class="store-create-note" id="storeCreateStatus">اطلاعات ورود فقط بعد از ساخت نمایش داده می‌شود؛ رمز در کد سایت ذخیره نمی‌شود.</span></div>
+    </form>
+    <div class="credential-box" id="credentialBox"><div class="credential-title">حساب با موفقیت ساخته شد</div><div class="credential-grid"><div class="credential-item"><small>نام فروشگاه</small><b id="createdStoreName" style="direction:rtl;text-align:right">—</b></div><div class="credential-item"><small>نام کاربری</small><b id="createdUsername">—</b></div><div class="credential-item"><small>ایمیل داخلی</small><b id="createdEmail">—</b></div><div class="credential-item"><small>رمز اولیه</small><b id="createdPassword">—</b></div></div><div class="store-create-actions"><button class="credential-copy" id="copyCredentialsBtn" type="button">کپی اطلاعات ورود</button><span class="store-create-note">بعد از تحویل اطلاعات، بهتر است رمز اولیه در محل امن نگهداری شود.</span></div></div>
+  </section>
 
   <section class="exec-report" id="executiveReport">
     <div class="exec-head">
@@ -225,12 +252,26 @@ const REFRESH_MS=60000,PAGE=1000,MAX=100000,TABLE_PAGE_SIZE=50;
 let stores=[],batches=[],storeMap=new Map(),productMap=new Map(),expanded=null,busy=false,timer=null,iranChart=null,toastTimer=null,orderTab="products",orderExpandedProduct=null,orderSearchTimer=null;
 const tablePages={orderProducts:1,orderRegions:1,orderStores:1,latest:1,summary:1,archive:1};
 const $=id=>document.getElementById(id);
+function securePassword(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";const bytes=new Uint32Array(12);crypto.getRandomValues(bytes);let out="DM@";for(const n of bytes)out+=chars[n%chars.length];return out}
+function normalizeStoreCode(value){return String(value||"").trim().toUpperCase().replace(/\s+/g,"")}
+function updateStoreUsernamePreview(){const code=normalizeStoreCode($("newStoreCode").value);$("newStoreUsernamePreview").value=code||"—"}
+function fillStoreCreatorRegions(){const el=$("newStoreRegion"),old=el.value,regions=[...new Set(stores.map(s=>s.region).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fa"));el.innerHTML='<option value="">انتخاب منطقه</option>'+regions.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");if(regions.includes(old))el.value=old}
+function autofillStoreManagers(){const region=$("newStoreRegion").value,matching=stores.filter(s=>s.region===region),regionManager=matching.map(s=>s.region_manager_name).find(Boolean)||"",executiveManager=matching.map(s=>s.executive_manager_name).find(Boolean)||"";$("newRegionManager").value=regionManager;$("newExecutiveManager").value=executiveManager}
+function resetStoreCreator(){$("storeCreateForm").reset();$("newStorePassword").value=securePassword();updateStoreUsernamePreview();fillStoreCreatorRegions()}
+function storeCreateMessage(message,error=false){$("storeCreateStatus").textContent=message;$("storeCreateStatus").style.color=error?"#ff8796":"#8f9ba3"}
+async function copyCreatedCredentials(){const text=`فروشگاه: ${$("createdStoreName").textContent}\nنام کاربری: ${$("createdUsername").textContent}\nرمز عبور: ${$("createdPassword").textContent}`;await navigator.clipboard.writeText(text);showToast("اطلاعات ورود کپی شد.")}
+async function createStoreAccount(event){event.preventDefault();const button=$("storeCreateBtn"),code=normalizeStoreCode($("newStoreCode").value),payload={storeCode:code,storeName:$("newStoreName").value.trim(),region:$("newStoreRegion").value,regionManagerName:$("newRegionManager").value.trim(),executiveManagerName:$("newExecutiveManager").value.trim(),password:$("newStorePassword").value};$("credentialBox").classList.remove("show");if(!/^[A-Z][A-Z0-9_-]{2,31}$/.test(code)){storeCreateMessage("کد فروشگاه باید با حرف انگلیسی شروع شود؛ نمونه: F1010",true);return}button.disabled=true;button.textContent="در حال ساخت کامل حساب…";storeCreateMessage("در حال ساخت حساب Auth، فروشگاه و دسترسی اپراتور…");try{const response=await fetch(`${FUNCTIONS_URL}/create-store-account`,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.token}`},body:JSON.stringify(payload)});let data={};try{data=await response.json()}catch(_e){}if(!response.ok)throw new Error(data.message||"ساخت حساب با خطا مواجه شد.");$("createdStoreName").textContent=data.store.name;$("createdUsername").textContent=data.credentials.username;$("createdEmail").textContent=data.credentials.email;$("createdPassword").textContent=payload.password;$("credentialBox").classList.add("show");storeCreateMessage("ساخت کامل انجام شد؛ اطلاعات ورود آماده تحویل است.");await loadStores();fillFilters();resetStoreCreator();showToast("فروشگاه و حساب اپراتور ساخته شد.")}catch(error){storeCreateMessage(error.message||"ساخت حساب با خطا مواجه شد.",true)}finally{button.disabled=false;button.textContent="ساخت فروشگاه و حساب ورود"}}
 function resetTablePages(...keys){(keys.length?keys:Object.keys(tablePages)).forEach(k=>tablePages[k]=1)}
 function pageData(items,key){const total=items.length,pages=Math.max(1,Math.ceil(total/TABLE_PAGE_SIZE));tablePages[key]=Math.min(Math.max(1,tablePages[key]||1),pages);const start=(tablePages[key]-1)*TABLE_PAGE_SIZE;return{items:items.slice(start,start+TABLE_PAGE_SIZE),total,pages,page:tablePages[key],start,end:Math.min(start+TABLE_PAGE_SIZE,total)}}
 function paginationHtml(key,p){if(p.total<=TABLE_PAGE_SIZE)return"";const from=Math.max(1,p.page-2),to=Math.min(p.pages,p.page+2),buttons=[];if(from>1){buttons.push(`<button class="page-btn" data-page="1">${fa(1,0)}</button>`);if(from>2)buttons.push('<span class="page-dots">…</span>')}for(let i=from;i<=to;i++)buttons.push(`<button class="page-btn${i===p.page?" active":""}" data-page="${i}">${fa(i,0)}</button>`);if(to<p.pages){if(to<p.pages-1)buttons.push('<span class="page-dots">…</span>');buttons.push(`<button class="page-btn" data-page="${p.pages}">${fa(p.pages,0)}</button>`)}return`<div class="pagination" data-pager="${key}"><div class="pagination-info">نمایش ${fa(p.start+1,0)} تا ${fa(p.end,0)} از ${fa(p.total,0)} ردیف</div><div class="pagination-buttons"><button class="page-btn" data-page="${p.page-1}" ${p.page===1?"disabled":""}>قبلی</button>${buttons.join("")}<button class="page-btn" data-page="${p.page+1}" ${p.page===p.pages?"disabled":""}>بعدی</button></div></div>`}
 function bindPagination(container,key,rerender){container.querySelectorAll(`[data-pager="${key}"] [data-page]`).forEach(btn=>btn.onclick=()=>{tablePages[key]=Number(btn.dataset.page)||1;rerender();container.scrollIntoView({behavior:"smooth",block:"start"})})}
 $("logoutBtn").onclick=e=>{e.preventDefault();nhLogout()};
 $("refreshBtn").onclick=()=>refresh(true);
+$("storeCreateForm").addEventListener("submit",createStoreAccount);
+$("newStoreCode").addEventListener("input",updateStoreUsernamePreview);
+$("newStoreRegion").addEventListener("change",autofillStoreManagers);
+$("generatePasswordBtn").onclick=()=>{$("newStorePassword").value=securePassword()};
+$("copyCredentialsBtn").onclick=copyCreatedCredentials;
 ["regionFilter","storeFilter","groupFilter","daysFilter"].forEach(id=>$(id).onchange=()=>{if(id==="regionFilter")fillStores();resetTablePages("latest","summary");render()});
 let st=null;$("search").oninput=()=>{clearTimeout(st);st=setTimeout(()=>{resetTablePages("latest","summary");render()},180)};
 $("clearBtn").onclick=()=>{["regionFilter","storeFilter","groupFilter","daysFilter","search"].forEach(id=>$(id).value="");fillStores();resetTablePages("latest","summary");render()};
@@ -585,7 +626,7 @@ async function exportOrderingExcel(){
 
 async function loadStores(){
  const q=`query{stores(order_by:[{region:asc},{name:asc}]){id store_code name region region_manager_name executive_manager_name}}`;
- const d=await nhGql(q,{},session.token);stores=d.stores||[];storeMap=new Map(stores.map(s=>[String(s.id),s]));
+ const d=await nhGql(q,{},session.token);stores=d.stores||[];storeMap=new Map(stores.map(s=>[String(s.id),s]));fillStoreCreatorRegions();
 }
 async function loadBatches(){
  const q=`query($limit:Int!,$offset:Int!){expiry_batches(order_by:[{created_at:desc},{id:desc}],limit:$limit,offset:$offset){id product_id store_id product_name product_group quantity unit unit_price expiry_date status created_at}}`;
@@ -671,6 +712,7 @@ function renderArchive(){
 }
 let archiveTimer=null;$("archiveSearch").oninput=()=>{clearTimeout(archiveTimer);archiveTimer=setTimeout(()=>{resetTablePages("archive");renderArchive()},180)};
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&!busy)refresh()});
+$("newStorePassword").value=securePassword();updateStoreUsernamePreview();
 refresh(true);
 </script>
 </body>
