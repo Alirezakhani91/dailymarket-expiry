@@ -3,6 +3,7 @@ const NHOST_SUBDOMAIN = "wijabqjyryslediitcrc";
 const NHOST_REGION = "eu-central-1";
 const GRAPHQL_URL = `https://${NHOST_SUBDOMAIN}.graphql.${NHOST_REGION}.nhost.run/v1`;
 const AUTH_URL = `https://${NHOST_SUBDOMAIN}.auth.${NHOST_REGION}.nhost.run/v1/signin/email-password`;
+const FUNCTIONS_URL = `https://${NHOST_SUBDOMAIN}.functions.${NHOST_REGION}.nhost.run/v1`;
 
 const ROLE_HOME = {
   store_operator: "operator.html",
