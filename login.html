@@ -336,13 +336,17 @@ input {
       return normalized.toLowerCase();
     }
 
-    const internalEmail = USERNAME_EMAIL_MAP[normalized.toLowerCase()];
+    const username = normalized.toLowerCase();
+    const internalEmail = USERNAME_EMAIL_MAP[username];
+    if (internalEmail) return internalEmail;
 
-    if (!internalEmail) {
-      throw new Error("نام کاربری واردشده در سامانه تعریف نشده است.");
+    // کد هر فروشگاه بدون نیاز به ویرایش دوباره‌ی این فایل، به ایمیل داخلی
+    // همان حساب تبدیل می‌شود؛ نمونه: F1009 -> f1009@dailymarket.local
+    if (/^[a-z][a-z0-9_-]{2,31}$/.test(username)) {
+      return `${username}@dailymarket.local`;
     }
 
-    return internalEmail;
+    throw new Error("نام کاربری معتبر نیست؛ کد فروشگاه یا ایمیل کاری را وارد کنید.");
   }
 
   function showLoginError(message) {
