@@ -314,6 +314,52 @@
     overflow: hidden;
   }
 
+  .price-check-panel {
+    display: none;
+    margin: 4px 0 18px;
+    padding: 15px;
+    border: 1px solid #e4ddd6;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #fffdfb, #f8f4f0);
+  }
+
+  .price-check-panel.show { display: block; }
+
+  .price-reference {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #ddd4cc;
+  }
+
+  .price-reference span { color: var(--muted); font-size: 11px; }
+  .price-reference strong { color: #29241f; font-size: 14px; direction: ltr; }
+
+  .price-mismatch-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    color: #4e4640;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .price-mismatch-toggle input {
+    width: 19px;
+    height: 19px;
+    margin: 0;
+    accent-color: #9f2136;
+  }
+
+  .actual-price-wrap { display: none; margin-top: 13px; }
+  .actual-price-wrap.show { display: block; }
+  .actual-price-wrap input { direction: ltr; text-align: left; }
+  .price-help { margin-top: 6px; color: var(--muted); font-size: 10px; line-height: 1.8; }
+
   @media (max-width: 620px) {
     .operator-actions {
       min-width: 116px;
@@ -670,6 +716,23 @@
         <label for="quantity">تعداد</label>
         <input type="number" id="quantity" required min="1" step="1">
       </div>
+      <div class="price-check-panel" id="priceCheckPanel">
+        <div class="price-reference">
+          <span>قیمت ثبت‌شده در سیستم</span>
+          <strong id="systemPriceValue">—</strong>
+        </div>
+        <label class="price-mismatch-toggle" for="priceMismatch">
+          <input type="checkbox" id="priceMismatch">
+          <span>قیمت روی محصول با قیمت سیستم مغایرت دارد</span>
+        </label>
+        <div class="actual-price-wrap" id="actualPriceWrap">
+          <div class="field" style="margin:0">
+            <label for="actualProductPrice">قیمت واقعی درج‌شده روی محصول (ریال)</label>
+            <input type="number" id="actualProductPrice" min="1" step="1" inputmode="numeric" placeholder="مثلاً 850000">
+          </div>
+          <div class="price-help">ارزش ریالی این ثبت با قیمت واردشده توسط فروشگاه محاسبه می‌شود.</div>
+        </div>
+      </div>
       <div class="field">
         <label for="expiry_day">تاریخ انقضا (شمسی)</label>
         <div class="jalali-date-row">
@@ -787,6 +850,11 @@
   const searchInput = document.getElementById("product_search");
   const resultsBox = document.getElementById("productResults");
   const selectedBox = document.getElementById("selectedProduct");
+  const priceCheckPanel = document.getElementById("priceCheckPanel");
+  const systemPriceValue = document.getElementById("systemPriceValue");
+  const priceMismatch = document.getElementById("priceMismatch");
+  const actualPriceWrap = document.getElementById("actualPriceWrap");
+  const actualProductPrice = document.getElementById("actualProductPrice");
   const wastedRialEl = document.getElementById("wastedRial");
   const wastedMetaEl = document.getElementById("wastedMeta");
   const dangerRialEl = document.getElementById("dangerRial");
@@ -1348,14 +1416,37 @@
       <button type="button" id="clearProductBtn" class="link-ghost">تغییر کالا</button>
     `;
     selectedBox.classList.add("show");
+    systemPriceValue.textContent = selectedProductPrice ? nhFormatRial(selectedProductPrice) : "در سیستم ثبت نشده";
+    priceCheckPanel.classList.add("show");
+    priceMismatch.checked = !selectedProductPrice;
+    actualProductPrice.value = "";
+    syncPriceMismatchField();
     document.getElementById("clearProductBtn").addEventListener("click", clearProduct);
   }
+
+  function syncPriceMismatchField() {
+    const enabled = priceMismatch.checked;
+    actualPriceWrap.classList.toggle("show", enabled);
+    actualProductPrice.required = enabled;
+    if (!enabled) actualProductPrice.value = "";
+  }
+
+  priceMismatch.addEventListener("change", () => {
+    syncPriceMismatchField();
+    if (priceMismatch.checked) actualProductPrice.focus();
+  });
 
   function clearProduct() {
     selectedProductId = null;
     selectedProductName = null;
     selectedProductGroup = null;
     selectedProductPrice = null;
+    priceMismatch.checked = false;
+    actualProductPrice.value = "";
+    actualProductPrice.required = false;
+    actualPriceWrap.classList.remove("show");
+    priceCheckPanel.classList.remove("show");
+    systemPriceValue.textContent = "—";
     selectedBox.innerHTML = "";
     selectedBox.classList.remove("show");
   }
@@ -1823,6 +1914,17 @@
       return;
     }
 
+    let registrationUnitPrice = selectedProductPrice;
+    if (priceMismatch.checked) {
+      const enteredPrice = Number(actualProductPrice.value);
+      if (!Number.isFinite(enteredPrice) || enteredPrice <= 0) {
+        showError("قیمت واقعی روی محصول را به ریال و بزرگ‌تر از صفر وارد کنید.");
+        actualProductPrice.focus();
+        return;
+      }
+      registrationUnitPrice = enteredPrice;
+    }
+
     const expiryIso = nhJalaliToIso(
       parseInt(document.getElementById("expiry_year").value),
       parseInt(document.getElementById("expiry_month").value),
@@ -1857,7 +1959,7 @@
         product_id: selectedProductId,
         product_name: selectedProductName,
         product_group: selectedProductGroup,
-        unit_price: selectedProductPrice,
+        unit_price: registrationUnitPrice,
         quantity: parseInt(document.getElementById("quantity").value),
         expiry_date: expiryIso,
         created_by: session.userId
