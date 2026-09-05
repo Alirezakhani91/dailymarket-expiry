@@ -73,13 +73,15 @@ export default async function handler(req: Request, res: Response) {
     }
 
     const storeCode = clean(req.body?.storeCode, 32).toUpperCase().replace(/\s+/g, '')
+    const sapStoreCode = clean(req.body?.sapStoreCode, 32).toUpperCase().replace(/\s+/g, '')
     const storeName = clean(req.body?.storeName)
     const region = clean(req.body?.region)
     const regionManagerName = clean(req.body?.regionManagerName)
     const executiveManagerName = clean(req.body?.executiveManagerName)
     const password = String(req.body?.password || '')
 
-    if (!/^[A-Z][A-Z0-9_-]{2,31}$/.test(storeCode)) return fail(res, 400, 'کد فروشگاه معتبر نیست؛ نمونه درست: F1010')
+    if (!/^[A-Z0-9][A-Z0-9_-]{0,31}$/.test(storeCode)) return fail(res, 400, 'کد فروشگاه معتبر نیست.')
+    if (!/^[A-Z0-9][A-Z0-9_-]{0,31}$/.test(sapStoreCode)) return fail(res, 400, 'کد SAP معتبر نیست.')
     if (!storeName || !region || !regionManagerName || !executiveManagerName) return fail(res, 400, 'تمام مشخصات فروشگاه و مدیران را کامل کنید.')
     if (password.length < 8 || password.length > 50) return fail(res, 400, 'رمز باید بین ۸ تا ۵۰ کاراکتر باشد.')
 
@@ -92,11 +94,11 @@ export default async function handler(req: Request, res: Response) {
       stores: Array<{ id: string }>
       users: Array<{ id: string }>
     }>(`
-      query DuplicateStoreAccount($code: String!, $email: citext!) {
-        stores(where: {store_code: {_ilike: $code}}, limit: 1) { id }
+      query DuplicateStoreAccount($code: String!, $sapCode: String!, $email: citext!) {
+        stores(where: {_or: [{store_code: {_ilike: $code}}, {sap_store_code: {_ilike: $sapCode}}]}, limit: 1) { id }
         users(where: {email: {_eq: $email}}, limit: 1) { id }
       }
-    `, { code: storeCode, email })
+    `, { code: storeCode, sapCode: sapStoreCode, email })
 
     if (duplicate.stores.length || duplicate.users.length) {
       return fail(res, 409, `برای کد ${storeCode} قبلاً فروشگاه یا حساب ورود ساخته شده است.`)
@@ -114,7 +116,7 @@ export default async function handler(req: Request, res: Response) {
           displayName,
           defaultRole: 'store_operator',
           allowedRoles: ['store_operator'],
-          metadata: { storeCode, storeName },
+          metadata: { storeCode, sapStoreCode, storeName },
         },
       }),
     })
@@ -154,7 +156,7 @@ export default async function handler(req: Request, res: Response) {
         store: {
           id: storeId,
           store_code: storeCode,
-          sap_store_code: storeCode,
+          sap_store_code: sapStoreCode,
           name: fullStoreName,
           region,
           region_manager_name: regionManagerName,
@@ -173,7 +175,7 @@ export default async function handler(req: Request, res: Response) {
     }
 
     return res.status(201).json({
-      store: { id: storeId, code: storeCode, name: fullStoreName, region },
+      store: { id: storeId, code: storeCode, sapCode: sapStoreCode, name: fullStoreName, region },
       userId,
       credentials: { username: storeCode, email },
     })
