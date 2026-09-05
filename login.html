@@ -342,7 +342,7 @@ input {
 
     // کد هر فروشگاه بدون نیاز به ویرایش دوباره‌ی این فایل، به ایمیل داخلی
     // همان حساب تبدیل می‌شود؛ نمونه: F1009 -> f1009@dailymarket.local
-    if (/^[a-z][a-z0-9_-]{2,31}$/.test(username)) {
+    if (/^[a-z0-9][a-z0-9_-]{0,31}$/.test(username)) {
       return `${username}@dailymarket.local`;
     }
 
