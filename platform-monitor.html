@@ -351,9 +351,9 @@ function provincePlan(properties,metrics){
  const plan=(label,regions=[])=>({label,regions});
  if(n.includes("kermanshah"))return plan("کرمانشاه",["کرمانشاه"]);
  if(n.includes("kurdistan"))return plan("کردستان",["کرمانشاه"]);
- if(n.includes("east azar")||n.includes("east azer")||hasAll(n,"azarbaijan","east"))return plan("آذربایجان شرقی",["آذربایجان شرقی"]);
+ if(n.includes("east azar")||n.includes("east azer")||hasAll(n,"azarbaijan","east"))return plan("آذربایجان شرقی",["آذربایجان شرقی","آذربایجان غربی"]);
  if(n.includes("west azar")||n.includes("western azer")||hasAll(n,"azarbaijan","west"))return plan("آذربایجان غربی",["آذربایجان غربی","جنوب آذربایجان"]);
- if(n.includes("ardabil"))return plan("اردبیل",[]);
+ if(n.includes("ardabil"))return plan("اردبیل",["آذربایجان شرقی"]);
  if(n.includes("isfahan")||n.includes("esfahan"))return plan("اصفهان",["غرب اصفهان","شرق اصفهان"]);
  if(n.includes("chahar")||n.includes("bakhtiari"))return plan("چهارمحال و بختیاری",["غرب اصفهان"]);
  if(n.includes("kerman")&&!n.includes("kermanshah"))return plan("کرمان",["کرمان","هرمزگان و جنوب کرمان"]);
@@ -380,7 +380,7 @@ function provincePlan(properties,metrics){
  if(n.includes("south khorasan")||hasAll(n,"khorasan","south"))return plan("خراسان جنوبی",["خراسان"]);
  if(n.includes("khorasan"))return plan("خراسان",["خراسان"]);
  if(n.includes("sistan")||n.includes("baluch"))return plan("سیستان و بلوچستان",["سیستان و بلوچستان"]);
- if(n.includes("yazd"))return plan("یزد",[]);
+ if(n.includes("yazd"))return plan("یزد",["کرمان"]);
  return plan(properties?.name||"",[]);
 }
 function provinceStatus(regions,metrics){
