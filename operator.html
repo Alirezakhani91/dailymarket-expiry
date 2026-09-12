@@ -714,7 +714,7 @@
       </div>
       <div class="field">
         <label for="quantity">تعداد</label>
-        <input type="number" id="quantity" required min="1" step="1">
+        <input type="number" id="quantity" required min="1" max="50" step="1" inputmode="numeric">
       </div>
       <div class="price-check-panel" id="priceCheckPanel">
         <div class="price-reference">
@@ -728,9 +728,9 @@
         <div class="actual-price-wrap" id="actualPriceWrap">
           <div class="field" style="margin:0">
             <label for="actualProductPrice">قیمت واقعی درج‌شده روی محصول (ریال)</label>
-            <input type="number" id="actualProductPrice" min="1" step="1" inputmode="numeric" placeholder="مثلاً 850000">
+            <input type="number" id="actualProductPrice" min="1" max="10000000" step="1" inputmode="numeric" placeholder="مثلاً 850000">
           </div>
-          <div class="price-help">ارزش ریالی این ثبت با قیمت واردشده توسط فروشگاه محاسبه می‌شود.</div>
+          <div class="price-help">ارزش ریالی این ثبت با قیمت واردشده توسط فروشگاه محاسبه می‌شود. حداکثر قیمت مجاز ۱۰٬۰۰۰٬۰۰۰ ریال (۱ میلیون تومان) است.</div>
         </div>
       </div>
       <div class="field">
@@ -804,7 +804,7 @@
     <form id="editBatchForm">
       <div class="field">
         <label for="edit_quantity">تعداد</label>
-        <input type="number" id="edit_quantity" min="1" step="1" required>
+        <input type="number" id="edit_quantity" min="1" max="50" step="1" inputmode="numeric" required>
       </div>
 
       <div class="field">
@@ -828,6 +828,8 @@
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["store_operator"]);
+  const MAX_QUANTITY = 50;
+  const MAX_UNIT_PRICE_RIAL = 10000000;
   let myStoreId = null;
   let selectedProductId = null;
   let selectedProductName = null;
@@ -1785,8 +1787,9 @@
     clearAlert();
 
     const quantity = Number(editQuantity.value);
-    if (!Number.isInteger(quantity) || quantity < 1) {
-      showError("تعداد باید یک عدد صحیح و بزرگ‌تر از صفر باشد.");
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+      showError("تعداد باید یک عدد صحیح بین ۱ تا ۵۰ باشد.");
+      editQuantity.focus();
       return;
     }
 
@@ -1914,15 +1917,31 @@
       return;
     }
 
+    const quantityInput = document.getElementById("quantity");
+    const quantity = Number(quantityInput.value);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+      showError("تعداد باید یک عدد صحیح بین ۱ تا ۵۰ باشد.");
+      quantityInput.focus();
+      return;
+    }
+
     let registrationUnitPrice = selectedProductPrice;
     if (priceMismatch.checked) {
       const enteredPrice = Number(actualProductPrice.value);
-      if (!Number.isFinite(enteredPrice) || enteredPrice <= 0) {
-        showError("قیمت واقعی روی محصول را به ریال و بزرگ‌تر از صفر وارد کنید.");
+      if (!Number.isFinite(enteredPrice) || enteredPrice <= 0 || enteredPrice > MAX_UNIT_PRICE_RIAL) {
+        showError("قیمت باید بین ۱ تا ۱۰٬۰۰۰٬۰۰۰ ریال (حداکثر ۱ میلیون تومان) باشد.");
         actualProductPrice.focus();
         return;
       }
       registrationUnitPrice = enteredPrice;
+    }
+
+    if (registrationUnitPrice !== null && registrationUnitPrice !== undefined) {
+      registrationUnitPrice = Number(registrationUnitPrice);
+      if (!Number.isFinite(registrationUnitPrice) || registrationUnitPrice <= 0 || registrationUnitPrice > MAX_UNIT_PRICE_RIAL) {
+        showError("قیمت این کالا بیشتر از سقف مجاز ۱ میلیون تومان است. در صورت اشتباه بودن قیمت سیستم، گزینه مغایرت قیمت را فعال و قیمت صحیح را وارد کنید.");
+        return;
+      }
     }
 
     const expiryIso = nhJalaliToIso(
@@ -1960,7 +1979,7 @@
         product_name: selectedProductName,
         product_group: selectedProductGroup,
         unit_price: registrationUnitPrice,
-        quantity: parseInt(document.getElementById("quantity").value),
+        quantity,
         expiry_date: expiryIso,
         created_by: session.userId
       }, session.token);
