@@ -714,7 +714,7 @@
       </div>
       <div class="field">
         <label for="quantity">تعداد</label>
-        <input type="number" id="quantity" required min="1" max="50" step="1" inputmode="numeric">
+        <input type="number" id="quantity" required min="1" max="20" step="1" inputmode="numeric">
       </div>
       <div class="price-check-panel" id="priceCheckPanel">
         <div class="price-reference">
@@ -804,7 +804,7 @@
     <form id="editBatchForm">
       <div class="field">
         <label for="edit_quantity">تعداد</label>
-        <input type="number" id="edit_quantity" min="1" max="50" step="1" inputmode="numeric" required>
+        <input type="number" id="edit_quantity" min="1" max="20" step="1" inputmode="numeric" required>
       </div>
 
       <div class="field">
@@ -828,7 +828,8 @@
 <script src="auth.js"></script>
 <script>
   const session = nhRequireRole(["store_operator"]);
-  const MAX_QUANTITY = 50;
+  const MAX_QUANTITY = 20;
+  const MAX_ACTIVE_BARCODE_QUANTITY = 20;
   const MAX_UNIT_PRICE_RIAL = 10000000;
   let myStoreId = null;
   let selectedProductId = null;
@@ -1458,6 +1459,53 @@
     alertEl.classList.remove("show", "alert-success");
   }
 
+  async function getActiveProductQuantity(productId, excludeBatchId = null) {
+    const today = localIsoDate(0);
+    const exclusion = excludeBatchId ? "id: { _neq: $exclude_id }" : "";
+    const variableDefinition = excludeBatchId ? ", $exclude_id: uuid!" : "";
+    const query = `
+      query ActiveProductQuantity(
+        $store_id: uuid!
+        $product_id: uuid!
+        $today: date!
+        ${variableDefinition}
+      ) {
+        expiry_batches(
+          where: {
+            store_id: { _eq: $store_id }
+            product_id: { _eq: $product_id }
+            status: { _nin: ["sold", "cancelled", "rejected"] }
+            expiry_date: { _gte: $today }
+            ${exclusion}
+          }
+        ) {
+          quantity
+        }
+      }
+    `;
+
+    const variables = {
+      store_id: myStoreId,
+      product_id: productId,
+      today
+    };
+    if (excludeBatchId) variables.exclude_id = excludeBatchId;
+
+    const data = await nhGql(query, variables, session.token);
+    return (data.expiry_batches || []).reduce(
+      (sum, row) => sum + (Number(row.quantity) || 0),
+      0
+    );
+  }
+
+  function activeQuantityLimitMessage(currentQuantity, requestedQuantity) {
+    const remaining = Math.max(0, MAX_ACTIVE_BARCODE_QUANTITY - currentQuantity);
+    if (remaining === 0) {
+      return `از این بارکد هم‌اکنون ${currentQuantity.toLocaleString("fa-IR")} عدد فعال در این فروشگاه ثبت شده و امکان ثبت تعداد بیشتر وجود ندارد.`;
+    }
+    return `با این ثبت، مجموع فعال این بارکد به ${(currentQuantity + requestedQuantity).toLocaleString("fa-IR")} عدد می‌رسد. سقف مجاز ۲۰ عدد است و حداکثر ${remaining.toLocaleString("fa-IR")} عدد دیگر قابل ثبت است.`;
+  }
+
   function showError(message) {
     alertEl.classList.remove("alert-success");
 
@@ -1613,6 +1661,7 @@
           limit: 200
         ) {
           id
+          product_id
           product_name
           quantity
           expiry_date
@@ -1631,6 +1680,7 @@
           limit: 200
         ) {
           id
+          product_id
           product_name
           quantity
           expiry_date
@@ -1788,7 +1838,7 @@
 
     const quantity = Number(editQuantity.value);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
-      showError("تعداد باید یک عدد صحیح بین ۱ تا ۵۰ باشد.");
+      showError("تعداد باید یک عدد صحیح بین ۱ تا ۲۰ باشد.");
       editQuantity.focus();
       return;
     }
@@ -1831,6 +1881,19 @@
     `;
 
     try {
+      const editingBatch = allBatches.find(item => String(item.id) === String(editingBatchId));
+      if (!editingBatch?.product_id) {
+        throw new Error("شناسه کالا برای بررسی سقف تعداد در دسترس نیست. صفحه را تازه‌سازی و دوباره تلاش کنید.");
+      }
+
+      const currentActiveQuantity = await getActiveProductQuantity(
+        editingBatch.product_id,
+        editingBatchId
+      );
+      if (currentActiveQuantity + quantity > MAX_ACTIVE_BARCODE_QUANTITY) {
+        throw new Error(activeQuantityLimitMessage(currentActiveQuantity, quantity));
+      }
+
       const data = await nhGql(mutation, {
         id: editingBatchId,
         store_id: myStoreId,
@@ -1920,7 +1983,7 @@
     const quantityInput = document.getElementById("quantity");
     const quantity = Number(quantityInput.value);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
-      showError("تعداد باید یک عدد صحیح بین ۱ تا ۵۰ باشد.");
+      showError("تعداد باید یک عدد صحیح بین ۱ تا ۲۰ باشد.");
       quantityInput.focus();
       return;
     }
@@ -1973,6 +2036,11 @@
     `;
 
     try {
+      const currentActiveQuantity = await getActiveProductQuantity(selectedProductId);
+      if (currentActiveQuantity + quantity > MAX_ACTIVE_BARCODE_QUANTITY) {
+        throw new Error(activeQuantityLimitMessage(currentActiveQuantity, quantity));
+      }
+
       await nhGql(mutation, {
         store_id: myStoreId,
         product_id: selectedProductId,
