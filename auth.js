@@ -77,6 +77,12 @@ async function nhGql(query, variables, token) {
     if (msg.includes("JWTExpired") || msg.includes("Could not verify JWT") || msg.includes("Malformed Authorization")) {
       throw new Error("SESSION_EXPIRED");
     }
+    if (msg.includes("ACTIVE_BARCODE_QUANTITY_LIMIT")) {
+      throw new Error("مجموع تعداد فعال این بارکد در این فروشگاه نمی‌تواند بیشتر از ۲۰ عدد باشد. ثبت یا ویرایش انجام نشد.");
+    }
+    if (msg.includes("INVALID_BATCH_QUANTITY")) {
+      throw new Error("تعداد هر ثبت باید یک عدد صحیح بین ۱ تا ۲۰ باشد.");
+    }
     throw new Error(msg);
   }
 
