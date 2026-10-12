@@ -119,20 +119,17 @@ export default async function handler(req: Request, res: Response) {
       if (!Number.isFinite(item.price) || item.price <= 0 || !Number.isInteger(item.price)) errors.push('قیمت باید عدد صحیح مثبت و به ریال باشد.')
       const articleMatches = item.article ? byArticle.get(item.article) || [] : []
       const barcodeMatches = item.barcode ? byBarcode.get(item.barcode) || [] : []
-      if (articleMatches.length > 1) errors.push('بیش از یک کالا با این Article در دیتابیس وجود دارد.')
-      if (barcodeMatches.length > 1) errors.push('بیش از یک کالا با این بارکد در دیتابیس وجود دارد.')
-
       const existing = articleMatches[0]
-      const barcodeProduct = barcodeMatches[0]
-      if (existing && barcodeProduct && existing.id !== barcodeProduct.id) errors.push('Article و بارکد به دو کالای متفاوت اشاره می‌کنند.')
-      if (!existing && barcodeProduct) errors.push('بارکد موجود است اما Article فایل با کالای دیتابیس یکسان نیست.')
+      const conflictingBarcodeProducts = barcodeMatches.filter(product => text(product.article) !== item.article)
+      if (conflictingBarcodeProducts.length) errors.push('Article و بارکد به کالاهای متفاوتی در دیتابیس اشاره می‌کنند.')
+      if (!existing && barcodeMatches.length) errors.push('بارکد موجود است اما Article فایل با کالای دیتابیس یکسان نیست.')
 
       if (existing) {
         return {
           row: item.row,
           action: errors.length ? 'error' : 'update',
           errors,
-          id: existing.id,
+          ids: [...new Set(articleMatches.map(product => product.id))],
           article: item.article,
           barcode: item.barcode,
           name: existing.name || item.name,
@@ -148,6 +145,7 @@ export default async function handler(req: Request, res: Response) {
         row: item.row,
         action: errors.length ? 'error' : 'insert',
         errors,
+        ids: [] as string[],
         article: item.article,
         barcode: item.barcode,
         name: item.name,
@@ -163,7 +161,7 @@ export default async function handler(req: Request, res: Response) {
 
     const updates = valid.filter(x => x.action === 'update')
     const inserts = valid.filter(x => x.action === 'insert')
-    const updateItems = updates.map(x => ({ id: x.id as string, price: x.newPrice }))
+    const updateItems = updates.flatMap(x => x.ids.map(id => ({ id, price: x.newPrice })))
     const insertRows = inserts.map(x => {
       const source = items.find(item => item.row === x.row)!
       return {
