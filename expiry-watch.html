@@ -573,6 +573,7 @@
   const PROMOTION_LAST_EXPORT_KEY =
     `dailymarket-expiry:last-promotion-export:${session.userId}`;
   const BCS_GROUP_LABEL = "آشامیدنی و تنقلات (BCS)";
+  const BASIC_GOODS_GROUP_LABEL = "کالاهای اساسی";
   const BCS_SOURCE_GROUPS = new Set([
     "آشامیدنی",
     "ادویه و کنسروجات",
@@ -608,6 +609,17 @@
       compact.includes("شیرینی") ||
       compact.includes("تنقلات")
     );
+  }
+
+  function isSauceProduct(value) {
+    const normalized = normalizePromotionGroup(value);
+    return /^(?:سس|کچاپ)(?:\s|$)/.test(normalized);
+  }
+
+  function promotionDisplayGroup(productGroup, productName) {
+    if (isSauceProduct(productName)) return BASIC_GOODS_GROUP_LABEL;
+    if (isBcsSourceGroup(productGroup)) return BCS_GROUP_LABEL;
+    return normalizePromotionGroup(productGroup);
   }
 
   const BUCKETS = [
@@ -1384,7 +1396,12 @@
     const sourceGroups = [
       ...new Set(
         allBatches
-          .map(row => row.product_group)
+          .map(row => {
+            const product = productCatalogById.get(String(row.product_id)) || {};
+            const productGroup = row.product_group || product.product_group || "";
+            const productName = String(product.name || row.product_name || "").trim();
+            return promotionDisplayGroup(productGroup, productName);
+          })
           .filter(Boolean)
       )
     ];
@@ -1447,23 +1464,22 @@
 
       const product = productCatalogById.get(String(batch.product_id)) || {};
       const productGroup = batch.product_group || product.product_group || "";
+      const description = String(product.name || batch.product_name || "").trim();
+      const displayGroup = promotionDisplayGroup(productGroup, description);
 
-      if (selectedGroup === BCS_GROUP_LABEL) {
-        if (!isBcsSourceGroup(productGroup)) return;
-      } else if (
+      if (
         selectedGroup &&
-        normalizePromotionGroup(productGroup) !== normalizePromotionGroup(selectedGroup)
+        normalizePromotionGroup(displayGroup) !== normalizePromotionGroup(selectedGroup)
       ) {
         return;
       }
 
       const article = String(product.article || "").trim();
       const barcode = String(product.barcode || "").trim();
-      const description = String(product.name || batch.product_name || "").trim();
 
       if (searchTerm) {
         const haystack = normalizePromotionText(
-          `${article} ${barcode} ${description} ${productGroup}`
+          `${article} ${barcode} ${description} ${displayGroup}`
         );
         if (!haystack.includes(searchTerm)) return;
       }
@@ -1490,7 +1506,7 @@
         storeId: String(store.id),
         storeName: store.name,
         storeCode: store.store_code,
-        productGroup,
+        productGroup: displayGroup,
         quantity: Number(batch.quantity) || 0,
         days,
         createdAt: batch.created_at || ""
