@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- EXPIRY WATCH VERSION: PROMOTION RANGE 0-30 DAYS | 2026-08-17 -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -94,9 +95,23 @@
 
   .promo-filter-grid {
     display: grid;
-    grid-template-columns: 1.2fr 1.3fr 1fr 1.15fr;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 12px;
     align-items: end;
+  }
+
+  .promo-date-input {
+    direction: ltr;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .promo-date-hint {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 9.5px;
+    line-height: 1.7;
   }
 
   .promo-field {
@@ -194,6 +209,30 @@
     display: flex;
     gap: 8px;
     align-items: center;
+  }
+
+  .promo-last-export {
+    min-width: 210px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(36, 31, 27, 0.06);
+  }
+
+  .promo-last-export span {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+  }
+
+  .promo-last-export strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--ink);
+    font-size: 11.5px;
+    line-height: 1.8;
+    font-weight: 900;
   }
 
   .promo-export-btn {
@@ -341,6 +380,12 @@
       min-width: 0;
     }
 
+    .promo-last-export {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
     .promo-actions {
       width: 100%;
     }
@@ -391,7 +436,7 @@
         <span class="promo-export-eyebrow">خروجی رسمی تیم بازرگانی</span>
         <h2 class="promo-export-title">فرم قیمت پروموشن کالاهای تاریخ نزدیک</h2>
         <p class="promo-export-description">
-          فروشگاه، محصول، گروه کالایی و بازه ۰ تا ۷ روز را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
+          فروشگاه، محصول، گروه کالایی و بازه تاریخ انقضای شمسی را انتخاب کنید؛ ردیف‌های ناقص نیز بدون توقف و با سلول خالی در فایل اکسل قرار می‌گیرند.
         </p>
       </div>
       <span class="promo-excel-badge">EXCEL</span>
@@ -427,6 +472,36 @@
           <select id="promoMaxDay" aria-label="حداکثر روز باقی‌مانده"></select>
         </div>
       </div>
+
+      <div class="promo-field">
+        <label for="promoExpiryFrom">تاریخ انقضا از (شمسی)</label>
+        <input
+          id="promoExpiryFrom"
+          class="promo-date-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="10"
+          placeholder="۱۴۰۵/۰۸/۰۱"
+          aria-label="تاریخ شروع بازه انقضا به شمسی"
+        >
+        <span class="promo-date-hint">مثال: ۱۴۰۵/۰۸/۰۱ — خالی باشد یعنی بدون محدودیت شروع</span>
+      </div>
+
+      <div class="promo-field">
+        <label for="promoExpiryTo">تاریخ انقضا تا (شمسی)</label>
+        <input
+          id="promoExpiryTo"
+          class="promo-date-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="10"
+          placeholder="۱۴۰۵/۰۸/۳۰"
+          aria-label="تاریخ پایان بازه انقضا به شمسی"
+        >
+        <span class="promo-date-hint">مثال: ۱۴۰۵/۰۸/۳۰ — خالی باشد یعنی بدون محدودیت پایان</span>
+      </div>
     </div>
 
     <div class="promo-export-summary">
@@ -444,9 +519,14 @@
           <span>ارزش موجودی انتخاب‌شده</span>
         </div>
         <div class="promo-metric">
-          <strong id="promoDayLabel">۰ تا ۷ روز</strong>
+          <strong id="promoDayLabel">۰ تا ۳۰ روز</strong>
           <span>بازه انقضا</span>
         </div>
+      </div>
+
+      <div class="promo-last-export">
+        <span>آخرین دریافت فایل اکسل</span>
+        <strong id="promoLastExportValue">هنوز فایلی دریافت نشده است</strong>
       </div>
 
       <div class="promo-actions">
@@ -531,8 +611,62 @@
   const promoGroupFilter = document.getElementById("promoGroupFilter");
   const promoMinDay = document.getElementById("promoMinDay");
   const promoMaxDay = document.getElementById("promoMaxDay");
+  const promoExpiryFrom = document.getElementById("promoExpiryFrom");
+  const promoExpiryTo = document.getElementById("promoExpiryTo");
   const promoExportBtn = document.getElementById("promoExportBtn");
   const promoResetBtn = document.getElementById("promoResetBtn");
+  const promoLastExportValue = document.getElementById("promoLastExportValue");
+  const PROMOTION_LAST_EXPORT_KEY =
+    `dailymarket-expiry:last-promotion-export:${session.userId}`;
+  const BCS_GROUP_LABEL = "آشامیدنی و تنقلات (BCS)";
+  const BASIC_GOODS_GROUP_LABEL = "کالاهای اساسی";
+  const BCS_SOURCE_GROUPS = new Set([
+    "آشامیدنی",
+    "ادویه و کنسروجات",
+    "شیرینیجات و تنقلات",
+    "شیرینی‌جات و تنقلات"
+  ]);
+
+  function normalizePromotionGroup(value) {
+    return String(value || "")
+      .trim()
+      .replace(/ي/g, "ی")
+      .replace(/ك/g, "ک")
+      .replace(/[\u200c\u200f\u202a-\u202e]/g, "")
+      .replace(/\s+/g, " ");
+  }
+
+  const NORMALIZED_BCS_SOURCE_GROUPS = new Set(
+    [...BCS_SOURCE_GROUPS].map(normalizePromotionGroup)
+  );
+
+  function isBcsSourceGroup(value) {
+    const normalized = normalizePromotionGroup(value);
+
+    if (NORMALIZED_BCS_SOURCE_GROUPS.has(normalized)) return true;
+
+    const compact = normalized.replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, "");
+
+    return (
+      compact.includes("آشامیدنی") ||
+      compact.includes("نوشیدنی") ||
+      compact.includes("ادویه") ||
+      compact.includes("کنسرو") ||
+      compact.includes("شیرینی") ||
+      compact.includes("تنقلات")
+    );
+  }
+
+  function isSauceProduct(value) {
+    const normalized = normalizePromotionGroup(value);
+    return /^(?:سس|کچاپ)(?:\s|$)/.test(normalized);
+  }
+
+  function promotionDisplayGroup(productGroup, productName) {
+    if (isSauceProduct(productName)) return BASIC_GOODS_GROUP_LABEL;
+    if (isBcsSourceGroup(productGroup)) return BCS_GROUP_LABEL;
+    return normalizePromotionGroup(productGroup);
+  }
 
   const BUCKETS = [
     { key: "d0", label: "امروز" },
@@ -1202,6 +1336,69 @@
     return targetDay - todayDay;
   }
 
+  function normalizePromotionDateDigits(value) {
+    const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
+
+    return String(value || "")
+      .trim()
+      .replace(/[۰-۹]/g, digit => String(persianDigits.indexOf(digit)))
+      .replace(/[٠-٩]/g, digit => String(arabicDigits.indexOf(digit)))
+      .replace(/[.\-]/g, "/")
+      .replace(/\s+/g, "");
+  }
+
+  function parsePromotionJalaliDate(value, label) {
+    const normalized = normalizePromotionDateDigits(value);
+    if (!normalized) return { iso: "", display: "" };
+
+    const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+    if (!match) {
+      return { error: `${label} را به شکل ۱۴۰۵/۰۸/۰۱ وارد کنید.` };
+    }
+
+    const jy = Number(match[1]);
+    const jm = Number(match[2]);
+    const jd = Number(match[3]);
+
+    if (jy < 1300 || jy > 1600 || jm < 1 || jm > 12 || jd < 1 || jd > 31) {
+      return { error: `${label} معتبر نیست.` };
+    }
+
+    const iso = nhJalaliToIso(jy, jm, jd);
+    const [gy, gm, gd] = iso.split("-").map(Number);
+    const [checkYear, checkMonth, checkDay] = nhGregorianToJalali(gy, gm, gd);
+
+    if (checkYear !== jy || checkMonth !== jm || checkDay !== jd) {
+      return { error: `${label} معتبر نیست.` };
+    }
+
+    return {
+      iso,
+      display: `${jy}/${String(jm).padStart(2, "0")}/${String(jd).padStart(2, "0")}`
+    };
+  }
+
+  function getPromotionExpiryDateRange() {
+    const from = parsePromotionJalaliDate(
+      promoExpiryFrom.value,
+      "تاریخ شروع انقضا"
+    );
+    if (from.error) return { error: from.error };
+
+    const to = parsePromotionJalaliDate(
+      promoExpiryTo.value,
+      "تاریخ پایان انقضا"
+    );
+    if (to.error) return { error: to.error };
+
+    if (from.iso && to.iso && from.iso > to.iso) {
+      return { error: "تاریخ شروع انقضا نمی‌تواند بعد از تاریخ پایان باشد." };
+    }
+
+    return { from, to };
+  }
+
   function setPromotionMessage(type, text) {
     promotionMessage.className = `promo-message ${type} show`;
     promotionMessage.textContent = text;
@@ -1305,13 +1502,27 @@
       promoStoreFilter.value = currentStore;
     }
 
-    const groups = [
+    const sourceGroups = [
       ...new Set(
         allBatches
-          .map(row => row.product_group)
+          .map(row => {
+            const product = productCatalogById.get(String(row.product_id)) || {};
+            const productGroup = row.product_group || product.product_group || "";
+            const productName = String(product.name || row.product_name || "").trim();
+            return promotionDisplayGroup(productGroup, productName);
+          })
           .filter(Boolean)
       )
-    ].sort((a, b) => a.localeCompare(b, "fa"));
+    ];
+
+    const hasBcsGroup = sourceGroups.some(isBcsSourceGroup);
+    const groups = sourceGroups
+      .filter(group => !isBcsSourceGroup(group))
+      .sort((a, b) => a.localeCompare(b, "fa"));
+
+    if (hasBcsGroup) {
+      groups.unshift(BCS_GROUP_LABEL);
+    }
 
     const currentGroup = promoGroupFilter.value;
     promoGroupFilter.innerHTML =
@@ -1325,14 +1536,14 @@
     }
 
     const dayOptions = Array.from(
-      { length: 8 },
+      { length: 31 },
       (_, day) => `<option value="${day}">${day.toLocaleString("fa-IR")} روز</option>`
     ).join("");
 
     promoMinDay.innerHTML = dayOptions;
     promoMaxDay.innerHTML = dayOptions;
     promoMinDay.value = "0";
-    promoMaxDay.value = "7";
+    promoMaxDay.value = "30";
   }
 
   function buildPromotionRows() {
@@ -1343,6 +1554,11 @@
     const searchTerm = normalizePromotionText(promoProductFilter.value);
     const minDay = Number(promoMinDay.value);
     const maxDay = Number(promoMaxDay.value);
+    const expiryDateRange = getPromotionExpiryDateRange();
+    if (expiryDateRange.error) return [];
+    const hasExplicitDateRange = Boolean(
+      expiryDateRange.from.iso || expiryDateRange.to.iso
+    );
 
     const storesById = new Map(
       promotionStores.map(store => [String(store.id), store])
@@ -1354,7 +1570,16 @@
       if (PROMOTION_EXCLUDED_STATUSES.has(batch.status)) return;
 
       const days = daysUntilExpiry(batch.expiry_date);
-      if (days === null || days < minDay || days > maxDay) return;
+      if (days === null) return;
+      if (!hasExplicitDateRange && (days < minDay || days > maxDay)) return;
+      if (
+        expiryDateRange.from.iso &&
+        batch.expiry_date < expiryDateRange.from.iso
+      ) return;
+      if (
+        expiryDateRange.to.iso &&
+        batch.expiry_date > expiryDateRange.to.iso
+      ) return;
 
       const store = storesById.get(String(batch.store_id));
       if (!store) return;
@@ -1362,16 +1587,22 @@
 
       const product = productCatalogById.get(String(batch.product_id)) || {};
       const productGroup = batch.product_group || product.product_group || "";
+      const description = String(product.name || batch.product_name || "").trim();
+      const displayGroup = promotionDisplayGroup(productGroup, description);
 
-      if (selectedGroup && productGroup !== selectedGroup) return;
+      if (
+        selectedGroup &&
+        normalizePromotionGroup(displayGroup) !== normalizePromotionGroup(selectedGroup)
+      ) {
+        return;
+      }
 
       const article = String(product.article || "").trim();
       const barcode = String(product.barcode || "").trim();
-      const description = String(product.name || batch.product_name || "").trim();
 
       if (searchTerm) {
         const haystack = normalizePromotionText(
-          `${article} ${barcode} ${description} ${productGroup}`
+          `${article} ${barcode} ${description} ${displayGroup}`
         );
         if (!haystack.includes(searchTerm)) return;
       }
@@ -1398,7 +1629,7 @@
         storeId: String(store.id),
         storeName: store.name,
         storeCode: store.store_code,
-        productGroup,
+        productGroup: displayGroup,
         quantity: Number(batch.quantity) || 0,
         days,
         createdAt: batch.created_at || ""
@@ -1432,11 +1663,27 @@
     if (!canExportPromotion) return;
 
     const minDay = Number(promoMinDay.value || 0);
-    const maxDay = Number(promoMaxDay.value || 7);
+    const maxDay = Number(promoMaxDay.value || 30);
 
     if (minDay > maxDay) {
       promoMaxDay.value = String(minDay);
     }
+
+    const expiryDateRange = getPromotionExpiryDateRange();
+    if (expiryDateRange.error) {
+      currentPromotionRows = [];
+      promoExportBtn.disabled = true;
+      setPromotionMessage("error", expiryDateRange.error);
+      promotionPreview.innerHTML =
+        '<div class="promo-empty">ابتدا بازه تاریخ انقضای شمسی را اصلاح کنید.</div>';
+      return;
+    }
+
+    const hasExplicitDateRange = Boolean(
+      expiryDateRange.from.iso || expiryDateRange.to.iso
+    );
+    promoMinDay.disabled = hasExplicitDateRange;
+    promoMaxDay.disabled = hasExplicitDateRange;
 
     currentPromotionRows = buildPromotionRows();
 
@@ -1458,8 +1705,11 @@
     document.getElementById("promoInventoryValue").textContent =
       nhFormatRial(inventoryValue);
 
-    document.getElementById("promoDayLabel").textContent =
-      `${Number(promoMinDay.value).toLocaleString("fa-IR")} تا ${Number(promoMaxDay.value).toLocaleString("fa-IR")} روز`;
+    const dateRangeLabel = expiryDateRange.from.display || expiryDateRange.to.display
+      ? `${expiryDateRange.from.display || "ابتدا"} تا ${expiryDateRange.to.display || "انتها"}`
+      : `${Number(promoMinDay.value).toLocaleString("fa-IR")} تا ${Number(promoMaxDay.value).toLocaleString("fa-IR")} روز`;
+
+    document.getElementById("promoDayLabel").textContent = dateRangeLabel;
 
     promoExportBtn.disabled =
       !promotionReferenceReady ||
@@ -1533,17 +1783,74 @@
     promoProductFilter.value = "";
     promoGroupFilter.value = "";
     promoMinDay.value = "0";
-    promoMaxDay.value = "7";
+    promoMaxDay.value = "30";
+    promoExpiryFrom.value = "";
+    promoExpiryTo.value = "";
     renderPromotionExport();
   }
 
   function currentJalaliFileDate() {
-    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+    const parts = new Intl.DateTimeFormat("en-US-u-ca-persian", {
       timeZone: "Asia/Tehran",
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
-    }).format(new Date()).replaceAll("/", "-").replaceAll(" ", "");
+    }).formatToParts(new Date());
+
+    const values = Object.fromEntries(
+      parts.map(part => [part.type, part.value])
+    );
+
+    return `${values.year}${values.month}${values.day}`;
+  }
+
+  function currentTehranJalaliDateTime() {
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+      timeZone: "Asia/Tehran",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(new Date());
+  }
+
+  function safePromotionFilenamePart(value) {
+    const cleaned = String(value || "")
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, " ")
+      .replace(/[. ]+$/g, "");
+
+    return cleaned || "کالاهای نزدیک انقضا";
+  }
+
+  function renderLastPromotionExport() {
+    if (!promoLastExportValue) return;
+
+    try {
+      const savedValue = localStorage.getItem(PROMOTION_LAST_EXPORT_KEY);
+      promoLastExportValue.textContent =
+        savedValue || "هنوز فایلی دریافت نشده است";
+    } catch (error) {
+      console.warn("Reading last Excel export time failed:", error);
+      promoLastExportValue.textContent = "اطلاعات آخرین دریافت در دسترس نیست";
+    }
+  }
+
+  function saveLastPromotionExport() {
+    const value = currentTehranJalaliDateTime();
+
+    try {
+      localStorage.setItem(PROMOTION_LAST_EXPORT_KEY, value);
+    } catch (error) {
+      console.warn("Saving last Excel export time failed:", error);
+    }
+
+    if (promoLastExportValue) {
+      promoLastExportValue.textContent = value;
+    }
   }
 
   async function exportPromotionWorkbook() {
@@ -1767,16 +2074,13 @@
         }
       );
 
-      const regionCodes = [
-        ...new Set(currentPromotionRows.map(row => row.regionCode))
-      ];
-
-      const regionPart = regionCodes.length === 1
-        ? regionCodes[0]
-        : "Multi";
+      const selectedGroupName = promoGroupFilter.value.trim();
+      const reportTitle = selectedGroupName
+        ? selectedGroupName
+        : "کالاهای نزدیک انقضا";
 
       const filename =
-        `Promotion_Region_${regionPart}_${currentJalaliFileDate()}.xlsx`;
+        `${safePromotionFilenamePart(reportTitle)} ${currentJalaliFileDate()}.xlsx`;
 
       const downloadUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
@@ -1785,6 +2089,8 @@
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
+
+      saveLastPromotionExport();
 
       setTimeout(() => URL.revokeObjectURL(downloadUrl), 1500);
       showSuccess(
@@ -1803,6 +2109,8 @@
   }
 
   if (canExportPromotion) {
+    renderLastPromotionExport();
+
     [
       promoStoreFilter,
       promoGroupFilter,
@@ -1810,6 +2118,26 @@
       promoMaxDay
     ].forEach(element => {
       element.addEventListener("change", renderPromotionExport);
+    });
+
+    [promoExpiryFrom, promoExpiryTo].forEach(element => {
+      element.addEventListener("input", () => {
+        element.value = element.value
+          .replace(/[^0-9۰-۹٠-٩/.-]/g, "")
+          .slice(0, 10);
+        renderPromotionExport();
+      });
+
+      element.addEventListener("blur", () => {
+        const parsed = parsePromotionJalaliDate(
+          element.value,
+          element === promoExpiryFrom ? "تاریخ شروع انقضا" : "تاریخ پایان انقضا"
+        );
+        if (!parsed.error && parsed.display) {
+          element.value = parsed.display;
+        }
+        renderPromotionExport();
+      });
     });
 
     let promotionSearchTimer = null;
