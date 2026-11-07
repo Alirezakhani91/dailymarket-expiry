@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- EXPIRY WATCH VERSION: PROMOTION RANGE 0-30 DAYS | 2026-08-17 -->
+<!-- EXPIRY WATCH VERSION: JALALI DATE PICKERS + PROMOTION RANGE 0-30 DAYS | 2026-11-07 -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -100,8 +100,16 @@
     align-items: end;
   }
 
-  .promo-date-input {
-    direction: ltr;
+  .promo-jalali-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.15fr;
+    gap: 6px;
+    direction: rtl;
+  }
+
+  .promo-jalali-picker select {
+    min-width: 0;
+    padding: 0 8px;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
@@ -474,33 +482,23 @@
       </div>
 
       <div class="promo-field">
-        <label for="promoExpiryFrom">تاریخ انقضا از (شمسی)</label>
-        <input
-          id="promoExpiryFrom"
-          class="promo-date-input"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          maxlength="10"
-          placeholder="۱۴۰۵/۰۸/۰۱"
-          aria-label="تاریخ شروع بازه انقضا به شمسی"
-        >
-        <span class="promo-date-hint">مثال: ۱۴۰۵/۰۸/۰۱ — خالی باشد یعنی بدون محدودیت شروع</span>
+        <label>تاریخ انقضا از (شمسی)</label>
+        <div class="promo-jalali-picker" role="group" aria-label="انتخاب تاریخ شروع انقضا">
+          <select id="promoExpiryFromDay" aria-label="روز شروع"></select>
+          <select id="promoExpiryFromMonth" aria-label="ماه شروع"></select>
+          <select id="promoExpiryFromYear" aria-label="سال شروع"></select>
+        </div>
+        <span class="promo-date-hint">روز، ماه و سال شروع بازه را انتخاب کنید.</span>
       </div>
 
       <div class="promo-field">
-        <label for="promoExpiryTo">تاریخ انقضا تا (شمسی)</label>
-        <input
-          id="promoExpiryTo"
-          class="promo-date-input"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          maxlength="10"
-          placeholder="۱۴۰۵/۰۸/۳۰"
-          aria-label="تاریخ پایان بازه انقضا به شمسی"
-        >
-        <span class="promo-date-hint">مثال: ۱۴۰۵/۰۸/۳۰ — خالی باشد یعنی بدون محدودیت پایان</span>
+        <label>تاریخ انقضا تا (شمسی)</label>
+        <div class="promo-jalali-picker" role="group" aria-label="انتخاب تاریخ پایان انقضا">
+          <select id="promoExpiryToDay" aria-label="روز پایان"></select>
+          <select id="promoExpiryToMonth" aria-label="ماه پایان"></select>
+          <select id="promoExpiryToYear" aria-label="سال پایان"></select>
+        </div>
+        <span class="promo-date-hint">روز، ماه و سال پایان بازه را انتخاب کنید.</span>
       </div>
     </div>
 
@@ -611,8 +609,12 @@
   const promoGroupFilter = document.getElementById("promoGroupFilter");
   const promoMinDay = document.getElementById("promoMinDay");
   const promoMaxDay = document.getElementById("promoMaxDay");
-  const promoExpiryFrom = document.getElementById("promoExpiryFrom");
-  const promoExpiryTo = document.getElementById("promoExpiryTo");
+  const promoExpiryFromDay = document.getElementById("promoExpiryFromDay");
+  const promoExpiryFromMonth = document.getElementById("promoExpiryFromMonth");
+  const promoExpiryFromYear = document.getElementById("promoExpiryFromYear");
+  const promoExpiryToDay = document.getElementById("promoExpiryToDay");
+  const promoExpiryToMonth = document.getElementById("promoExpiryToMonth");
+  const promoExpiryToYear = document.getElementById("promoExpiryToYear");
   const promoExportBtn = document.getElementById("promoExportBtn");
   const promoResetBtn = document.getElementById("promoResetBtn");
   const promoLastExportValue = document.getElementById("promoLastExportValue");
@@ -1336,58 +1338,112 @@
     return targetDay - todayDay;
   }
 
-  function normalizePromotionDateDigits(value) {
-    const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
-    const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
-
-    return String(value || "")
-      .trim()
-      .replace(/[۰-۹]/g, digit => String(persianDigits.indexOf(digit)))
-      .replace(/[٠-٩]/g, digit => String(arabicDigits.indexOf(digit)))
-      .replace(/[.\-]/g, "/")
-      .replace(/\s+/g, "");
-  }
-
-  function parsePromotionJalaliDate(value, label) {
-    const normalized = normalizePromotionDateDigits(value);
-    if (!normalized) return { iso: "", display: "" };
-
-    const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-    if (!match) {
-      return { error: `${label} را به شکل ۱۴۰۵/۰۸/۰۱ وارد کنید.` };
-    }
-
-    const jy = Number(match[1]);
-    const jm = Number(match[2]);
-    const jd = Number(match[3]);
-
-    if (jy < 1300 || jy > 1600 || jm < 1 || jm > 12 || jd < 1 || jd > 31) {
-      return { error: `${label} معتبر نیست.` };
+  function isValidPromotionJalaliDate(jy, jm, jd) {
+    if (!jy || !jm || !jd || jm < 1 || jm > 12 || jd < 1 || jd > 31) {
+      return false;
     }
 
     const iso = nhJalaliToIso(jy, jm, jd);
     const [gy, gm, gd] = iso.split("-").map(Number);
     const [checkYear, checkMonth, checkDay] = nhGregorianToJalali(gy, gm, gd);
+    return checkYear === jy && checkMonth === jm && checkDay === jd;
+  }
 
-    if (checkYear !== jy || checkMonth !== jm || checkDay !== jd) {
+  function promotionJalaliMonthDays(year, month) {
+    if (!month) return 31;
+    if (month <= 6) return 31;
+    if (month <= 11) return 30;
+    if (!year) return 30;
+    return isValidPromotionJalaliDate(year, 12, 30) ? 30 : 29;
+  }
+
+  function fillPromotionDayOptions(daySelect, yearSelect, monthSelect) {
+    const previousDay = daySelect.value;
+    const year = Number(yearSelect.value || 0);
+    const month = Number(monthSelect.value || 0);
+    const maxDay = promotionJalaliMonthDays(year, month);
+
+    daySelect.innerHTML =
+      '<option value="">روز</option>' +
+      Array.from({ length: maxDay }, (_, index) => {
+        const day = index + 1;
+        return `<option value="${day}">${day.toLocaleString("fa-IR")}</option>`;
+      }).join("");
+
+    if (previousDay && Number(previousDay) <= maxDay) {
+      daySelect.value = previousDay;
+    }
+  }
+
+  function initializePromotionJalaliPickers() {
+    const [currentYear] = nhTodayJalali();
+    const yearOptions = Array.from(
+      { length: 9 },
+      (_, index) => currentYear - 3 + index
+    ).map(year =>
+      `<option value="${year}">${year.toLocaleString("fa-IR", { useGrouping: false })}</option>`
+    ).join("");
+
+    const monthOptions = JALALI_MONTHS.map((month, index) =>
+      `<option value="${index + 1}">${month}</option>`
+    ).join("");
+
+    [promoExpiryFromYear, promoExpiryToYear].forEach(select => {
+      select.innerHTML = '<option value="">سال</option>' + yearOptions;
+    });
+
+    [promoExpiryFromMonth, promoExpiryToMonth].forEach(select => {
+      select.innerHTML = '<option value="">ماه</option>' + monthOptions;
+    });
+
+    fillPromotionDayOptions(
+      promoExpiryFromDay,
+      promoExpiryFromYear,
+      promoExpiryFromMonth
+    );
+    fillPromotionDayOptions(
+      promoExpiryToDay,
+      promoExpiryToYear,
+      promoExpiryToMonth
+    );
+  }
+
+  function readPromotionJalaliPicker(daySelect, monthSelect, yearSelect, label) {
+    const rawValues = [yearSelect.value, monthSelect.value, daySelect.value];
+    const selectedCount = rawValues.filter(Boolean).length;
+
+    if (selectedCount === 0) return { iso: "", display: "" };
+    if (selectedCount !== 3) {
+      return { error: `برای ${label}، روز، ماه و سال را کامل انتخاب کنید.` };
+    }
+
+    const jy = Number(yearSelect.value);
+    const jm = Number(monthSelect.value);
+    const jd = Number(daySelect.value);
+
+    if (!isValidPromotionJalaliDate(jy, jm, jd)) {
       return { error: `${label} معتبر نیست.` };
     }
 
     return {
-      iso,
+      iso: nhJalaliToIso(jy, jm, jd),
       display: `${jy}/${String(jm).padStart(2, "0")}/${String(jd).padStart(2, "0")}`
     };
   }
 
   function getPromotionExpiryDateRange() {
-    const from = parsePromotionJalaliDate(
-      promoExpiryFrom.value,
+    const from = readPromotionJalaliPicker(
+      promoExpiryFromDay,
+      promoExpiryFromMonth,
+      promoExpiryFromYear,
       "تاریخ شروع انقضا"
     );
     if (from.error) return { error: from.error };
 
-    const to = parsePromotionJalaliDate(
-      promoExpiryTo.value,
+    const to = readPromotionJalaliPicker(
+      promoExpiryToDay,
+      promoExpiryToMonth,
+      promoExpiryToYear,
       "تاریخ پایان انقضا"
     );
     if (to.error) return { error: to.error };
@@ -1784,8 +1840,24 @@
     promoGroupFilter.value = "";
     promoMinDay.value = "0";
     promoMaxDay.value = "30";
-    promoExpiryFrom.value = "";
-    promoExpiryTo.value = "";
+    [
+      promoExpiryFromDay,
+      promoExpiryFromMonth,
+      promoExpiryFromYear,
+      promoExpiryToDay,
+      promoExpiryToMonth,
+      promoExpiryToYear
+    ].forEach(element => { element.value = ""; });
+    fillPromotionDayOptions(
+      promoExpiryFromDay,
+      promoExpiryFromYear,
+      promoExpiryFromMonth
+    );
+    fillPromotionDayOptions(
+      promoExpiryToDay,
+      promoExpiryToYear,
+      promoExpiryToMonth
+    );
     renderPromotionExport();
   }
 
@@ -2109,6 +2181,7 @@
   }
 
   if (canExportPromotion) {
+    initializePromotionJalaliPickers();
     renderLastPromotionExport();
 
     [
@@ -2120,22 +2193,37 @@
       element.addEventListener("change", renderPromotionExport);
     });
 
-    [promoExpiryFrom, promoExpiryTo].forEach(element => {
-      element.addEventListener("input", () => {
-        element.value = element.value
-          .replace(/[^0-9۰-۹٠-٩/.-]/g, "")
-          .slice(0, 10);
-        renderPromotionExport();
-      });
-
-      element.addEventListener("blur", () => {
-        const parsed = parsePromotionJalaliDate(
-          element.value,
-          element === promoExpiryFrom ? "تاریخ شروع انقضا" : "تاریخ پایان انقضا"
-        );
-        if (!parsed.error && parsed.display) {
-          element.value = parsed.display;
+    [
+      promoExpiryFromDay,
+      promoExpiryFromMonth,
+      promoExpiryFromYear,
+      promoExpiryToDay,
+      promoExpiryToMonth,
+      promoExpiryToYear
+    ].forEach(element => {
+      element.addEventListener("change", () => {
+        if (
+          element === promoExpiryFromMonth ||
+          element === promoExpiryFromYear
+        ) {
+          fillPromotionDayOptions(
+            promoExpiryFromDay,
+            promoExpiryFromYear,
+            promoExpiryFromMonth
+          );
         }
+
+        if (
+          element === promoExpiryToMonth ||
+          element === promoExpiryToYear
+        ) {
+          fillPromotionDayOptions(
+            promoExpiryToDay,
+            promoExpiryToYear,
+            promoExpiryToMonth
+          );
+        }
+
         renderPromotionExport();
       });
     });
